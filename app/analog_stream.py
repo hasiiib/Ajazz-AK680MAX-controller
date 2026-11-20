@@ -7,7 +7,6 @@ input HID interfaces are uniquely paired to one USB parent.
 from __future__ import annotations
 
 import os
-from typing import Callable
 
 from protocol import (
     ANALOG_REPORT_LENGTH,
