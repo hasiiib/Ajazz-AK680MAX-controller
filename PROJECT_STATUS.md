@@ -99,3 +99,10 @@ Next investigation:
 - Obtain the actual report descriptor bytes for each interface (prefer sysfs/kernel-exposed descriptors or a safe HID descriptor inspection utility).
 - Decode report usages, report IDs, and input/output/feature report sizes.
 - Do not probe by sending guessed SET_REPORT or vendor commands.
+
+
+## HID report descriptor sysfs check (2026-11-20)
+User checked `/sys/bus/usb/devices/1-1/1-1:1.{0,1,2}/report_descriptor`; none of the three paths exposed a readable `report_descriptor` file.
+- This is a sysfs exposure limitation, not evidence of a keyboard fault.
+- Descriptor lengths remain known from lsusb (59, 171, and 20 bytes), but raw descriptor bytes have not yet been retrieved.
+- Next: check whether `usbhid-dump` is available, inspect its help/options, then use descriptor-only mode for the matching VID:PID/interface. Avoid stream mode and do not send reports.
