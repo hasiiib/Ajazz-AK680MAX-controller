@@ -219,14 +219,14 @@ class Main(QMainWindow):
         try:
             self.stream_session.stop()
         except AnalogStreamError as exc:
-            self.log.append(f"\\n\\nANALOG MONITOR STOP WARNING: {exc}")
+            self.log.append(f"\n\nANALOG MONITOR STOP WARNING: {exc}")
         finally:
             self.latest_samples.clear()
             self.stream_button.setText("Start Analog Monitor")
             self.stream_button.setEnabled(True)
             self.identify_button.setEnabled(True)
             self.analog_status.setText("Analog monitor: stopped — connection lost")
-            self.log.append(f"\\n\\nANALOG MONITOR: {reason}")
+            self.log.append(f"\n\nANALOG MONITOR: {reason}")
 
     def export_diagnostics(self):
         """Save a privacy-filtered support report; this performs no HID I/O."""
@@ -245,10 +245,10 @@ class Main(QMainWindow):
             Path(filename).write_text(report, encoding="utf-8")
         except OSError as exc:
             self.statusBar().showMessage(f"Diagnostic export failed: {exc}", 10000)
-            self.log.append(f"\\n\\nDIAGNOSTIC EXPORT ERROR: {exc}")
+            self.log.append(f"\n\nDIAGNOSTIC EXPORT ERROR: {exc}")
             return
         self.statusBar().showMessage(f"Diagnostic report saved: {filename}", 10000)
-        self.log.append(f"\\n\\nDIAGNOSTICS EXPORTED: {filename}")
+        self.log.append(f"\n\nDIAGNOSTICS EXPORTED: {filename}")
 
     def toggle_analog_stream(self):
         if self.stream_session.active:
