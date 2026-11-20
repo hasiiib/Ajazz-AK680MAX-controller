@@ -23,9 +23,9 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - Standard-library unit tests and GitHub Actions workflow.
 
 ## Automated verification
-- GitHub Actions run for commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9`: **success**.
-- The workflow's `unittest` job passed **47 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings page parsing, and keymap page framing.
-- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389
+- GitHub Actions run for commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7`: **success**.
+- The workflow's `unittest` job passed **51 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings pages, keymap pages, and active-profile metadata.
+- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761830077
 
 ## Not yet physically verified
 - The analog stream has not yet been tested on the physical keyboard.
@@ -80,7 +80,7 @@ This code is pure and disconnected from HID/GUI. The protocol shape is family-le
 
 The magnetic settings and keymap modules are both request builders/parsers only. No GET or SET command was sent to the physical keyboard during these changes.
 
-The combined 47-test suite passed on commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389.
+The combined 51-test suite passed on commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761830077.
 
 
 ## Read-only active-profile parser groundwork (2026-11-20)
