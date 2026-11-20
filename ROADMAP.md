@@ -168,3 +168,16 @@ No HID reports have been sent and no keyboard settings have been changed during 
 - [ ] Run the GUI read-only Identify operation and record the live board ID / exact error.
 
 No keyboard reports or settings changes were part of the open test. Continue with only the documented read-only 0x8F Identify request.
+
+
+## Physical Identify milestone verified (2026-11-20)
+
+- [x] Verify scoped USB-node ACL and ordinary-user HIDAPI open.
+- [x] Verify HIDAPI interface 2 (control candidate) and interface 1 (analog-input candidate) share USB parent `1-1`.
+- [x] Run the GUI read-only Identify action on the physical keyboard.
+- [x] Confirm the live board-reported device ID is `2255`, matching the public AK680 MAX `3151:502d` gen2 record.
+- [ ] Review/add a documented GET-only firmware metadata query (`0x80`) with response validation and unit tests.
+- [ ] Consider optional precision metadata only after `0x80` response is understood.
+- [ ] Design and separately authorize analog stream testing; do not send stream enable (`0x1B, 1`) yet.
+
+The board ID is no longer an assumption: it came from the keyboard's successful read-only Identify response. No configuration writes or setting changes have been performed.
