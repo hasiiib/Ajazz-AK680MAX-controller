@@ -30,13 +30,14 @@
 - [x] Audit public board-2255 registry/protocol evidence and document family-level versus firmware-image evidence, the upstream `0x8A` byte-4 ambiguity, stock/custom firmware limits, and incompatible-board exclusions.
 - [x] Validate one physical 0x84 active-profile GET response on board 2255 (accepted profile index 0; one capture only).
 - [x] Validate one physical 0x8A keymap page-0 response on board 2255; preserve its 16 entries as opaque four-byte values.
-- [ ] Validate one physical 0xE5 magnetic sub-operation-0/page-0 response on board 2255 before connecting magnetic reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
+- [x] Validate one physical 0xE5 magnetic sub-operation-0/page-0 response on board 2255; preserve its 32 values as raw little-endian u16 values.
+- [ ] Validate additional magnetic sub-operations/pages and establish their meanings before connecting magnetic reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
 - [x] Add a read-only snapshot browser tab that renders validated keymap and magnetic values without assigning meanings.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
-- [ ] Connect snapshot acquisition only after 0xE5 and 0x8A response framing is physically verified on board 2255.
+- [ ] Connect snapshot acquisition only after additional magnetic/keymap page coverage and metadata semantics are verified on board 2255.
 - [ ] Build editable controls only for capabilities verified on board 2255.
 - [ ] Verify lighting capabilities and safe controls.
 - [ ] Verify actuation, Rapid Trigger, DKS, and macro capabilities.
@@ -48,14 +49,14 @@
 - [x] Add a regression guard preventing incompatible 3151:502C and 0C45:80B2 protocol identifiers from entering application or udev code.
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
-- Physical Identify result 2255, one read-only 0x84 active-profile GET (Profile 1 / index 0), and one read-only 0x8A keymap page-0 GET (16 opaque entries) are verified; 0xE5 and analog streaming are not yet physically verified.
+- Physical Identify result 2255, one read-only 0x84 active-profile GET, one 0x8A keymap page-0 GET, and one 0xE5 magnetic sub-operation-0/page-0 GET are accepted. Broader page coverage, 0x8A byte-4 semantics, magnetic value meanings, and analog streaming remain unverified.
 - Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
 - Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
+The suite contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and broader `0xE5`/`0x8A` page coverage remain hardware gates; `0x84`, `0x8A` page 0, and `0xE5` sub-operation 0/page 0 each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
