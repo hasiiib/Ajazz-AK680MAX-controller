@@ -11,7 +11,7 @@ This roadmap is ordered by dependencies. Complete and verify each stage before m
 - [x] Record exact USB VID/PID, interfaces, hidraw nodes, and report descriptors.
 
 ## Phase 2 — Hardware protocol investigation
-- [ ] Identify the exact AK680 MAX hardware/firmware revision (still unknown; USB product string is generic).
+- [ ] Identify the exact keyboard hardware/firmware revision (unresolved: detected VID:PID 3151:502D differs from AK680 MAX IDs in one public reverse-engineering reference).
 - [ ] Research vendor software, official documentation, Linux driver support, and credible community protocol findings.
 - [x] Retrieve and decode all three HID report descriptors (descriptor-only inspection; no reports sent).
 - [ ] Document verified report formats and device communication constraints.
@@ -50,3 +50,10 @@ Only implement features supported by verified firmware/protocol behavior.
 - Interface 2 exposes a vendor-defined 64-byte Feature report on Usage Page `0xFFFF`, Usage `0x02`, with no Report ID. This is a candidate for protocol research, not proof of a configuration API.
 - Interface 1 also contains vendor-defined input Report ID 5 with a 31-byte payload.
 - Next: locate official AJAZZ utility/docs or credible community protocol evidence matching VID:PID `3151:502d` and hardware revision. Keep testing read-only; never send guessed Feature/Output reports.
+
+
+## Hardware identity checkpoint (2026-11-20)
+- Public sources associate `3151:502D` with other magnetic keyboard models (including Epomaker HE68 Mag / Attack Shark X82HE), while one AK680 MAX reverse-engineering project describes lightless `3151:502C` and RGB `0C45:80B2` variants.
+- This is an identity discrepancy, not proof of mislabeling. Similar USB descriptors do not prove protocol compatibility.
+- Block protocol-specific implementation until the physical model/variant and USB bcdDevice/manufacturer/product strings are reconciled.
+- Next safe step: confirm the underside/box model marking and inspect full USB identity fields. No HID reports are to be sent.
