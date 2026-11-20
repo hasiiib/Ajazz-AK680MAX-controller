@@ -11,7 +11,7 @@ This roadmap is ordered by dependencies. Complete and verify each stage before m
 - [x] Record exact USB VID/PID, interfaces, hidraw nodes, and report descriptors.
 
 ## Phase 2 — Hardware protocol investigation
-- [ ] Identify the exact keyboard hardware/firmware revision (unresolved: detected VID:PID 3151:502D differs from AK680 MAX IDs in one public reverse-engineering reference).
+- [ ] Verify live board-reported device ID and exact controller revision (public AK680 MAX reference maps USB ID 3151:502D to candidate device ID 2255 / gen2).
 - [ ] Research vendor software, official documentation, Linux driver support, and credible community protocol findings.
 - [x] Retrieve and decode all three HID report descriptors (descriptor-only inspection; no reports sent).
 - [ ] Document verified report formats and device communication constraints.
@@ -57,3 +57,11 @@ Only implement features supported by verified firmware/protocol behavior.
 - This is an identity discrepancy, not proof of mislabeling. Similar USB descriptors do not prove protocol compatibility.
 - Block protocol-specific implementation until the physical model/variant and USB bcdDevice/manufacturer/product strings are reconciled.
 - Next safe step: confirm the underside/box model marking and inspect full USB identity fields. No HID reports are to be sent.
+
+
+## Protocol reference update (2026-11-20)
+- Found a public AK680 MAX board record matching VID:PID `3151:502d`: candidate device ID 2255, controller `ry5088_sg9005_rt004_dm_hall_8k`, protocol family gen2. The record lists other AK680 MAX revisions too, so verify the live device ID.
+- Reference board page: https://getsharkfin.com/boards/ajazzmouse-ak680-max
+- Reference protocol: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md
+- Protocol doc describes 64-byte Feature reports on Usage Page `0xFFFF`, Usage `0x02`, and identify GET opcode `0x8F` returning a 32-bit little-endian device ID. Gen2 and yc500 opcodes collide; never guess family.
+- Next development milestone: add a narrowly scoped, GET-only identify operation (0x8F), verify device ID, and disable all writes/configuration changes. No protocol command has yet been sent to the user's keyboard.
