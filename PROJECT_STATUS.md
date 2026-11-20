@@ -45,3 +45,8 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 3. Keep physical analog stream validation as a clearly marked release gate.
 4. Expand automated tests for lifecycle edge cases and installer safety.
 5. Maintain this status and ROADMAP.md as the authoritative current handoff.
+
+
+## Protocol variant guard (2026-11-20)
+
+A further protocol comparison established that similarly named AK680 MAX variants are not interchangeable. The physical board is 3151:502D / board 2255 / RY1B-2255. A public AK680 MAX lightless implementation targets 3151:502C, while a separate RGB implementation targets 0C45:80B2 and a different 0xAA/0x55 chunk protocol. Those command sets are explicitly excluded from this project. Future controls must be sourced from board-2255 RongYuan evidence only. See [the research note](docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md#variant-separation-similarly-named-ak680-max-protocols-2026-11-20).
