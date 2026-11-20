@@ -385,3 +385,22 @@ Follow-up review of the current public ROYUAN protocol reference shows that the 
 The current application parser returns only the board ID and discards the rest of the Identify reply. The next implementation task is to retain the validated 64-byte Identify response internally, parse the gen2 revision from bytes 7–8 with strict length/opcode checks, and add unit tests. Before showing a human-readable version, confirm the precise display convention and whether byte 9 has a documented meaning for this board. No additional HID transaction is required for this metadata step; it reuses the already successful read-only Identify response.
 
 Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md (Families / Other).
+
+
+## gen2 firmware revision parsed from Identify response (2026-11-20)
+
+Implemented the safe metadata path without adding another HID transaction:
+- Added an immutable Identify result carrying board ID, the validated 64-byte reply, and optional gen2 firmware revision.
+- Decodes revision from Identify response bytes 7 and 8 using the documented formula `(reply[8] << 8) | reply[7]`.
+- Converts the four decimal nibbles to the package/version number (for example, bytes `02 01` produce revision `102`).
+- Rejects short/wrong-opcode responses, zero revision, and non-decimal nibbles rather than guessing.
+- The GUI now displays the revision when safely decodable, otherwise clearly reports it as unavailable.
+- Kept the existing board-ID-only functions as compatibility wrappers.
+- Added unit tests for valid revision decoding, invalid/zero values, malformed replies, and preservation of the original Identify response.
+
+Implementation commits:
+- Protocol parser: `c828c16cf48d9d8cc4354f95e9b5e37a4fae57cc`
+- GUI display: `0292d244e3b92fc4b16bd225a1eb19dc00a6c965`
+- Tests: `d790be357b44665158bf7a3c94cf5769c962cc7e`
+
+Validation caveat: GitHub combined status and the available workflow-run lookup currently return no status entries / no runs for the test commit. Do not treat CI as passed. The updated GUI has not yet been retested on the physical keyboard, so its firmware-revision display remains pending hardware verification. No additional HID opcode was sent; no keyboard setting was changed.
