@@ -225,3 +225,8 @@ The independent Python builders in `app/magnetic_settings.py` and `app/keymap.py
 Evidence boundary: this is source-level transport behavior from HallJoy's shared RongYuan implementation; the exact 2255 model is present in its stream-profile table, but the request-tail behavior has not been captured on the user's physical unit. These changes only construct bytes in pure Python; no HID request was sent. The modules remain disconnected from device I/O. The full 55-test suite, including installer/udev safety regression checks, passed on commit `e19b648753ca41c3d144fc67231381c00952db0c`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803.
   
 Reference: [HallJoy RongYuan snapshot protocol](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_snapshot_protocol.h) and [RongYuan stream profiles](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_stream_protocol.h).
+
+
+## Diagnostic export privacy boundary (2026-11-20)
+
+The Linux GUI now offers a local Export Diagnostics action. It collects the existing USB/HID discovery text, applies serial-number redaction for common udev/USB field names, and labels analog stream verification as not yet completed on physical hardware. The export does not open HID handles or send protocol commands. Regression tests cover serial redaction and preservation of non-sensitive VID:PID/interface evidence. All app modules are syntax-compiled in CI. The 59-test suite passed on commit `a10c459c51319fe53740da82f91b034be0773e3d`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456.
