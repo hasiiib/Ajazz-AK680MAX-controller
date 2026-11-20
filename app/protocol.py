@@ -234,12 +234,14 @@ def identify_keyboard() -> int:
         try:
             device.open_path(os.fsencode(selected["path"]))
         except Exception as exc:
+            detail = str(exc).strip() or exc.__class__.__name__
             raise IdentifyError(
-                "The keyboard was found, but this user cannot open its HID "
-                "settings interface. On Ubuntu this is usually a udev "
-                "permission issue. Do not run the whole GUI with sudo; "
-                "we will add a narrowly scoped rule after this interface "
-                "check is complete."
+                "Could not open the keyboard's HID settings interface 2 "
+                f"({selected['path']}). OS/hidapi error: {detail}. "
+                "The scoped udev rule is now installed in the project; "
+                "if access is still denied, verify the ACL on the matching "
+                "/dev/hidraw node after reconnecting the keyboard. "
+                "Do not run the GUI with sudo."
             ) from exc
         try:
             return identify_exchange(device)
