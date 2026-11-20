@@ -279,3 +279,15 @@ The user's first launch of the HID-inventory build exposed a formatting-key mism
 - Fixed the display template to use the actual `interface_number` field.
 - Fix commit: 3f1da8b5c9da7ad29a4b366289106953795765f8
 - The fix is committed, but the user's updated installation still needs to be launched to verify the GUI starts and the scan output renders.
+
+
+## HID interface pairing diagnostic fix (2026-11-20)
+
+The user's latest scan confirms the keyboard is visible as USB VID:PID `3151:502D` and hidapi enumerates interfaces 0, 1, and 2. It also exposed that Linux hidapi returns interface paths such as `1-1:1.2`, not `/dev/hidrawN`; the previous sysfs resolver therefore left the physical USB parent blank.
+
+- Updated sysfs resolution to handle hidapi USB-interface paths and hidraw paths.
+- Pairing now derives the physical USB parent from the resolved interface path, allowing interface 1 and 2 to be matched safely.
+- Added a unit test for the hidapi path format.
+- Fix commits: `4a31620b969c3917d26032359b29a48ee62b07ec`, `7178c13b59acba6fef9175758b56fcd42c362631`, `f8356208fa1b6ec2f8571e72966fc0273e2a3f07`.
+- The reported Identify failure is consistent with the current user's inability to open the HID settings node. Do not add a udev permission rule until the updated pairing diagnostic is confirmed on the user's machine.
+- Target Ubuntu verification remains pending.
