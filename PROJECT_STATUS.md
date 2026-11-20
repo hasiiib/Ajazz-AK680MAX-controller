@@ -22,7 +22,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
-- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
+- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET has been accepted; a separate, opt-in one-shot keymap page-0 capture helper is prepared but has not been run.
 - Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
 - Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
