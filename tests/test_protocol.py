@@ -209,6 +209,23 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(len(result.raw_reply), 64)
         self.assertEqual(result.raw_reply[7:9], bytes([0x02, 0x01]))
 
+    def test_identify_revision_is_only_exposed_for_verified_gen2_board(self):
+        class FakeDevice:
+            def send_feature_report(self, report):
+                return len(report)
+
+            def get_feature_report(self, report_id, length):
+                reply = bytearray(64)
+                reply[0] = 0x8F
+                reply[1:5] = (1234).to_bytes(4, "little")
+                reply[7] = 0x02
+                reply[8] = 0x01
+                return bytes([0]) + bytes(reply)
+
+        result = identify_exchange_details(FakeDevice(), sleep=lambda _: None)
+        self.assertEqual(result.device_id, 1234)
+        self.assertIsNone(result.firmware_revision)
+
     def test_identify_exchange_does_not_resend_on_timeout(self):
         class SilentDevice:
             def __init__(self):
