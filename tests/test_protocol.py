@@ -1,6 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
@@ -11,6 +12,7 @@ from protocol import (
     _feature_payload,
     identify_exchange,
     paired_keyboard_interfaces,
+    _sysfs_details,
 )
 
 
@@ -50,6 +52,17 @@ class IdentifyProtocolTests(unittest.TestCase):
     def test_reject_short_feature_report(self):
         with self.assertRaises(IdentifyError):
             _feature_payload(b"short")
+
+    def test_sysfs_details_resolves_hidapi_usb_interface_path(self):
+        resolved = (
+            "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1:1.2/"
+            "0003:3151:502D.001A"
+        )
+        with patch("protocol.os.path.realpath", return_value=resolved):
+            details = _sysfs_details("1-1:1.2")
+        self.assertEqual(details["sysfs_interface"], 2)
+        self.assertEqual(details["usb_parent"], "1-1")
+        self.assertEqual(details["sysfs_path"], resolved)
 
     def test_pair_requires_unique_interfaces_and_same_usb_parent(self):
         control = {
