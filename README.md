@@ -37,7 +37,7 @@ Running the install command again updates the application.
 
 ## Current status
 
-**Phase 1 — USB/HID discovery.** The app lists USB devices and available Linux HID raw interfaces. This helps identify the exact keyboard USB identity and interfaces before protocol work begins.
+**Phase 1 / protocol handshake preparation.** The app lists USB devices, Linux HID raw interfaces, hidapi collection metadata, and whether the Feature-control candidate (interface 2) and Report ID 5 input candidate (interface 1) resolve to the same physical USB device. It also offers a read-only 0x8F Identify request. The live board ID and the physical-device handshake are not yet verified.
 
 Features such as RGB control, per-key actuation, Rapid Trigger, DKS, macros, remapping, and profiles are not claimed as supported yet. They will be added only after the AK680 MAX's actual USB protocol and firmware behavior are verified.
 
@@ -50,3 +50,14 @@ If the app does not open, run it from Terminal:
 ```
 
 Copy the error output when reporting a problem. Do not run the application with `sudo`.
+
+
+## Run the protocol unit tests
+
+From a local clone of the repository:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+GitHub Actions also runs these tests on pushes and pull requests.
