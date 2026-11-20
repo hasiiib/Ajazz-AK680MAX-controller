@@ -22,7 +22,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
-- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET has been accepted; a separate, opt-in one-shot keymap page-0 capture helper is prepared but has not been run.
+- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET and one keymap page-0 GET have each been accepted; the keymap entries remain opaque and wire byte 4 semantics remain unresolved. A separate, opt-in one-shot magnetic page-0 capture helper is prepared.
 - Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
 - Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
@@ -30,7 +30,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Protocol research findings (not target-board validation)
 - The independent Sharkfin registry maps board ID 2255 / USB 3151:502D to the AK680 MAX gen2 family and controller string `ry5088_sg9005_rt004_dm_hall_8k`; this is third-party host-software metadata, not stock-firmware proof.
 - The same AK680 MAX name covers four device IDs; 2336/2343/2371 use PID 3151:502F and different controller strings. PID 3151:502D is also shared by unrelated device IDs, so Identify ID 2255 remains essential.
-- One physical `0x84` active-profile GET has been accepted on target board 2255 (profile index 0). Public `0x8A` hardware notes are family-level; upstream documentation and code disagree on the meaning of byte 4 in that request.
+- One physical `0x84` active-profile GET and one `0x8A` keymap page-0 GET have been accepted on target board 2255. The `0x8A` parser accepted 16 opaque four-byte entries; upstream documentation and code still disagree on the meaning of byte 4 in that request.
 - Public `0xE5` magnetic-settings findings are firmware-image-derived from other gen2 IDs (2268, 2116, 3708), not a board-2255 hardware test.
 - Public `0x1B` travel-stream findings are from other firmware images and other hardware; target transport, stop behavior, and report semantics remain unverified.
 - Stock firmware provenance is not established by the Identify ID alone; this project has not flashed firmware and no board-2255 stock image/hash has been matched. Full sources and exclusions are in [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
@@ -38,20 +38,20 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Not yet verified on the physical keyboard
 - Live analog stream start, transport, stop behavior, travel reports, hold/release behavior, and physical confirmation of disconnect recovery. Keep the GUI warning visible until tested on board 2255.
 - Raw travel units and calibrated travel range.
-- Live magnetic settings and keymap reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated active-profile `0x84` GET has been physically accepted (index 0 / Profile 1), but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
+- Live magnetic settings and broader keymap page coverage remain unverified; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated `0x84` GET (Profile 1 / index 0) and one `0x8A` GET (profile 0/page 0) have been physically accepted, but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
 
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated; it is intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility/effect is unverified on board 2255.
-- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; the standalone one-shot `0x84` capture helper is separate. Its first physical capture succeeded once. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
+- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; standalone one-shot `0x84`, `0x8A`, and `0xE5` capture helpers are separate and require explicit flags. The `0x84` and `0x8A` helpers each have one accepted physical capture; the `0xE5` helper is prepared but not yet run. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The suite contains **167 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, and strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap capture safety tests. The latest full run passed on commit `9d5863e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44784448456).
+The suite contains **173 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests. CI verification for these latest capture-tooling changes is pending.
 
 
-The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile response framing has one accepted physical capture; `0x8A` keymap and `0xE5` magnetic response framing remain unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
+The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile and `0x8A` keymap page-0 response framing each have one accepted physical capture; `0xE5` magnetic response framing remains unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
