@@ -67,6 +67,7 @@ cp -a "$WORK_DIR/repo/app/." "$STAGE_DIR/"
 cp -- "$WORK_DIR/repo/requirements.txt" "$STAGE_DIR/requirements.txt"
 # Stage the standalone opt-in probe alongside the installed app modules.
 cp -- "$WORK_DIR/repo/capture_analog_stream.py" "$STAGE_DIR/capture_analog_stream.py"
+[[ -s "$STAGE_DIR/capture_analog_stream.py" ]] || fail "Analog probe staging failed."
 
 say "Preparing the isolated Python environment..."
 python3 -m venv "$STAGE_DIR/.venv"
@@ -109,6 +110,7 @@ if ! mv -- "$STAGE_DIR" "$APP_DIR"; then
   fail "Could not activate the new installation; the previous version was restored."
 fi
 STAGE_DIR=""
+[[ -s "$APP_DIR/capture_analog_stream.py" ]] || fail "Installed analog probe is missing; the previous version will be restored."
 
 mv -- "$LAUNCHER_TMP" "$BIN_DIR/$APP_NAME"
 LAUNCHER_TMP=""
