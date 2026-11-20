@@ -12,6 +12,8 @@ from read_only_snapshot import (
     assemble_keymap_layer,
     assemble_magnetic_column,
     build_read_only_snapshot,
+    KeymapLayerSnapshot,
+    MagneticColumnSnapshot,
 )
 
 
@@ -69,6 +71,42 @@ class SnapshotAssemblyTests(unittest.TestCase):
         mixed = [complete[0], parse_magnetic_settings_page(5, 1, bytes(64))]
         with self.assertRaises(SnapshotValidationError):
             assemble_magnetic_column(mixed)
+
+
+    def test_assemblers_reject_forged_page_offsets_and_value_shapes(self):
+        valid_keymap = [
+            parse_keymap_page(0, page, 0, bytes(64))
+            for page in range(8)
+        ]
+        valid_keymap[3] = valid_keymap[3].__class__(
+            profile=0, sublayer=0, page=3, first_slot=47,
+            entries=valid_keymap[3].entries,
+        )
+        with self.assertRaises(SnapshotValidationError):
+            assemble_keymap_layer(valid_keymap)
+
+        valid_magnetic = [
+            parse_magnetic_settings_page(0, page, bytes(64))
+            for page in range(4)
+        ]
+        valid_magnetic[2] = valid_magnetic[2].__class__(
+            subop=0, page=2, first_slot=63,
+            values=valid_magnetic[2].values, value_width=2,
+        )
+        with self.assertRaises(SnapshotValidationError):
+            assemble_magnetic_column(valid_magnetic)
+
+        malformed_values = [
+            parse_magnetic_settings_page(10, page, bytes(64))
+            for page in range(8)
+        ]
+        malformed_values[0] = malformed_values[0].__class__(
+            subop=10, page=0, first_slot=0,
+            values=((0, 1, 2),) + malformed_values[0].values[1:],
+            value_width=4,
+        )
+        with self.assertRaises(SnapshotValidationError):
+            assemble_magnetic_column(malformed_values)
 
     def test_snapshot_requires_exact_keymap_and_magnetic_reply_sets(self):
         keymaps = {(0, page): bytes(64) for page in range(8)}
