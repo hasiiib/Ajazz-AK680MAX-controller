@@ -135,3 +135,32 @@ Next handoff:
 1. Ask the user to confirm the exact model/variant printed on the keyboard underside or box (and whether it is RGB or no-backlight).
 2. Obtain full USB identity fields with `sudo lsusb -v -d 3151:502d | grep -E '(^Bus|bcdUSB|bcdDevice|iManufacturer|iProduct|iSerial|idVendor|idProduct|bNumInterfaces)'`.
 3. Reconcile the hardware identity before any protocol-specific implementation. Continue read-only; do not send Feature/Output reports.
+
+
+## External protocol research: AK680 MAX match found (2026-11-20)
+A public open-source keyboard utility's AK680 MAX board page identifies:
+- AK680 MAX USB IDs: `3151:502d` and `3151:502f`.
+- Device IDs listed: 2255, 2336, 2343, 2371.
+- Protocol family: `gen2`.
+- For USB ID `3151:502d`, the listed revision is device ID 2255 with controller label `ry5088_sg9005_rt004_dm_hall_8k`.
+- The utility states that multiple AK680 MAX revisions exist and identifies the exact command family from the board-reported device ID, not USB PID alone.
+Source: https://getsharkfin.com/boards/ajazzmouse-ak680-max
+
+The same project's public protocol document describes the vendor collection used by this keyboard class:
+- Usage Page `0xFFFF`, Usage `0x02`.
+- 64-byte HID Feature reports, report ID 0 (no Report ID prefix in the descriptor).
+- Identify GET opcode `0x8F`; documented reply begins `[0x8F, device_id:u32 little-endian, ...]`.
+- It explicitly warns that gen2 and yc500 command opcodes collide and must be selected from the device record; never infer family from USB PID.
+Source: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md
+
+Assessment:
+- The user's VID:PID `3151:502d`, AK680 MAX marking, and Interface 2 vendor Feature report are consistent with the public AK680 MAX listing. This resolves the earlier concern that this PID necessarily indicated another keyboard.
+- The exact device ID must still be read from the board before selecting commands. Public listing suggests 2255 for this USB PID, but the app must verify the live device response.
+- The user's bcdDevice `3.06` is recorded as USB device revision, not assumed to be the same thing as the protocol's board-reported device ID or controller firmware version.
+- No protocol command has yet been sent to the keyboard. No settings have been changed.
+- User's unique serial number was intentionally not copied into this public repository.
+
+Next step:
+1. Implement a read-only identification transaction for opcode `0x8F` on Interface 2 using the documented 64-byte Feature-report transport, with strict VID/PID/interface checks and no fallback writes.
+2. Decode and validate the returned device ID; expect 2255 as a hypothesis, not a hardcoded assumption.
+3. Only after device ID/family verification, implement GET-only reads and compare replies. Keep all SET/configuration operations disabled until a separate reviewed test plan exists.
