@@ -69,7 +69,7 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, read-only Qt viewer coverage, safe diagnostics for unusable HID Feature responses, and opt-in keymap/magnetic capture helpers, and a regression guard against incompatible 3151:502C / 0C45:80B2 protocol IDs in application code. CI installs the application dependencies and runs the Qt tests in offscreen mode. The latest full run passed on commit `55346cde`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44787359392).
+GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, read-only Qt viewer coverage, safe diagnostics for unusable HID Feature responses, and opt-in keymap/magnetic capture helpers, and a regression guard against incompatible 3151:502C / 0C45:80B2 protocol IDs in application code. CI installs the application dependencies and runs the Qt tests in offscreen mode. The latest full run passed on commit `48aac9e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44787733712).
 
 https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 
