@@ -6,8 +6,8 @@ This plan is a gate for validating the read-only configuration protocol on the p
 
 - USB enumeration and HID interface pairing have been observed on the target Ubuntu system.
 - A user-initiated, read-only Identify (0x8F) exchange returned board ID 2255.
-- The 0x84 active-profile, 0x8A keymap, and 0xE5 magnetic-settings request builders and response parsers currently have synthetic unit-test coverage.
-- No physical response for 0x84, 0x8A, or 0xE5 has been captured or validated on this board.
+- The active-profile `0x84` GET has now been physically captured once on board 2255: a 65-byte hidapi result with leading report-ID `00`, opcode `84`, active-profile index `00`, and the parser accepted it. The request send returned 65/65 bytes.
+- The `0x8A` keymap and `0xE5` magnetic-settings builders/parsers currently have synthetic unit-test coverage only; neither has a physical capture on this board.
 - The reviewed RongYuan protocol reference describes 0x84 as an opcode-echoing GET, while 0x8A keymap and 0xE5 magnetic page GETs return raw 64-byte pages without an opcode echo. This is family-level reference evidence, not a physical capture from board 2255.
 - The analog stream is separate and also remains unverified on physical hardware.
 - The board-specific evidence audit is in [BOARD_2255_PROTOCOL_EVIDENCE.md](BOARD_2255_PROTOCOL_EVIDENCE.md). It records the upstream `0x8A` byte-4 ambiguity and distinguishes `0xE5` firmware-image evidence and `0x1B` observations on other devices from target-board hardware evidence. The gen2 family label alone does not clear this gate.
@@ -27,7 +27,7 @@ Before a physical configuration-read test is attempted:
 
 | Stage | Request | Initial scope | Acceptance evidence |
 |---|---|---|---|
-| 1 | Active profile 0x84 GET | One request | Exact raw report bytes, transport return value, normalized length, response opcode, and a profile index in 0..3 |
+| 1 | Active profile 0x84 GET | <strong>Physically verified once</strong> | Captured 65-byte raw result, 65/65-byte send, leading report-ID `00`, opcode `84`, profile index `0`; no retry |
 | 2 | Keymap 0x8A GET | One profile, sublayer 0, page 0 | Exact raw report bytes and confirmed response framing; do not interpret the four-byte entries |
 | 3 | Magnetic 0xE5 GET | One supported read-only sub-operation, page 0 | Exact raw report bytes and confirmed response framing; retain values as raw protocol units |
 
@@ -40,7 +40,7 @@ The pure `active_profile_get_packet()` builder currently produces a 64-byte payl
 - Byte 7: `0x7B` (the gen2 checksum for bytes 0–6).
 - Bytes 8–63: `0x00`.
 
-The existing hidapi transport convention prepends a zero report-ID byte to the payload for `send_feature_report`, producing a 65-byte host buffer. This describes the software request shape; it is not evidence that board 2255 has accepted the command. The expected family-level response shape is a 64-byte payload beginning with `0x84`, with byte 1 in the range 0..3. A 65-byte response with a leading zero report-ID byte is normalized by the parser. Both framing and profile semantics remain unverified until an actual board-2255 capture is reviewed.
+The existing hidapi transport convention prepends a zero report-ID byte to the payload for `send_feature_report`, producing a 65-byte host buffer. On the physical board-2255 capture, `send_feature_report` returned 65/65 bytes. `get_feature_report(0, 65)` returned 65 bytes beginning `00 84 00`; the parser normalized the leading report-ID byte and accepted active-profile index `0` (Profile 1). This verifies one successful exchange and framing on this board; it does not establish behavior across repeated reads, other profile states, disconnects, or firmware variants.
 
 For the first physical test, do not run a bulk snapshot, keymap read, magnetic read, or analog monitor. The only permitted operation in this stage is one explicitly user-started `0x84` GET after a fresh Identify result of 2255 and unique interface-2 selection. Record the complete response exactly as returned; do not trim the leading byte, pad a short response, or issue another request to recover from an ambiguous result. Stop after one attempt and review the capture offline with `assess_hex_capture("active-profile", "...")`.
 
@@ -56,7 +56,7 @@ After updating the installed application files, the user can start the one-shot 
   --confirm-one-read-only-0x84
 ```
 
-The explicit flag is the user's confirmation to send this single read-only GET. Do not run it unless the keyboard is connected directly by USB and the user is ready to perform the physical test. The helper prints the exact response HEX and its offline parser assessment; it does not change any keyboard setting. Share only that output and any error text, never serial numbers or device paths.
+The explicit flag is the user's confirmation to send one read-only GET. This Stage 1 capture has already been completed successfully on the user's board; do not rerun it merely to reproduce the result. The helper prints exact response HEX and offline assessment; it does not change any keyboard setting. Share only that output and any error text, never serial numbers or device paths.
 
 ### Stage 1 capture worksheet
 
@@ -69,6 +69,16 @@ Record the following without including the USB serial number or unique device pa
 - `get_feature_report` returned length: exact byte count.
 - Raw response: uppercase hex, preserving every byte and its order.
 - Offline assessment: accepted/rejected and parser summary.
+
+### Stage 1 physical capture record
+
+- Result: accepted, one user-initiated capture.
+- `send_feature_report`: `65/65` bytes.
+- `get_feature_report`: 65 raw bytes.
+- Raw response: `00 84 00 00 00 00 00 00 7B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00`.
+- Framing: leading report-ID `00`, followed by opcode `84`; normalized payload length 64 bytes.
+- Parsed active-profile index: `0` (Profile 1).
+- No retry; no capture file or serial/device path was recorded.
 
 A timeout, partial send, malformed length, unexpected opcode, or profile byte outside 0..3 ends this stage. Do not continue to another opcode on the basis of a guessed or repaired frame.
 
