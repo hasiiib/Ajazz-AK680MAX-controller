@@ -19,9 +19,11 @@
 
 ## Read-only configuration foundation
 - [x] Pure magnetic-settings GET request builder and response parsers.
-- [x] Pure keymap GET request builder and opaque-page parser.
-- [x] Pure active-profile GET request builder and parser.
-- [ ] Validate 0xE5, 0x8A, and 0x84 response framing and values on physical board 2255 before connecting these reads to the GUI.
+- [x] Pure keymap GET page builder and opaque-entry parser.
+- [x] Pure active-profile GET builder and parser.
+- [x] Strict aggregation of complete 128-slot keymap layers and magnetic-settings columns from supplied replies.
+- [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
+- [ ] Validate 0xE5, 0x8A, and 0x84 response framing and values on physical board 2255 before connecting these reads to HID or the GUI.
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
@@ -33,9 +35,10 @@
 
 ## Evidence and safety
 - Physical Identify result 2255 is verified; analog streaming and configuration reads are not yet physically verified.
+- Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
 - Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest completed CI run passed **74 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44766230771. Automatic connection refresh is metadata-only and does not issue Identify or configuration commands. Physical analog stream validation remains the next hardware gate.
+The latest completed CI run passed **81 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44766978634. Automatic connection refresh is metadata-only and does not issue Identify or configuration commands. Physical analog stream validation and read-only configuration response validation remain hardware gates.
