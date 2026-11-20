@@ -239,3 +239,34 @@ Next handoff:
 3. After the user-authorized test, validate the live board ID. Only then add GET-only firmware/precision/assignment reads.
 4. Keep opcode 0x1B disabled until a separately reviewed stream start/stop and cleanup test plan exists.
 5. Inspect udev ancestry and add a narrow rule only for the exact required interfaces after collection pairing is confirmed.
+
+
+## HID topology and Identify transport hardening (2026-11-20)
+
+Implementation based on the reviewed HallJoy RongYuan transport:
+- Added a HID inventory function that reports hidapi interface number, Usage Page / Usage metadata, hidraw path, resolved sysfs path, and physical USB parent.
+- The scanner now identifies interface 2 as the descriptor-confirmed Feature-control candidate and interface 1 as the descriptor-confirmed Report ID 5 analog-input candidate.
+- Added a conservative pairing check: only report a paired control/input collection when exactly one interface 2 and one interface 1 are found and both resolve to the same physical USB parent. This check is diagnostic only; it does not open the input collection.
+- Linux sysfs interface number is used as a fallback when hidapi returns an invalid / negative interface number.
+- The read-only Identify transaction now sends the 0x8F Feature request once, then polls for a valid reply every 10 ms for up to 100 ms. It does not resend the command for each poll. It includes the documented 10 ms spacing before SET_FEATURE and before each GET_FEATURE read.
+- Added unit tests for HID pairing, one-send/multiple-poll behavior, timeout behavior, and request spacing.
+- Added a GitHub Actions workflow to run the standard-library unittest suite on pushes and pull requests.
+
+Safety:
+- Only the documented read-only 0x8F Identify request is sent.
+- No analog stream enable/disable opcode (0x1B), firmware/profile write, calibration, RGB, remapping, or other setting command was added.
+- The pairing result is based on Linux sysfs path evidence and the previously inspected report descriptors; the actual runtime inventory still needs the user's next scan.
+- The live board ID is still unverified. 2255 remains the public-reference candidate, not a hardcoded identity.
+- The target Ubuntu device test has not yet been run. The latest GitHub commit status has not yet reported a CI result.
+
+Latest implementation commits:
+- HID inventory and pairing display: 0ef4e6429d35771fcb8e02f22cb6bef35e577987
+- Identify polling aligned with RongYuan timing: 10dd15765828be90a71cc041c7e5db7494f6af89
+- HID pairing / transaction unit tests: a9ef95ae9dca9bb65cb07e3e5973732584537185
+- CI workflow: 011d107d8f7d3b0a9586bba0975dcf5560c97ef4
+
+Next handoff:
+1. Wait for / inspect the GitHub Actions unit-test result.
+2. User updates the app and runs Scan USB / HID; review the HIDAPI COLLECTIONS and PAIRING CHECK output.
+3. User clicks Identify once and shares the exact result. If it opens but times out, compare the failure with the 10 ms / 100 ms transaction behavior; if open is denied, inspect udev ancestry before adding any rule.
+4. Do not start analog streaming until the live board ID is validated and a stream cleanup design is reviewed.
