@@ -33,7 +33,8 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - [x] Cross-check board 2255 capabilities against an independent AK680 MAX software record (magnetic settings, profiles, lighting); retain firmware-level vs exact-board evidence grades.
 - [x] Implement a pure, strict 0xE5 magnetic GET packet builder and response-page parsers for gen2 sub-operations 0–7, 9, and read-only 10; enforce page bounds, exact 64-byte payloads, little-endian u16 values, and four-byte DKS records.
 - [x] Implement a pure 0x8A keymap GET page builder/parser for four profiles, four sublayers, eight pages, and sixteen opaque four-byte entries per page; do not guess keycode or physical-layout semantics.
-- [ ] Physically verify 0xE5 and 0x8A response timing, page shape, and values on board 2255 before enabling any configuration reads in the GUI.
+- [x] Implement a pure 0x84 active-profile GET packet and strict zero-based profile-index parser (0–3); no profile-switch command.
+- [ ] Physically verify 0xE5, 0x8A, and 0x84 GET response timing, shape, and values on board 2255 before enabling any configuration reads in the GUI.
 - [ ] Decode and validate the factory keymap against a verified physical layout before enabling remapping.
 - [ ] Identify supported RGB capabilities and safe read/write protocol.
 - [ ] Identify keymap/remapping capabilities and profile format.
