@@ -17,7 +17,7 @@ class MagneticSettingsRequestTests(unittest.TestCase):
         self.assertEqual(len(packet), 64)
         self.assertEqual(packet[:4], bytes([0xE5, 0, 1, 3]))
         self.assertEqual(packet[7], (0xFF - sum(packet[:7])) & 0xFF)
-        self.assertEqual(packet[8:], bytes(56))
+        self.assertEqual(packet[8:], bytes([0xFF]) * 56)
 
     def test_request_supports_documented_page_ranges(self):
         for subop, last_page in ((0, 3), (6, 3), (5, 1), (7, 1), (9, 1), (10, 7)):
