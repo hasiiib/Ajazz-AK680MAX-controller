@@ -7,7 +7,8 @@ This plan is a gate for validating the read-only configuration protocol on the p
 - USB enumeration and HID interface pairing have been observed on the target Ubuntu system.
 - A user-initiated, read-only Identify (0x8F) exchange returned board ID 2255.
 - The 0x84 active-profile, 0x8A keymap, and 0xE5 magnetic-settings request builders and response parsers currently have synthetic unit-test coverage.
-- No physical response for 0x84, 0x8A, or 0xE5 has been captured or validated.
+- No physical response for 0x84, 0x8A, or 0xE5 has been captured or validated on this board.
+- The reviewed RongYuan protocol reference describes 0x84 as an opcode-echoing GET, while 0x8A keymap and 0xE5 magnetic page GETs return raw 64-byte pages without an opcode echo. This is family-level reference evidence, not a physical capture from board 2255.
 - The analog stream is separate and also remains unverified on physical hardware.
 
 ## Preconditions
