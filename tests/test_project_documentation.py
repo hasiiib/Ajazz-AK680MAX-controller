@@ -51,7 +51,7 @@ class Board2255DocumentationTests(unittest.TestCase):
             "one explicitly user-started `0x84` GET",
             "assess_hex_capture(\"active-profile\", \"...\")",
             "Do not continue to another opcode",
-            "tools/capture_active_profile.py",
+            "app/capture_active_profile.py",
             "--confirm-one-read-only-0x84",
             "never retries, saves a file",
         ):
