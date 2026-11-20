@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
-from hardware_verification import assess_capture
+from hardware_verification import assess_capture, assess_hex_capture
 
 
 class HardwareCaptureAssessmentTests(unittest.TestCase):
@@ -65,6 +65,22 @@ class HardwareCaptureAssessmentTests(unittest.TestCase):
                 result = assess_capture(stage, raw, **kwargs)
                 self.assertFalse(result.accepted)
                 self.assertIn("Rejected:", result.summary)
+
+    def test_hex_capture_accepts_common_whitespace_and_preserves_bytes(self):
+        result = assess_hex_capture("active-profile", "84 02 " + "00 " * 62)
+        self.assertTrue(result.accepted)
+        self.assertEqual(result.raw_length, 64)
+        self.assertEqual(result.raw_hex.split()[:2], ["84", "02"])
+
+    def test_hex_capture_rejects_incomplete_or_decorated_input(self):
+        for raw_hex in ("84 0", "0x84 02", "84:02", "not hex"):
+            with self.subTest(raw_hex=raw_hex):
+                with self.assertRaises(ValueError):
+                    assess_hex_capture("active-profile", raw_hex)
+
+    def test_hex_capture_requires_text(self):
+        with self.assertRaises(TypeError):
+            assess_hex_capture("active-profile", bytes(64))
 
     def test_non_byte_capture_is_rejected_at_boundary(self):
         for raw in (64, "x" * 64, None):
