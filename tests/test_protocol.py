@@ -35,6 +35,15 @@ class IdentifyProtocolTests(unittest.TestCase):
         reply[1:5] = (2255).to_bytes(4, "little")
         self.assertEqual(parse_device_id(reply), 2255)
 
+    def test_read_only_parsers_reject_non_byte_input_without_coercion(self):
+        for value in (32, "x" * 64, None):
+            with self.subTest(value_type=type(value).__name__):
+                self.assertIsNone(parse_analog_report(value))
+                self.assertIsNone(parse_gen2_firmware_revision(value))
+                self.assertIsNone(parse_device_id(value))
+                with self.assertRaises(IdentifyError):
+                    _feature_payload(value)
+
     def test_parse_analog_report_little_endian_and_slot(self):
         report = bytearray(32)
         report[0] = 0x05
