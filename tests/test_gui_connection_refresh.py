@@ -109,5 +109,52 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("self.scan()\n        self.connection_timer.start()", self.source)
 
 
+    def test_input_error_callback_aborts_session_and_resets_status(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        poll = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "poll_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, poll)
+        self.assertIn("except AnalogStreamError", source)
+        self.assertIn("self._abort_analog_stream(", source)
+        self.assertIn("self.analog_status.setText(", source)
+
+    def test_abort_path_is_idempotent_after_session_self_cleanup(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        abort = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "_abort_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, abort)
+        self.assertIn("self.stream_session.stop()", source)
+        self.assertIn("finally:", source)
+        self.assertIn("self.latest_samples.clear()", source)
+        session_source_path = ROOT / "app" / "analog_stream.py"
+        session_source = session_source_path.read_text(encoding="utf-8")
+        self.assertIn("if self._control is not None and self._active:", session_source)
+        self.assertIn("else:\\n            self._close_handles()", session_source)
+
+    def test_window_close_best_effort_stops_session(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        close = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "closeEvent"
+        )
+        source = ast.get_source_segment(self.source, close)
+        self.assertIn("self.stream_session.stop()", source)
+        self.assertIn("except Exception:", source)
+        self.assertIn("super().closeEvent(event)", source)
+
+
 if __name__ == "__main__":
     unittest.main()
