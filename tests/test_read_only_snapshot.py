@@ -5,8 +5,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from active_profile import active_profile_get_packet
-from keymap import parse_keymap_page
-from magnetic_settings import parse_magnetic_settings_page
+from keymap import KeymapPage, parse_keymap_page
+from magnetic_settings import MagneticSettingsPage, parse_magnetic_settings_page
 from read_only_snapshot import (
     SnapshotValidationError,
     assemble_keymap_layer,
@@ -105,6 +105,41 @@ class SnapshotAssemblyTests(unittest.TestCase):
         )
         with self.assertRaises(SnapshotValidationError):
             assemble_magnetic_column(malformed_values)
+
+    def test_assemblers_reject_empty_wrong_type_and_forged_page_objects(self):
+        for pages in ([], None, [object()] * 8):
+            with self.subTest(kind=type(pages).__name__):
+                with self.assertRaises(SnapshotValidationError):
+                    assemble_keymap_layer(pages)
+
+        valid_keymaps = [
+            parse_keymap_page(0, page, 0, bytes(64))
+            for page in range(8)
+        ]
+        forged_keymaps = list(valid_keymaps)
+        forged_keymaps[0] = KeymapPage(
+            profile=0, sublayer=0, page=True, first_slot=0,
+            entries=valid_keymaps[0].entries,
+        )
+        with self.assertRaises(SnapshotValidationError):
+            assemble_keymap_layer(forged_keymaps)
+
+        for pages in ([], None, [object()]):
+            with self.subTest(magnetic_kind=type(pages).__name__):
+                with self.assertRaises(SnapshotValidationError):
+                    assemble_magnetic_column(pages)
+
+        valid_magnetic = [
+            parse_magnetic_settings_page(5, page, bytes(64))
+            for page in range(2)
+        ]
+        forged_magnetic = list(valid_magnetic)
+        forged_magnetic[0] = MagneticSettingsPage(
+            subop=5, page=False, first_slot=0,
+            values=valid_magnetic[0].values, value_width=1,
+        )
+        with self.assertRaises(SnapshotValidationError):
+            assemble_magnetic_column(forged_magnetic)
 
     def test_snapshot_requires_exact_keymap_and_magnetic_reply_sets(self):
         keymaps = {(0, page): bytes(64) for page in range(8)}
