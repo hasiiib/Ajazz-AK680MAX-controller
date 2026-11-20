@@ -30,7 +30,7 @@ def _hid_inventory_text():
     lines = []
     for item in inventory:
         lines.append(
-            "Interface {interface!r}: {role}\n"
+            "Interface {interface_number!r}: {role}\n"
             "  path: {path}\n"
             "  usage_page: {usage_page!r}, usage: {usage!r}\n"
             "  USB parent: {usb_parent!r}".format(**item)
