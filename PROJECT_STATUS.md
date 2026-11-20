@@ -38,14 +38,14 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Not yet verified on the physical keyboard
 - Live analog stream start, transport, stop behavior, travel reports, hold/release behavior, and physical confirmation of disconnect recovery. Keep the GUI warning visible until tested on board 2255.
 - Raw travel units and calibrated travel range.
-- Live magnetic settings, keymap, and active-profile reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
+- Live magnetic settings and keymap reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated active-profile `0x84` GET has been physically accepted (index 0 / Profile 1), but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
 
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated; it is intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility/effect is unverified on board 2255.
-- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
+- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; the standalone one-shot `0x84` capture helper is separate. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
