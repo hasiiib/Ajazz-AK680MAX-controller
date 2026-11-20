@@ -27,7 +27,9 @@
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
-- [ ] Build a clear settings interface only for capabilities verified on board 2255.
+- [x] Add a read-only snapshot browser tab that renders validated keymap and magnetic values without assigning meanings.
+- [ ] Connect snapshot acquisition only after 0xE5, 0x8A, and 0x84 response framing is physically verified on board 2255.
+- [ ] Build editable controls only for capabilities verified on board 2255.
 - [ ] Verify lighting capabilities and safe controls.
 - [ ] Verify actuation, Rapid Trigger, DKS, and macro capabilities.
 - [ ] Design read-back verification and recovery before any persistent write feature.
@@ -41,4 +43,4 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest completed CI run passed **94 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44770371835. Snapshot value objects now enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Connection-state classification fails closed on malformed HID inventory metadata; diagnostic export redacts additional USB serial-field formats. Physical analog stream validation and read-only configuration response validation remain hardware gates.
+The latest completed CI run passed **101 tests** (3 Qt panel tests skipped because PySide6 was not installed). CI is being updated to install application dependencies and execute those GUI tests offscreen. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates.
