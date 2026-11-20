@@ -207,3 +207,35 @@ Correction committed:
 - This does not broaden selection to keyboard input interfaces and does not add any configuration commands.
 
 Next user test: update/reinstall, click Identify again, and share the full result. If interface 2 still cannot be selected, the updated error will show the interface number / usage metadata hidapi actually reports. If it selects but cannot open, then investigate permissions separately. No command has yet been sent to the keyboard.
+
+
+## HallJoy / RongYuan protocol research (2026-11-20)
+
+A follow-up from Universal Analog Plugin issue #23 led to the public repository https://github.com/PashOK7/HallJoy. This is a significant new reference and supersedes the earlier uncertainty about whether VID:PID 3151:502D could correspond to an AK680 MAX.
+
+Findings:
+- HallJoy's Supported list includes AJAZZ AK680 MAX HE (USB).
+- Its support report states that its existing RongYuan stream implementation covers AK680 MAX boards 2255 / 2336 / 2343 / 2371. Board 2255 is paired with VID:PID 3151:502D; the other listed boards use PID 502F.
+- Its model table identifies board 2255 as AJAZZ AK680 MAX HE and includes a 68-key ANSI factory profile. The software profile's nominal 4000 µm range is not an independent physical measurement and remains provisional for our project.
+- HallJoy's control path uses a 65-byte Feature buffer including report ID zero. Its separate input path reads 32-byte report-ID-5 frames. Our descriptor inspection found the matching 64-byte Feature payload on interface 1.2 and a 31-byte report-ID-5 payload on interface 1.1 (32 bytes including report ID).
+- The documented stream packet layout in HallJoy is report ID 0x05, opcode 0x1B, raw travel value (little-endian), and slot 0–127.
+- HallJoy's identity flow uses 0x8F; optional GET operations include 0x80 / 0xE6 and assignment reads 0x84 / 0x8A. The app must validate exact board ID + VID/PID before using a board-specific profile.
+- Opcode 0x1B with value 1 enables the live magnetism stream; value 0 disables it. This is a SET/state-change operation, not part of read-only Identify. It is not implemented or sent by our app. If later implemented, it must have a user-visible start/stop lifecycle and guaranteed best-effort disable on exit/error.
+- HallJoy spaces control exchanges by about 10 ms and polls the response with validation. Review this timing if our current Identify transaction fails.
+- HallJoy is a Windows 10/11 application using ViGEmBus for virtual Xbox output; it is not directly usable as the Linux GUI. Its protocol findings are useful for an independent Linux implementation.
+- HallJoy is AGPL-3.0. We have recorded protocol facts and source links, not copied its implementation code. Do not copy substantial source without reviewing the license obligations.
+
+Our own state remains unchanged:
+- The latest Linux hidapi interface-selection correction has not yet been retested by the user.
+- The live board ID from our physical keyboard is not yet known; 2255 is a strong candidate, not a verified fact.
+- No Feature report transaction has yet completed on the physical keyboard.
+- No stream command, configuration write, or settings change has been sent.
+
+Detailed research notes: docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md
+
+Next handoff:
+1. Pair the Linux control Feature interface and report-ID-5 input interface by their shared USB parent/path, not just VID/PID.
+2. Revisit Identify timing while keeping the only request at read-only opcode 0x8F.
+3. After the user-authorized test, validate the live board ID. Only then add GET-only firmware/precision/assignment reads.
+4. Keep opcode 0x1B disabled until a separately reviewed stream start/stop and cleanup test plan exists.
+5. Inspect udev ancestry and add a narrow rule only for the exact required interfaces after collection pairing is confirmed.
