@@ -192,3 +192,18 @@ User's next action:
 3. Share the exact result shown in the inspector.
 
 Expected possible blocker: the earlier `root:root 0600` hidraw permissions may prevent opening the settings interface. If so, the app will explain this without elevating privileges. Then request the udev attribute walk for `/dev/hidraw4` and design a precise rule; do not add a broad permission rule.
+
+
+## HID discovery filter correction (2026-11-20)
+User tested the first Identify UI build. USB scan confirms:
+- Keyboard enumerates as `3151:502D`.
+- hidraw sysfs paths map `hidraw2` to USB interface 1.0, `hidraw3` to 1.1, and `hidraw4` to 1.2 (the previously descriptor-inspected settings interface).
+- Identify did not begin because the app's initial hidapi filter required interface number 2 AND hidapi Usage Page / Usage metadata to equal 0xFFFF / 0x0002.
+
+Correction committed:
+- Linux hidapi can expose incomplete/zero Usage Page / Usage metadata for a Feature-only top-level collection. The already inspected Interface 2 report descriptor remains the source of truth for its 64-byte Feature report.
+- Selector now uses the exact VID/PID returned by `hid.enumerate(3151, 502D)`, requires `interface_number == 2`, and a nonempty HID path. It still refuses missing or ambiguous interface matches.
+- Usage metadata is retained in diagnostic output instead of being a hard filter.
+- This does not broaden selection to keyboard input interfaces and does not add any configuration commands.
+
+Next user test: update/reinstall, click Identify again, and share the full result. If interface 2 still cannot be selected, the updated error will show the interface number / usage metadata hidapi actually reports. If it selects but cannot open, then investigate permissions separately. No command has yet been sent to the keyboard.
