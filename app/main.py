@@ -173,6 +173,7 @@ class Main(QMainWindow):
             self.latest_samples.clear()
             self.stream_timer.start()
             self.stream_button.setText("Stop Analog Monitor")
+            self.identify_button.setEnabled(False)
             self.analog_status.setText("Analog monitor: running; press and release keys to view raw travel.")
             self.log.append("\n\nANALOG MONITOR: started (temporary; no settings are saved)")
         except AnalogStreamError as exc:
@@ -199,6 +200,7 @@ class Main(QMainWindow):
             except Exception:
                 pass
             self.stream_button.setText("Start Analog Monitor")
+            self.identify_button.setEnabled(True)
             self.analog_status.setText("Analog monitor: stopped after input error")
             self.log.append(f"\n\nANALOG MONITOR ERROR: {exc}")
 
@@ -213,6 +215,7 @@ class Main(QMainWindow):
             self.log.append(f"\n\nANALOG MONITOR STOP WARNING: {exc}")
         finally:
             self.stream_button.setText("Start Analog Monitor")
+            self.identify_button.setEnabled(True)
 
     def closeEvent(self, event):
         self.stream_timer.stop()
