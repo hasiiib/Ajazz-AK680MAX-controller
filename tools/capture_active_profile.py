@@ -68,7 +68,7 @@ def capture_once(
         raw = device.get_feature_report(0, 65)
         if not isinstance(raw, (bytes, bytearray)):
             raise CaptureError("HID Feature read did not return bytes; no retry attempted.")
-        return bytes(raw)
+        return bytes(raw), sent
     except CaptureError:
         raise
     except Exception as exc:
@@ -105,12 +105,13 @@ def main(argv=None) -> int:
         return 2
 
     try:
-        raw = capture_once(hid)
+        raw, sent = capture_once(hid)
     except CaptureError as exc:
         print(f"Capture stopped: {exc}", file=sys.stderr)
         return 1
 
     assessment = assess_capture("active-profile", raw)
+    print(f"SET_FEATURE send return: {sent}/65 bytes")
     print(f"Raw response length: {len(raw)} bytes")
     print(f"Raw response HEX: {raw.hex(' ').upper()}")
     print(f"Offline assessment: {assessment.summary}")
