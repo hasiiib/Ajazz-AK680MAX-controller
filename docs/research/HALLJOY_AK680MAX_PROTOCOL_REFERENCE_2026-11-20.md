@@ -96,3 +96,10 @@ The Universal Analog Plugin repository's issue #23 and its Wooting SDK integrati
 - Live board ID from our keyboard: not yet read.
 - HallJoy-style report ID 5 analog stream on our keyboard: not yet read.
 - Any settings/configuration write: not implemented and not sent.
+
+
+## Live Linux hardware confirmation (2026-11-20)
+
+The project's Ubuntu GUI has now completed its read-only Identify transaction against the user's physical keyboard. The application reports board-reported device ID `2255`. Its HIDAPI inventory simultaneously confirms interface 2 (`1-1:1.2`, Feature-control candidate) and interface 1 (`1-1:1.1`, Report ID 5 analog-input candidate) share USB parent `1-1`; the app's pairing check reports PASS. This validates the board 2255 / VID:PID `3151:502d` association for this physical unit, rather than relying solely on the public model table.
+
+This live test does not yet validate firmware metadata, travel units, analog streaming, or any writable settings. No `0x1B` stream command or configuration write has been sent. Keep the next protocol step GET-only and validate exact response bytes before adding any further feature.
