@@ -70,9 +70,15 @@ def _path_text(path: object) -> str:
 def _sysfs_details(hid_path: str) -> dict[str, object]:
     """Resolve a /dev/hidraw node to its USB interface and physical USB parent."""
     node = os.path.basename(hid_path)
-    if not node.startswith("hidraw"):
+    # hidapi on Linux commonly returns the USB interface path itself
+    # (for example "1-1:1.2"), not /dev/hidrawN. Resolve that path through
+    # /sys/bus/usb/devices. Also retain support for hidraw-style paths.
+    if node.startswith("hidraw"):
+        link = f"/sys/class/hidraw/{node}/device"
+    elif re.fullmatch(r"[^/]+:1\.\d+", node):
+        link = f"/sys/bus/usb/devices/{node}"
+    else:
         return {"sysfs_path": "", "usb_parent": "", "sysfs_interface": None}
-    link = f"/sys/class/hidraw/{node}/device"
     try:
         resolved = os.path.realpath(link)
     except OSError:
@@ -82,7 +88,7 @@ def _sysfs_details(hid_path: str) -> dict[str, object]:
         return {"sysfs_path": resolved, "usb_parent": "", "sysfs_interface": None}
     return {
         "sysfs_path": resolved,
-        "usb_parent": match.group(1),
+        "usb_parent": os.path.basename(os.path.dirname(resolved)),
         "sysfs_interface": int(match.group(2)),
     }
 
