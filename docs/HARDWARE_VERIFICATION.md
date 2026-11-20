@@ -7,7 +7,7 @@ This plan is a gate for validating the read-only configuration protocol on the p
 - USB enumeration and HID interface pairing have been observed on the target Ubuntu system.
 - A user-initiated, read-only Identify (0x8F) exchange returned board ID 2255.
 - The active-profile `0x84` GET has now been physically captured once on board 2255: a 65-byte hidapi result with leading report-ID `00`, opcode `84`, active-profile index `00`, and the parser accepted it. The request send returned 65/65 bytes.
-- The `0x8A` keymap and `0xE5` magnetic-settings builders/parsers currently have synthetic unit-test coverage only; neither has a physical capture on this board.
+- The `0x8A` keymap page-0 GET has now been physically captured once on board 2255: a 65-byte hidapi result with leading report-ID `00`; the parser accepted 16 opaque four-byte entries for profile 0, sublayer 0, page 0. The `0xE5` magnetic-settings GET remains unverified on this board.
 - The reviewed RongYuan protocol reference describes 0x84 as an opcode-echoing GET, while 0x8A keymap and 0xE5 magnetic page GETs return raw 64-byte pages without an opcode echo. This is family-level reference evidence, not a physical capture from board 2255.
 - The analog stream is separate and also remains unverified on physical hardware.
 - The board-specific evidence audit is in [BOARD_2255_PROTOCOL_EVIDENCE.md](BOARD_2255_PROTOCOL_EVIDENCE.md). It records the upstream `0x8A` byte-4 ambiguity and distinguishes `0xE5` firmware-image evidence and `0x1B` observations on other devices from target-board hardware evidence. The gen2 family label alone does not clear this gate.
@@ -28,7 +28,7 @@ Before a physical configuration-read test is attempted:
 | Stage | Request | Initial scope | Acceptance evidence |
 |---|---|---|---|
 | 1 | Active profile 0x84 GET | <strong>Physically verified once</strong> | Captured 65-byte raw result, 65/65-byte send, leading report-ID `00`, opcode `84`, profile index `0`; no retry |
-| 2 | Keymap 0x8A GET | One profile, sublayer 0, page 0 | Exact raw report bytes and confirmed response framing; do not interpret the four-byte entries |
+| 2 | Keymap 0x8A GET | **Physically verified once**: profile 0, wire byte 4 = 0, page 0 | Captured 65-byte raw result, 65/65-byte send, leading report-ID `00`; 16 opaque entries accepted; no keycode interpretation |
 | 3 | Magnetic 0xE5 GET | One supported read-only sub-operation, page 0 | Exact raw report bytes and confirmed response framing; retain values as raw protocol units |
 
 ### Stage 1 request envelope (0x84 only)
@@ -73,6 +73,31 @@ This command is not authorized by the earlier `0x84` confirmation. Run it only a
 ```
 
 A fresh Identify failure, wrong board ID, ambiguous interface, partial send, read failure, or malformed response stops the helper. Do not automatically rerun after an ambiguous result.
+
+### Stage 2 physical keymap capture record
+
+- Result: accepted, one user-initiated capture on board 2255.
+- `send_feature_report`: `65/65` bytes.
+- `get_feature_report`: 65 raw bytes.
+- Raw response: `00 00 00 00 00 00 00 29 00 00 00 2B 00 00 00 39 00 00 00 E1 00 00 00 E0 00 00 00 00 00 00 00 1E 00 00 00 14 00 00 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1F 00 00 00 1A 00 00 00 16 00`.
+- Framing: leading report-ID `00`; normalized payload length 64 bytes; no opcode-echo assumption.
+- Parser: accepted profile 0, sublayer 0, page 0, first slot 0, 16 opaque four-byte entries.
+- Wire byte 4 remains semantically unresolved because this probe used zero.
+- No retry; no capture file or serial/device path was recorded.
+
+### Stage 3 magnetic capture helper (0xE5)
+
+The repository includes `app/capture_magnetic_page.py` as a separate, explicitly invoked one-shot read-only probe. It performs a fresh Identify on the same interface-2 handle, confirms board ID 2255, then sends exactly one `0xE5` GET for magnetic sub-operation 0, page 0. It reads one Feature response, closes the handle, and prints the exact raw bytes and offline assessment. It does not send any magnetic write, retry, save a capture, or print a serial number or device path. The first probe is deliberately limited to one sub-operation/page; a successful page does not prove other columns or pages exist on this firmware.
+
+The helper requires its own explicit confirmation flag:
+
+```bash
+~/.local/opt/ak680-controller/.venv/bin/python \\
+  ~/.local/opt/ak680-controller/capture_magnetic_page.py \\
+  --confirm-one-read-only-0xe5
+```
+
+The user's explicit authorization for one read-only `0xE5` GET has been granted. Run this helper once; if it reports a partial send, read failure, malformed response, or parser rejection, stop and review the output before any further hardware command. Never automatically retry.
 
 ### Stage 1 capture worksheet
 
