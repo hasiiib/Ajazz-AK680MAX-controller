@@ -69,7 +69,7 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **117 tests**, including strict response-to-snapshot integration, snapshot validation, and read-only Qt viewer coverage. CI installs the application dependencies and runs the Qt tests in offscreen mode. Latest completed run: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44776410764.
+GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **125 tests**, including strict response-to-snapshot integration, snapshot validation, and read-only Qt viewer coverage. CI installs the application dependencies and runs the Qt tests in offscreen mode. Latest completed run: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44776410764.
 
 https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 
@@ -79,3 +79,6 @@ https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 - [Development roadmap](ROADMAP.md)
 
 No unique keyboard serial number is stored in this repository.
+
+
+Hardware response verification is still gated on physical board-2255 captures. The offline capture assessor is available in `app/hardware_verification.py`; see [the verification plan](docs/HARDWARE_VERIFICATION.md).
