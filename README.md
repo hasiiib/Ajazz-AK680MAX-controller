@@ -61,3 +61,10 @@ python3 -m unittest discover -s tests -v
 ```
 
 GitHub Actions also runs these tests on pushes and pull requests.
+
+
+## Optional HID permissions (one-time setup)
+
+The app needs access to the vendor Feature collection on USB interface 2 to perform the documented read-only Identify request. A narrowly scoped udev rule is provided at `udev/70-ak680-controller.rules`. It matches only USB ID `3151:502d`, interface number `02`, and adds the `uaccess` tag for the active desktop user. It does not grant access to the keyboard's other HID interfaces.
+
+To install the rule, create `/etc/udev/rules.d/70-ak680-controller.rules` with the contents of that repository file, reload udev rules, then unplug and reconnect the keyboard. Do not run the GUI with sudo. The rule has not been tested on the target machine until the user verifies access after reconnecting.
