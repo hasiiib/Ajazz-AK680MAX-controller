@@ -20,10 +20,21 @@ REPORT_LENGTH = 64
 IDENTIFY_OPCODE = 0x8F
 EXCHANGE_GAP_SECONDS = 0.010
 IDENTIFY_TIMEOUT_SECONDS = 0.100
+ANALOG_REPORT_ID = 0x05
+ANALOG_STREAM_OPCODE = 0x1B
+ANALOG_REPORT_LENGTH = 32
 
 
 class IdentifyError(RuntimeError):
     """A safe identification attempt could not be completed."""
+
+
+@dataclass(frozen=True)
+class AnalogSample:
+    """One validated key-travel sample from the vendor input report."""
+
+    slot: int
+    raw_travel: int
 
 
 @dataclass(frozen=True)
@@ -33,6 +44,20 @@ class IdentifyResult:
     device_id: int
     firmware_revision: str | None
     raw_reply: bytes
+
+
+def parse_analog_report(report: bytes | bytearray) -> AnalogSample | None:
+    """Parse a 32-byte report-ID-5 analog sample; never performs I/O."""
+    data = bytes(report)
+    if len(data) != ANALOG_REPORT_LENGTH:
+        return None
+    if data[0] != ANALOG_REPORT_ID or data[1] != ANALOG_STREAM_OPCODE:
+        return None
+    slot = data[4]
+    if slot > 127:
+        return None
+    raw_travel = int.from_bytes(data[2:4], "little")
+    return AnalogSample(slot=slot, raw_travel=raw_travel)
 
 
 def parse_gen2_firmware_revision(reply: bytes | bytearray) -> str | None:
