@@ -41,4 +41,4 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest completed CI run passed **90 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44769538037. Snapshot assembly rejects forged page objects, invalid metadata, malformed mapping keys, and non-byte payloads; HID parsers fail safely on non-byte inputs. Automatic connection refresh is metadata-only and does not issue Identify or configuration commands. Physical analog stream validation and read-only configuration response validation remain hardware gates.
+The latest completed CI run passed **93 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44770039431. Snapshot assembly rejects forged page objects, invalid metadata, malformed mapping keys, and non-byte payloads; connection-state classification fails closed on malformed HID inventory metadata; diagnostic export redacts additional USB serial-field formats. Automatic connection refresh remains metadata-only. Physical analog stream validation and read-only configuration response validation remain hardware gates.
