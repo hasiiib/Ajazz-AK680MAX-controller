@@ -88,7 +88,7 @@ def _sysfs_details(hid_path: str) -> dict[str, object]:
         return {"sysfs_path": resolved, "usb_parent": "", "sysfs_interface": None}
     return {
         "sysfs_path": resolved,
-        "usb_parent": os.path.basename(os.path.dirname(resolved)),
+        "usb_parent": match.group(1),
         "sysfs_interface": int(match.group(2)),
     }
 
