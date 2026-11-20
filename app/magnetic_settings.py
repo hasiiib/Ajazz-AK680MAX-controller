@@ -1,8 +1,9 @@
 """Strict, read-only parsers for RongYuan gen2 magnetic-setting pages.
 
-The 0xE5 request layout is documented for gen2 firmware, but its behavior
-has not yet been physically verified on board 2255. This module deliberately
-contains no HID I/O and no 0x65 write command.
+The 0xE5 request layout is documented for gen2 firmware and sub-operation 0/page 0
+has one accepted physical capture on board 2255. Other sub-operations, pages, and
+value semantics remain unverified. This module deliberately contains no HID I/O
+and no 0x65 write command.
 """
 from __future__ import annotations
 
