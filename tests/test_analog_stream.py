@@ -170,6 +170,45 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertEqual(device.open_calls, 0)
 
 
+    def test_partial_enable_send_triggers_best_effort_stop_and_cleanup(self):
+        class FakeDevice:
+            def __init__(self, partial_first=False):
+                self.partial_first = partial_first
+                self.sent = []
+                self.closed = False
+            def open_path(self, path):
+                pass
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                if self.partial_first and len(self.sent) == 1:
+                    return len(report) - 1
+                return len(report)
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice(partial_first=True)
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaisesRegex(AnalogStreamError, "incomplete analog stream"):
+                session.start()
+
+        self.assertFalse(session.active)
+        self.assertEqual(len(control.sent), 2)
+        self.assertEqual(control.sent[0][2], 1)
+        self.assertEqual(control.sent[1][2], 0)
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+
     def test_input_open_failure_closes_both_handles_without_enabling_stream(self):
         class FakeDevice:
             def __init__(self, fail_open=False):
