@@ -20,22 +20,24 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a temporary stop is attempted best-effort.
 - Privacy-filtered diagnostic export with serial-number redaction.
 - User-local staged installer with rollback protection.
+- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
+- Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
 - Automated unit tests and GitHub Actions CI.
 
 ## Not yet verified on the physical keyboard
 - Live analog stream start, travel reports, hold/release behavior, and physical confirmation of disconnect recovery.
 - Raw travel units and calibrated travel range.
-- Live magnetic settings, keymap, and active-profile reads.
+- Live magnetic settings, keymap, and active-profile reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O.
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
 
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated and temporary.
-- The magnetic, keymap, and active-profile modules are pure parser/request-builder code only; they are not connected to HID or the GUI.
+- The magnetic, keymap, active-profile, and snapshot modules are pure framing/validation code only; they are not connected to HID or the GUI.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest CI run passed **74 tests** on commit `ff80f8990a09933235478fa1a801bbe9abccfb3a`, including analog-monitor disconnect recovery, GUI cleanup, and log-format regression checks: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44766230771.
+The latest CI run passed **81 tests** on commit `8e228d6028c6a2c8e42e651c4c984465121c2d8d`, including seven new snapshot assembly and fail-closed validation tests: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44766978634.
