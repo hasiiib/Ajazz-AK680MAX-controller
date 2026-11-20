@@ -56,7 +56,7 @@ The upstream protocol source distinguishes family-level GET evidence from firmwa
 
 ### Analog transport caveat
 
-The current Linux implementation sends its temporary `0x1B` control packet using hidapi `send_feature_report` on interface 2 and reads Report ID 5 on interface 1. The third-party protocol notes describe the travel sender in terms of a USB input endpoint and report ID 5 on a vendor input collection. No board-2255 capture has established that the current host transport and report framing match this unit. This is an explicit physical-validation blocker, not a claim of compatibility.
+The current Linux implementation sends its temporary `0x1B` control packet using hidapi `send_feature_report` on interface 2 and reads Report ID 5 on interface 1. The third-party protocol notes describe the travel sender in terms of a USB input endpoint and report ID 5 on a vendor input collection. Before any experimental stream attempt, the application now re-identifies the exact opened control handle that would receive the command, preventing a separate identify/open cycle from silently authorizing another device. This is an identity/race guard only: no board-2255 capture has established that the `0x1B` host transport, report framing, stop behavior, or travel scale match this unit. This is an explicit physical-validation blocker, not a claim of compatibility.
 
 ## Stock firmware versus host software or custom firmware
 
@@ -82,7 +82,7 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 - `capture_keymap_page.py` is a separate, opt-in one-shot `0x8A` page-0 probe. It is not run by the GUI, installer, or background refresh, and requires its own explicit confirmation flag. One target-board capture was accepted as 16 opaque four-byte entries; its initial wire byte 4 is zero, so it cannot resolve the host-layer/sub-layer ambiguity.
 - `capture_magnetic_page.py` is a separate, opt-in one-shot `0xE5` sub-operation-0/page-0 probe. It requires its own confirmation flag, performs a fresh same-handle Identify, and never retries or sends a setting write; it has not yet been run on the target board.
 - `snapshot_panel.py` and `snapshot_view.py` render only a validated in-memory snapshot and do not perform HID I/O.
-- The Analog Monitor is opt-in and intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility and behavior are unverified on board 2255. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
+- The Analog Monitor is opt-in and experimental. Before an attempt it re-identifies the exact opened control handle as board 2255, but the 0x1B command, transport, volatility, stop behavior, Report ID 5 framing, and travel scale remain unverified on board 2255. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
 
 ## Sources reviewed
 
