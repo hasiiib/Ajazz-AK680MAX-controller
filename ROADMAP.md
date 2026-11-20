@@ -218,3 +218,18 @@ The implementation does not send GET 0x80, stream opcode 0x1B, or any configurat
 - [ ] Determine travel units / calibration from verified firmware metadata and measured samples.
 
 Parser implementation does not send or enable the stream. No keyboard state change has been made.
+
+
+## Opt-in analog monitor implementation (2026-11-20)
+
+- [x] Add guarded analog session: fresh board-2255 Identify and unique interface pairing.
+- [x] Add volatile 0x1B start / best-effort stop with Bit7 checksum.
+- [x] Open interface 1 for nonblocking Report ID 5 input and interface 2 for Feature control.
+- [x] Add 32-byte frame parser and per-slot raw travel state.
+- [x] Add GUI Start / Stop control, periodic polling, and app-exit cleanup.
+- [x] Add tests for packet checksum, identity gate, pairing, polling, and stop-failure cleanup.
+- [ ] Run the updated app on the physical keyboard and verify reports while pressing / holding / releasing keys.
+- [ ] Confirm stop disables the stream and that reconnect / app-close cleanup behaves safely.
+- [ ] Establish firmware-specific travel units and full-scale range before converting raw counts to millimetres.
+
+The implementation is opt-in; no stream command has been sent to the user's keyboard by this development work. No persistent keyboard settings have been changed.
