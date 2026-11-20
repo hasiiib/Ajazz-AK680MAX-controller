@@ -35,7 +35,7 @@ Read-only protocol groundwork includes pure request builders/parsers for gen2 ma
 
 The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
 
-USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands. If the analog monitor is active and its paired input/control interfaces disappear, the app stops polling, attempts a best-effort stream-clear command, closes both handles, clears stale samples, and restores the controls. Read errors and manual stops also clear stale samples; each poll batch is bounded. These safeguards do not establish the 0x1B effect on board 2255.
+USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands. If the analog monitor is active and its paired input/control interfaces disappear, the app stops polling, attempts a best-effort stream-clear command, closes both handles, clears stale samples, and restores the controls. Read errors and manual stops also clear stale samples; each poll batch is bounded. The session now performs read-only Identify on the exact opened control handle before any experimental 0x1B attempt, avoiding a separate identify/open race. This identity guard does not establish the 0x1B effect on board 2255.
 
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. Persistent configuration writes remain disabled pending exact stock board-2255 protocol verification and explicit user authorization. The research note also excludes incompatible 3151:502C and 0C45:80B2 protocols.
 
@@ -69,7 +69,7 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **173 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, read-only Qt viewer coverage, safe diagnostics for unusable HID Feature responses, and opt-in keymap/magnetic capture helpers. CI installs the application dependencies and runs the Qt tests in offscreen mode. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
+GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **174 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, read-only Qt viewer coverage, safe diagnostics for unusable HID Feature responses, and opt-in keymap/magnetic capture helpers. CI installs the application dependencies and runs the Qt tests in offscreen mode. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
 
 https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 
