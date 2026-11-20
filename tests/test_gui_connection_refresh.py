@@ -21,6 +21,12 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertEqual(argument_names, ["inventory", "inventory_error"])
         self.assertEqual(len(function.args.defaults), 2)
 
+    def test_inventory_report_uses_real_newlines_not_literal_escape_text(self):
+        start = self.source.index("def _hid_inventory_text")
+        end = self.source.index("\\n\\n\\ndef collect", start)
+        formatter = self.source[start:end]
+        self.assertNotIn("\\\\n", formatter)
+
     def test_scan_reuses_the_inventory_instead_of_enumerating_twice(self):
         self.assertIn(
             "self.log.setPlainText(collect(inventory, inventory_error))",
