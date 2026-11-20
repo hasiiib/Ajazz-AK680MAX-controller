@@ -270,3 +270,12 @@ Next handoff:
 2. User updates the app and runs Scan USB / HID; review the HIDAPI COLLECTIONS and PAIRING CHECK output.
 3. User clicks Identify once and shares the exact result. If it opens but times out, compare the failure with the 10 ms / 100 ms transaction behavior; if open is denied, inspect udev ancestry before adding any rule.
 4. Do not start analog streaming until the live board ID is validated and a stream cleanup design is reviewed.
+
+
+## GUI startup regression fix (2026-11-20)
+
+The user's first launch of the HID-inventory build exposed a formatting-key mismatch in the new collection diagnostics: the display template expected `interface`, while the inventory records expose `interface_number`. This caused a `KeyError` during startup before the window could finish initializing.
+
+- Fixed the display template to use the actual `interface_number` field.
+- Fix commit: 3f1da8b5c9da7ad29a4b366289106953795765f8
+- The fix is committed, but the user's updated installation still needs to be launched to verify the GUI starts and the scan output renders.
