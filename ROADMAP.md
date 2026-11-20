@@ -181,3 +181,14 @@ No keyboard reports or settings changes were part of the open test. Continue wit
 - [ ] Design and separately authorize analog stream testing; do not send stream enable (`0x1B, 1`) yet.
 
 The board ID is no longer an assumption: it came from the keyboard's successful read-only Identify response. No configuration writes or setting changes have been performed.
+
+
+## gen2 firmware metadata parsing correction (2026-11-20)
+
+- [x] Confirm board ID 2255 and gen2 family from the physical keyboard.
+- [x] Review protocol reference: wired gen2 GET 0x80 returns zeros; firmware revision is carried in Identify reply bytes 7–8 as `(reply[8] << 8) | reply[7]`.
+- [ ] Extend Identify parsing to preserve the validated reply and expose the revision metadata without issuing another HID command.
+- [ ] Add tests for revision byte order, short/invalid replies, and display formatting.
+- [ ] Confirm the meaning of Identify byte 9 before exposing it.
+
+Do not send 0x80 for the wired gen2 firmware version. Keep all other configuration and stream operations disabled.
