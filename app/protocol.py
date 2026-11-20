@@ -1,19 +1,24 @@
-"""Conservative, read-only HID identification for the AJAZZ AK680 MAX.
+""""Conservative, read-only HID identification for the AJAZZ AK680 MAX.
 
 Only the documented 0x8F Identify GET is sent. No configuration opcodes exist
 in this module.
 """
 from __future__ import annotations
 
+import os
+import re
 import time
 
 VENDOR_ID = 0x3151
 PRODUCT_ID = 0x502D
 SETTINGS_INTERFACE = 2
+ANALOG_INPUT_INTERFACE = 1
 USAGE_PAGE = 0xFFFF
 USAGE = 0x0002
 REPORT_LENGTH = 64
 IDENTIFY_OPCODE = 0x8F
+EXCHANGE_GAP_SECONDS = 0.010
+IDENTIFY_TIMEOUT_SECONDS = 0.100
 
 
 class IdentifyError(RuntimeError):
@@ -21,7 +26,7 @@ class IdentifyError(RuntimeError):
 
 
 def identify_packet() -> bytes:
-    """Build the documented 64-byte 0x8F GET packet with Bit7 checksum."""
+    """Build the documented 64-byte 0x8F GET payload with Bit7 checksum."""
     packet = bytearray(REPORT_LENGTH)
     packet[0] = IDENTIFY_OPCODE
     packet[7] = (0xFF - (sum(packet[:7]) & 0xFF)) & 0xFF
@@ -55,10 +60,127 @@ def _feature_payload(raw: bytes | bytearray) -> bytes:
     )
 
 
-def identify_keyboard() -> int:
-    """Identify the exact board through its verified vendor Feature collection.
+def _path_text(path: object) -> str:
+    """Convert hidapi's platform-specific path value to displayable text."""
+    if isinstance(path, bytes):
+        return os.fsdecode(path)
+    return str(path) if path is not None else ""
 
-    This performs a GET-only handshake. The device must be connected by USB,
+
+def _sysfs_details(hid_path: str) -> dict[str, object]:
+    """Resolve a /dev/hidraw node to its USB interface and physical USB parent."""
+    node = os.path.basename(hid_path)
+    if not node.startswith("hidraw"):
+        return {"sysfs_path": "", "usb_parent": "", "sysfs_interface": None}
+    link = f"/sys/class/hidraw/{node}/device"
+    try:
+        resolved = os.path.realpath(link)
+    except OSError:
+        resolved = ""
+    match = re.search(r"(?:^|/)([^/]+):1\.(\d+)(?:/|$)", resolved)
+    if not match:
+        return {"sysfs_path": resolved, "usb_parent": "", "sysfs_interface": None}
+    return {
+        "sysfs_path": resolved,
+        "usb_parent": match.group(1),
+        "sysfs_interface": int(match.group(2)),
+    }
+
+
+def inspect_keyboard_interfaces(hid_module=None) -> list[dict[str, object]]:
+    """Return HID collection metadata and Linux sysfs pairing evidence.
+
+    The report descriptors previously inspected for this exact keyboard show
+    interface 2 as the vendor Feature control collection and interface 1 as
+    the collection carrying vendor input Report ID 5. This function does not
+    open either node or send any report.
+    """
+    if hid_module is None:
+        try:
+            import hid as hid_module
+        except ImportError:
+            return []
+    try:
+        devices = hid_module.enumerate(VENDOR_ID, PRODUCT_ID)
+    except Exception as exc:
+        raise IdentifyError(f"Could not enumerate HID devices: {exc}") from exc
+
+    inventory = []
+    for item in devices:
+        path = _path_text(item.get("path"))
+        details = _sysfs_details(path)
+        interface = item.get("interface_number")
+        if not isinstance(interface, int):
+            interface = details["sysfs_interface"]
+        if interface == SETTINGS_INTERFACE:
+            role = "Feature control candidate (descriptor-confirmed interface 2)"
+        elif interface == ANALOG_INPUT_INTERFACE:
+            role = "Analog input candidate (descriptor-confirmed Report ID 5 on interface 1)"
+        else:
+            role = "Other HID collection"
+        inventory.append({
+            "interface_number": interface,
+            "usage_page": item.get("usage_page"),
+            "usage": item.get("usage"),
+            "path": path,
+            "usb_parent": details["usb_parent"],
+            "sysfs_path": details["sysfs_path"],
+            "role": role,
+        })
+    return inventory
+
+
+def paired_keyboard_interfaces(inventory: list[dict[str, object]]) -> tuple[dict, dict] | None:
+    """Return the unique control/input pair only when sysfs proves same USB parent."""
+    controls = [x for x in inventory if x.get("interface_number") == SETTINGS_INTERFACE]
+    inputs = [x for x in inventory if x.get("interface_number") == ANALOG_INPUT_INTERFACE]
+    if len(controls) != 1 or len(inputs) != 1:
+        return None
+    parent = controls[0].get("usb_parent")
+    if not parent or parent != inputs[0].get("usb_parent"):
+        return None
+    return controls[0], inputs[0]
+
+
+def identify_exchange(device, sleep=time.sleep) -> int:
+    """Send one Identify GET, then poll its Feature reply at 10 ms intervals.
+
+    HallJoy's reviewed RongYuan transport sends a command once, waits 10 ms
+    before each GET_FEATURE poll, and allows up to 100 ms for a valid reply.
+    Re-sending the command on every poll is deliberately avoided.
+    """
+    request = identify_packet()
+    wire_request = bytes([0]) + request
+    try:
+        sent = device.send_feature_report(wire_request)
+    except Exception as exc:
+        raise IdentifyError(f"Could not send the read-only Identify request: {exc}") from exc
+    if sent is not None and sent <= 0:
+        raise IdentifyError("hidapi did not send the Feature report.")
+
+    last_reply_note = "The keyboard did not return a valid 0x8F Identify reply."
+    poll_count = int(IDENTIFY_TIMEOUT_SECONDS / EXCHANGE_GAP_SECONDS)
+    for _ in range(poll_count):
+        sleep(EXCHANGE_GAP_SECONDS)
+        try:
+            raw = device.get_feature_report(0, REPORT_LENGTH + 1)
+        except Exception as exc:
+            raise IdentifyError(f"HID Feature read failed: {exc}") from exc
+        reply = _feature_payload(raw)
+        device_id = parse_device_id(reply)
+        if device_id is not None:
+            return device_id
+        last_reply_note = (
+            "The Feature report was received, but its contents were not a valid "
+            "0x8F reply (or the device refused the request)."
+        )
+    raise IdentifyError(last_reply_note)
+
+
+def identify_keyboard() -> int:
+    """Identify the board through its verified vendor Feature collection.
+
+    This performs one GET-only handshake. The device must be connected by USB,
     and the current user must have permission to open the matching HID node.
     """
     try:
@@ -68,38 +190,25 @@ def identify_keyboard() -> int:
             "The hidapi Python package is missing. Reinstall the application."
         ) from exc
 
-    try:
-        devices = hid.enumerate(VENDOR_ID, PRODUCT_ID)
-    except Exception as exc:
-        raise IdentifyError(f"Could not enumerate HID devices: {exc}") from exc
-
-    # Linux hidapi may report Usage Page / Usage as zero for a Feature-only
-    # top-level collection even though the kernel HID descriptor exposes it.
-    # We already inspected this keyboard's Interface 2 descriptor: it is the
-    # sole 64-byte Feature-report collection (0xFFFF / 0x0002). Therefore use
-    # the stable USB interface number plus VID/PID as the selector, and log
-    # the hidapi usage fields for diagnostics rather than rejecting it.
+    inventory = inspect_keyboard_interfaces(hid)
     candidates = [
-        item for item in devices
-        if item.get("interface_number") == SETTINGS_INTERFACE
-        and item.get("path")
+        item for item in inventory
+        if item.get("interface_number") == SETTINGS_INTERFACE and item.get("path")
     ]
     if not candidates:
-        details = []
-        for item in devices:
-            details.append(
-                "interface={interface!r}, usage_page={page!r}, usage={usage!r}, "
-                "path={path!r}".format(
-                    interface=item.get("interface_number"),
-                    page=item.get("usage_page"),
-                    usage=item.get("usage"),
-                    path=item.get("path"),
-                )
+        details = "; ".join(
+            "interface={interface!r}, usage_page={page!r}, usage={usage!r}, "
+            "path={path!r}, sysfs_parent={parent!r}".format(
+                interface=item.get("interface_number"),
+                page=item.get("usage_page"),
+                usage=item.get("usage"),
+                path=item.get("path"),
+                parent=item.get("usb_parent"),
             )
-        detail_text = "; ".join(details) if details else "hidapi returned no matching VID/PID entries"
+            for item in inventory
+        ) or "hidapi returned no matching VID/PID entries"
         raise IdentifyError(
-            "Could not select USB interface 2. hidapi enumeration: "
-            + detail_text
+            "Could not select USB interface 2. hidapi enumeration: " + details
         )
     if len(candidates) != 1:
         raise IdentifyError(
@@ -107,19 +216,15 @@ def identify_keyboard() -> int:
             "an ambiguous device selection."
         )
 
-    # If hidapi does expose collection metadata, make it visible in the
-    # eventual error message; the known interface-2 report descriptor is the
-    # authority for this particular board revision.
     selected = candidates[0]
     usage_note = (
         f" (hidapi usage_page={selected.get('usage_page')!r}, "
         f"usage={selected.get('usage')!r})"
     )
-
     device = hid.device()
     try:
         try:
-            device.open_path(candidates[0]["path"])
+            device.open_path(os.fsencode(selected["path"]))
         except Exception as exc:
             raise IdentifyError(
                 "The keyboard was found, but this user cannot open its HID "
@@ -128,32 +233,10 @@ def identify_keyboard() -> int:
                 "we will add a narrowly scoped rule after this interface "
                 "check is complete."
             ) from exc
-
-        request = identify_packet()
-        # Match the documented hidapi convention: leading zero is the
-        # unnumbered report ID; the following 64 bytes are the Feature data.
-        wire_request = bytes([0]) + request
-        last_error = "The keyboard did not answer the Identify request." + usage_note
-        for attempt in range(3):
-            try:
-                sent = device.send_feature_report(wire_request)
-                if sent is not None and sent <= 0:
-                    raise IdentifyError("hidapi did not send the Feature report.")
-                time.sleep(0.010 * (attempt + 1))
-                raw = device.get_feature_report(0, REPORT_LENGTH + 1)
-                reply = _feature_payload(raw)
-                device_id = parse_device_id(reply)
-                if device_id is not None:
-                    return device_id
-                last_error = (
-                    "The Feature report arrived, but it was not a valid "
-                    "0x8F Identify reply."
-                )
-            except IdentifyError:
-                raise
-            except Exception as exc:
-                last_error = f"HID Identify transaction failed: {exc}"
-        raise IdentifyError(last_error)
+        try:
+            return identify_exchange(device)
+        except IdentifyError as exc:
+            raise IdentifyError(str(exc) + usage_note) from exc
     finally:
         try:
             device.close()
