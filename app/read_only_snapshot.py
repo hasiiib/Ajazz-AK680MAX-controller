@@ -35,6 +35,16 @@ class KeymapLayerSnapshot:
     sublayer: int
     entries: tuple[bytes, ...]
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.profile, int) or isinstance(self.profile, bool) or not 0 <= self.profile < 4:
+            raise SnapshotValidationError("Keymap snapshot profile must be an integer from 0 through 3.")
+        if not isinstance(self.sublayer, int) or isinstance(self.sublayer, bool) or not 0 <= self.sublayer < 4:
+            raise SnapshotValidationError("Keymap snapshot sublayer must be an integer from 0 through 3.")
+        if not isinstance(self.entries, tuple) or len(self.entries) != 128 or any(
+            not isinstance(entry, bytes) or len(entry) != 4 for entry in self.entries
+        ):
+            raise SnapshotValidationError("Keymap snapshot must contain 128 immutable four-byte entries.")
+
 
 @dataclass(frozen=True)
 class MagneticColumnSnapshot:
@@ -44,6 +54,33 @@ class MagneticColumnSnapshot:
     values: tuple[int | tuple[int, int, int, int], ...]
     value_width: int
 
+    def __post_init__(self) -> None:
+        try:
+            _page_count(self.subop)
+        except MagneticSettingsProtocolError as exc:
+            raise SnapshotValidationError(str(exc)) from exc
+        expected_width = 4 if self.subop == 10 else (2 if self.subop in {0, 1, 2, 3, 4, 6} else 1)
+        if not isinstance(self.value_width, int) or isinstance(self.value_width, bool) or self.value_width != expected_width:
+            raise SnapshotValidationError("Magnetic snapshot value width does not match its sub-operation.")
+        if not isinstance(self.values, tuple) or len(self.values) != 128:
+            raise SnapshotValidationError("Magnetic snapshot must contain exactly 128 immutable values.")
+        if expected_width == 4:
+            valid = all(
+                isinstance(value, tuple) and len(value) == 4 and all(
+                    isinstance(part, int) and not isinstance(part, bool) and 0 <= part <= 255
+                    for part in value
+                )
+                for value in self.values
+            )
+        else:
+            limit = 1 << (8 * expected_width)
+            valid = all(
+                isinstance(value, int) and not isinstance(value, bool) and 0 <= value < limit
+                for value in self.values
+            )
+        if not valid:
+            raise SnapshotValidationError("Magnetic snapshot contains values outside its protocol shape.")
+
 
 @dataclass(frozen=True)
 class ReadOnlyConfigurationSnapshot:
@@ -52,6 +89,24 @@ class ReadOnlyConfigurationSnapshot:
     active_profile: int
     keymap_layers: tuple[KeymapLayerSnapshot, ...]
     magnetic_columns: tuple[MagneticColumnSnapshot, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.active_profile, int) or isinstance(self.active_profile, bool) or not 0 <= self.active_profile < 4:
+            raise SnapshotValidationError("Snapshot active profile must be an integer from 0 through 3.")
+        if not isinstance(self.keymap_layers, tuple) or any(
+            not isinstance(layer, KeymapLayerSnapshot) for layer in self.keymap_layers
+        ):
+            raise SnapshotValidationError("Snapshot keymap layers must be an immutable tuple of validated layers.")
+        if not self.keymap_layers or len({layer.sublayer for layer in self.keymap_layers}) != len(self.keymap_layers):
+            raise SnapshotValidationError("Snapshot keymap layers must be non-empty and have unique sublayers.")
+        if any(layer.profile != self.active_profile for layer in self.keymap_layers):
+            raise SnapshotValidationError("Snapshot keymap layers must match the active profile.")
+        if not isinstance(self.magnetic_columns, tuple) or any(
+            not isinstance(column, MagneticColumnSnapshot) for column in self.magnetic_columns
+        ):
+            raise SnapshotValidationError("Snapshot magnetic columns must be an immutable tuple of validated columns.")
+        if not self.magnetic_columns or len({column.subop for column in self.magnetic_columns}) != len(self.magnetic_columns):
+            raise SnapshotValidationError("Snapshot magnetic columns must be non-empty and have unique sub-operations.")
 
 
 def assemble_keymap_layer(pages: tuple[KeymapPage, ...] | list[KeymapPage]) -> KeymapLayerSnapshot:
