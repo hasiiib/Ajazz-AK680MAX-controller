@@ -109,7 +109,7 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(_feature_payload(payload), payload)
 
     def test_reject_short_and_oversized_feature_reports(self):
-        for raw in (b"short", bytes(65), bytes([0]) + bytes(65)):
+        for raw in (b"short", bytes([0x8F]) + bytes(64), bytes([0]) + bytes(65)):
             with self.subTest(length=len(raw)):
                 with self.assertRaises(IdentifyError):
                     _feature_payload(raw)
