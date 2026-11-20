@@ -151,6 +151,8 @@ def identify_exchange(device, sleep=time.sleep) -> int:
     """
     request = identify_packet()
     wire_request = bytes([0]) + request
+    # Match the vendor driver spacing before SET_FEATURE as well as GET_FEATURE.
+    sleep(EXCHANGE_GAP_SECONDS)
     try:
         sent = device.send_feature_report(wire_request)
     except Exception as exc:
