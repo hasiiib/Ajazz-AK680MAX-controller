@@ -44,6 +44,20 @@ The existing hidapi transport convention prepends a zero report-ID byte to the p
 
 For the first physical test, do not run a bulk snapshot, keymap read, magnetic read, or analog monitor. The only permitted operation in this stage is one explicitly user-started `0x84` GET after a fresh Identify result of 2255 and unique interface-2 selection. Record the complete response exactly as returned; do not trim the leading byte, pad a short response, or issue another request to recover from an ambiguous result. Stop after one attempt and review the capture offline with `assess_hex_capture("active-profile", "...")`.
 
+### Optional one-shot capture helper
+
+The repository includes `tools/capture_active_profile.py` as an isolated, explicitly invoked diagnostic. Importing it or displaying its help sends no device command. It requires the explicit `--confirm-one-read-only-0x84` flag, performs a fresh Identify check for board 2255, refuses anything other than one interface-2 candidate, sends one `0x84` GET, reads one Feature response, and closes the handle. It never retries, saves a file, or prints a serial number or device path. A partial send or transport error stops the operation.
+
+After updating the installed application files, the user can start the one-shot test from a terminal with:
+
+```bash
+~/.local/opt/ak680-controller/.venv/bin/python \\
+  ~/.local/opt/ak680-controller/tools/capture_active_profile.py \\
+  --confirm-one-read-only-0x84
+```
+
+The explicit flag is the user's confirmation to send this single read-only GET. Do not run it unless the keyboard is connected directly by USB and the user is ready to perform the physical test. The helper prints the exact response HEX and its offline parser assessment; it does not change any keyboard setting. Share only that output and any error text, never serial numbers or device paths.
+
 ### Stage 1 capture worksheet
 
 Record the following without including the USB serial number or unique device path:
