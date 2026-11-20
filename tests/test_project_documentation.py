@@ -54,7 +54,7 @@ class Board2255DocumentationTests(unittest.TestCase):
             "65-byte host buffer",
             "Stage 1 physical test is complete for one user-initiated `0x84` GET",
             "The capture was reviewed offline with the existing parser",
-            "do not repeat it merely to reproduce the result",
+            "do not rerun it merely to reproduce the result",
             "Do not continue to another opcode",
             "app/capture_active_profile.py",
             "~/.local/opt/ak680-controller/capture_active_profile.py",
