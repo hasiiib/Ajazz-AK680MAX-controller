@@ -310,3 +310,23 @@ Important:
 - The rule is committed but has not yet been installed on the user's system.
 - Access must be verified after installing the rule and reconnecting the keyboard.
 - No HID report or keyboard configuration command has been sent as part of this permission work.
+
+
+## Scoped udev access verified on the user's Ubuntu system (2026-11-20)
+
+The user installed `udev/70-ak680-controller.rules`, unplugged and reconnected the keyboard, then checked the ACL for the matching device node.
+
+Observed for `/dev/hidraw4`:
+- USB VID:PID `3151:502d`, interface number `02` (the descriptor-confirmed Feature-control interface).
+- Device mode: `crw-rw----+`, owner/group remain `root:root`.
+- ACL entry: `user:ayon:rw-`.
+- This confirms the active user received read/write access through `TAG+="uaccess"`; no broad chmod, group membership change, or sudo GUI launch was used.
+
+Follow-up hardening:
+- Updated Identify's open failure message to include the underlying hidapi/OS error and point to ACL verification, removing the now-obsolete claim that a udev rule still needs to be created.
+- Added a unit test ensuring the open error is surfaced and the HID handle is closed.
+
+Still unverified:
+- The read-only `0x8F` request has not yet been tested against the physical keyboard after the ACL change.
+- The live board ID is unknown; 2255 remains a reference candidate, not a verified result.
+- No analog stream or configuration write has been sent.
