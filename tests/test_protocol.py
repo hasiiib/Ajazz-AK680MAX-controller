@@ -226,6 +226,14 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(result.device_id, 1234)
         self.assertIsNone(result.firmware_revision)
 
+    def test_identify_exchange_rejects_unconfirmed_feature_send(self):
+        class NoLengthDevice:
+            def send_feature_report(self, report):
+                return None
+
+        with self.assertRaisesRegex(IdentifyError, "incomplete Identify request"):
+            identify_exchange(NoLengthDevice(), sleep=lambda _: None)
+
     def test_identify_exchange_rejects_partial_feature_send(self):
         class PartialSendDevice:
             def send_feature_report(self, report):
