@@ -35,6 +35,8 @@ Read-only protocol groundwork now includes pure request builders and strict resp
 
 The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
 
+USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands.
+
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
 
 ## Installation and data safety
@@ -71,11 +73,9 @@ GitHub Actions runs this suite on pushes and pull requests. The latest full unit
 
 https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763956318
 
-## Project status and research
+## Project status
 
 - [Project status](PROJECT_STATUS.md)
 - [Development roadmap](ROADMAP.md)
-- [HallJoy / RongYuan protocol research](docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md)
-- [Review of related AJAZZ driver repositories](docs/research/XYZMEAN_AJAZZ_REPOSITORIES_REVIEW_2026-11-20.md)
 
 No unique keyboard serial number is stored in this repository.
