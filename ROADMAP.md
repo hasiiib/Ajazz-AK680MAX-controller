@@ -15,6 +15,7 @@
 - [x] Automatically abort analog monitoring when the paired interfaces disappear or input/enumeration fails.
 - [x] Stop polling, clear stale samples, restore GUI controls, and attempt best-effort stream-clear during abort; target-board volatility remains unverified.
 - [x] Close partially allocated analog HID handles on setup failures and validate poll batch bounds.
+- [x] Re-identify the exact opened control handle before an experimental analog-stream attempt, preventing a separate identify/open cycle from authorizing a different device.
 - [x] Add a prominent GUI warning that analog streaming is not verified on physical board 2255 and raw travel units/range are unknown.
 - [ ] Verify analog start/stop, transport, press/hold/release, and disconnect recovery on the physical keyboard.
 - [ ] Establish raw travel units and calibrated range.
@@ -52,7 +53,7 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **173 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
+The suite contains **174 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
