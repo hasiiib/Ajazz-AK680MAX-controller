@@ -26,13 +26,14 @@
 - [x] Strict aggregation of complete 128-slot keymap layers and magnetic-settings columns from supplied replies.
 - [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
 - [x] Audit public board-2255 registry/protocol evidence and document family-level versus firmware-image evidence, the upstream `0x8A` byte-4 ambiguity, stock/custom firmware limits, and incompatible-board exclusions.
-- [ ] Validate 0xE5, 0x8A, and 0x84 response framing and values on physical board 2255 before connecting these reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
+- [x] Validate one physical 0x84 active-profile GET response on board 2255 (accepted profile index 0; one capture only).
+- [ ] Validate 0x8A and 0xE5 response framing and values on physical board 2255 before connecting these reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
 - [x] Add a read-only snapshot browser tab that renders validated keymap and magnetic values without assigning meanings.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
-- [ ] Connect snapshot acquisition only after 0xE5, 0x8A, and 0x84 response framing is physically verified on board 2255.
+- [ ] Connect snapshot acquisition only after 0xE5 and 0x8A response framing is physically verified on board 2255.
 - [ ] Build editable controls only for capabilities verified on board 2255.
 - [ ] Verify lighting capabilities and safe controls.
 - [ ] Verify actuation, Rapid Trigger, DKS, and macro capabilities.
@@ -43,7 +44,7 @@
 - [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
-- Physical Identify result 2255 is verified; analog streaming and configuration reads are not yet physically verified.
+- Physical Identify result 2255 and one read-only 0x84 active-profile GET (Profile 1 / index 0) are verified; 0x8A/0xE5 reads and analog streaming are not yet physically verified.
 - Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
 - Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
