@@ -76,5 +76,6 @@ https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456
 - [Project status](PROJECT_STATUS.md)
 - [Development roadmap](ROADMAP.md)
 - [HallJoy / RongYuan protocol research](docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md)
+- [Review of related AJAZZ driver repositories](docs/research/XYZMEAN_AJAZZ_REPOSITORIES_REVIEW_2026-11-20.md)
 
 No unique keyboard serial number is stored in this repository.
