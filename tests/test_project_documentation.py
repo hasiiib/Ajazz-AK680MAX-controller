@@ -24,7 +24,7 @@ class Board2255DocumentationTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token.lower(), self.evidence_lower)
         self.assertIn("physically verified once", self.evidence_lower)
-        self.assertIn("other magnetic sub-operations/pages", self.evidence_lower)
+        self.assertIn("other sub-operations/pages and value meanings remain unverified", self.evidence_lower)
         self.assertIn("value meanings remain unverified", self.evidence_lower)
         self.assertIn("upstream source ambiguity", self.evidence_lower)
         self.assertIn("not verified on board 2255", self.evidence_lower)
