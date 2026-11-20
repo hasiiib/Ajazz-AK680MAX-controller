@@ -94,6 +94,7 @@ class ReadOnlySnapshotPanel(QWidget):
             self.layer_selector.addItem(
                 f"Profile {layer.profile_index} / sublayer {layer.sublayer_index}"
             )
+        self.layer_selector.setCurrentIndex(-1)
         self.layer_selector.blockSignals(False)
         self.layer_selector.setEnabled(bool(view.keymap_layers))
 
@@ -102,6 +103,7 @@ class ReadOnlySnapshotPanel(QWidget):
             self.magnetic_selector.addItem(
                 f"GET sub-op {column.get_subop} · {column.value_width_bytes}-byte values"
             )
+        self.magnetic_selector.setCurrentIndex(-1)
         self.magnetic_selector.blockSignals(False)
         self.magnetic_selector.setEnabled(bool(view.magnetic_columns))
 
