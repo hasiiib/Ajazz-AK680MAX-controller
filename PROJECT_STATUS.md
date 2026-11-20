@@ -51,3 +51,17 @@ USB enumeration and presence of three HID interfaces are verified from the user'
 
 ## Session handoff
 Next action: inspect the three HID report descriptors and kernel metadata using read-only commands, then map interface roles. Do not send output reports or modify keyboard settings until protocol behavior is documented.
+
+
+## HID metadata and permissions check (2026-11-20)
+User ran `udevadm info` and `ls -l` for hidraw2, hidraw3, and hidraw4.
+
+Observed:
+- All three nodes report `ID_VENDOR_ID=3151` and `ID_MODEL_ID=502d`.
+- The requested grep did not return `HID_ID`, `HID_NAME`, or `HID_UNIQ` for these nodes.
+- All three nodes are character devices owned by `root:root` with mode `0600`; ordinary users cannot currently open them directly.
+- No permission changes have been made.
+
+Implications:
+- Need inspect USB interface descriptors and HID report descriptors to distinguish interface roles.
+- Later, if direct application access is required, design a narrowly scoped udev rule for the verified VID/PID and intended interfaces; do not use broad chmod or run the GUI as root.
