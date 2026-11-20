@@ -64,4 +64,4 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest full unit-test workflow for commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9` passed all 47 tests. The magnetic and keymap parsers are software-only: they build GET requests and decode captured replies but do not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and separately authorized read-only 0xE5 / 0x8A response checks; none has been performed yet.
+The latest full unit-test workflow for commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7` passed all 51 tests. The magnetic and keymap parsers are software-only: they build GET requests and decode captured replies but do not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and separately authorized read-only 0xE5 / 0x8A response checks; none has been performed yet.
