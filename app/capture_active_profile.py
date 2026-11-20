@@ -29,6 +29,26 @@ class CaptureError(RuntimeError):
     """A safe one-shot capture could not be completed."""
 
 
+def _safe_identify_failure(exc: Exception) -> str:
+    """Map Identify failures to useful diagnostics without exposing HID paths."""
+    message = str(exc).lower()
+    if "could not open" in message or "permission" in message or "access denied" in message:
+        return "could not open settings interface 2 (check USB connection and hidraw permissions)"
+    if "could not send" in message or "incomplete identify request" in message:
+        return "read-only Identify request could not be sent completely"
+    if "feature read failed" in message:
+        return "HID Feature read failed while waiting for the Identify response"
+    if "not a valid 0x8f" in message or "refused the request" in message:
+        return "Feature report arrived, but it was not a valid 0x8F Identify response"
+    if "did not return a valid 0x8f" in message:
+        return "no valid 0x8F Identify response arrived within the timeout"
+    if "could not select usb interface 2" in message or "matching settings interfaces" in message:
+        return "could not uniquely select HID settings interface 2"
+    if "hidapi python package is missing" in message:
+        return "hidapi Python package is missing from the installed environment"
+    return f"read-only Identify failed ({exc.__class__.__name__}; details withheld)"
+
+
 def capture_once(
     hid_module,
     *,
@@ -45,7 +65,8 @@ def capture_once(
         identity = identify()
     except Exception as exc:
         raise CaptureError(
-            f"Fresh read-only Identify failed ({exc.__class__.__name__}); no 0x84 request sent."
+            f"Fresh read-only Identify failed: {_safe_identify_failure(exc)}; "
+            "no 0x84 request sent."
         ) from exc
     if getattr(identity, "device_id", None) != 2255:
         raise CaptureError("Fresh Identify did not report board ID 2255; no 0x84 request sent.")
