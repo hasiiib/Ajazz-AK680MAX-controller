@@ -6,7 +6,51 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QTextEdit, QFrame,
 )
 
-from protocol import IdentifyError, identify_keyboard
+from protocol import (
+    IdentifyError,
+    identify_keyboard,
+    inspect_keyboard_interfaces,
+    paired_keyboard_interfaces,
+)
+
+
+def _hid_inventory_text():
+    try:
+        inventory = inspect_keyboard_interfaces()
+    except IdentifyError as exc:
+        return "HIDAPI COLLECTIONS\n" + str(exc)
+
+    if not inventory:
+        return (
+            "HIDAPI COLLECTIONS\n"
+            "No hidapi entries found for VID:PID 3151:502D. "
+            "Check that the keyboard is connected by USB."
+        )
+
+    lines = []
+    for item in inventory:
+        lines.append(
+            "Interface {interface!r}: {role}\n"
+            "  path: {path}\n"
+            "  usage_page: {usage_page!r}, usage: {usage!r}\n"
+            "  USB parent: {usb_parent!r}".format(**item)
+        )
+
+    pair = paired_keyboard_interfaces(inventory)
+    if pair:
+        lines.append(
+            "\nPAIRING CHECK: PASS — control interface 2 and analog-input "
+            "interface 1 belong to the same USB device ({})".format(
+                pair[0]["usb_parent"]
+            )
+        )
+    else:
+        lines.append(
+            "\nPAIRING CHECK: NOT CONFIRMED — a unique interface 2 / interface 1 "
+            "pair with a shared sysfs USB parent was not found. This does not "
+            "block the read-only Identify request; it blocks future analog-stream work."
+        )
+    return "HIDAPI COLLECTIONS\n" + "\n\n".join(lines)
 
 
 def collect():
@@ -33,6 +77,7 @@ def collect():
                 parts.append(label + " STDERR\n" + result.stderr)
         except Exception as exc:
             parts.append(label + " error: " + str(exc))
+    parts.append(_hid_inventory_text())
     return "\n\n".join(parts)
 
 
@@ -91,7 +136,7 @@ class Main(QMainWindow):
         layout.addLayout(row)
 
         info = QLabel(
-            "Identify sends only the documented 0x8F read request. "
+            "Identify sends one 0x8F read request and polls for its reply. "
             "No keyboard settings are changed."
         )
         info.setObjectName("sub")
