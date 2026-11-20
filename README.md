@@ -31,6 +31,8 @@ The physical keyboard has completed the read-only Identify handshake and reporte
 
 An opt-in Analog Monitor is implemented. It re-identifies the board before starting, validates the control/input interface pair, temporarily requests raw travel reports, and attempts cleanup when stopped or when the application exits. **Physical analog streaming has not yet been verified**, and raw travel values have no confirmed physical unit or calibrated range.
 
+Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`) and keymap pages (`0x8A`). These modules are not connected to the GUI, perform no HID I/O, and have not been exercised against the physical board. They do not write or alter keyboard settings.
+
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
 
 ## Installation and data safety
@@ -63,9 +65,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The latest run for commit `74ea205541d894b6451332dd69d26fad248b1a6c` passed, including incomplete HID transfer handling:
+GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run for commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9` passed: **47 tests** covering Identify, analog stream lifecycle, magnetic-page parsing, and keymap-page framing.
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44760074233
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389
 
 ## Project status and research
 
