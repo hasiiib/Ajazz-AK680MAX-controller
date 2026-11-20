@@ -37,6 +37,10 @@ class MagneticSettingsPage:
 
 
 def _page_count(subop: int) -> int:
+    if not isinstance(subop, int) or isinstance(subop, bool):
+        raise MagneticSettingsProtocolError(
+            f"Magnetic sub-operation must be an integer; got {subop!r}."
+        )
     if subop in MAGNETIC_U16_SUBOPS:
         return 4
     if subop in MAGNETIC_U8_SUBOPS:
