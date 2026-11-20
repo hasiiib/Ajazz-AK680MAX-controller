@@ -48,9 +48,12 @@ Keep the first raw response unchanged. Do not silently trim, pad, or repair a re
 
 ## Offline capture assessment
 
-`assess_capture()` accepts one manually supplied byte sequence and one explicit
-stage (`active-profile`, `keymap`, or `magnetic`). Keymap and magnetic stages
-require their corresponding metadata. The assessor calls only the existing
+`assess_capture()` accepts one manually supplied byte sequence, while
+`assess_hex_capture()` accepts a copied hexadecimal string with ordinary
+whitespace between byte pairs. Both require one explicit stage
+(`active-profile`, `keymap`, or `magnetic`). Keymap and magnetic stages require
+their corresponding metadata. The hex helper rejects incomplete or decorated
+input instead of guessing how to repair it. The assessor calls only the existing
 pure parsers; it cannot open the keyboard, send a request, or initiate a retry.
 Synthetic unit tests cover opcode-echo distinctions, report-ID prefixes,
 malformed lengths, invalid metadata, and preservation of the original capture.
