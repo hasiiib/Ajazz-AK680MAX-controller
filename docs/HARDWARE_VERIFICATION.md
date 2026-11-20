@@ -10,7 +10,7 @@ This plan is a gate for validating the read-only configuration protocol on the p
 - The `0x8A` keymap page-0 GET has now been physically captured once on board 2255: a 65-byte hidapi result with leading report-ID `00`; the parser accepted 16 opaque four-byte entries for profile 0, sublayer 0, page 0.
 - The `0xE5` magnetic sub-operation-0/page-0 GET has now been physically captured once: 65/65-byte send, 65-byte hidapi response, no leading report-ID prefix, and 32 accepted little-endian 16-bit values. All 32 values were `0x00C8` (decimal 200); they remain raw protocol units, not interpreted actuation/travel values.
 - The reviewed RongYuan protocol reference describes 0x84 as an opcode-echoing GET, while 0x8A keymap and 0xE5 magnetic page GETs return raw 64-byte pages without an opcode echo. This is family-level reference evidence, not a physical capture from board 2255.
-- The analog stream is separate and also remains unverified on physical hardware.
+- The analog stream is separate and also remains unverified on physical hardware. A bounded one-shot helper (`capture_analog_stream.py`) is prepared for the separately authorized temporary `0x1B` start/read/stop probe; it has not yet been run.
 - The board-specific evidence audit is in [BOARD_2255_PROTOCOL_EVIDENCE.md](BOARD_2255_PROTOCOL_EVIDENCE.md). It records the upstream `0x8A` byte-4 ambiguity and distinguishes `0xE5` firmware-image evidence and `0x1B` observations on other devices from target-board hardware evidence. The gen2 family label alone does not clear this gate.
 
 ## Preconditions
@@ -167,3 +167,17 @@ malformed lengths, invalid metadata, and preservation of the original capture.
 A read path may be connected to the application only after the physical captures establish the exact report framing and the board-2255 response semantics, and regression tests cover both valid captures and malformed variants. The GUI must remain read-only and user-initiated.
 
 Persistent writes remain out of scope. Any future write feature requires separate exact protocol evidence, read-back/recovery design, and the user's explicit authorization.
+
+### Stage 4 bounded analog stream probe
+
+The standalone `capture_analog_stream.py` helper requires `--confirm-one-temporary-0x1b-stream-test`, performs fresh read-only Identify on the selected control handle, verifies board 2255 and the paired interfaces, sends one temporary stream-start flag, polls at most 32 Report ID 5 frames (default 16), and attempts one stop flag before closing handles. It prints sample slot/raw travel values without writing a capture file or logging unique device identifiers. If a read fails, the session attempts stop and closes handles. A start/send/read/stop outcome that is ambiguous is not automatically retried. The user must explicitly authorize and execute this test; this is not a GUI/background action.
+
+The command, after the installed files are updated:
+
+```bash
+~/.local/opt/ak680-controller/.venv/bin/python \\
+  ~/.local/opt/ak680-controller/capture_analog_stream.py \\
+  --confirm-one-temporary-0x1b-stream-test
+```
+
+No persistent settings are written by this helper. The stop command is a best-effort temporary stream flag based on family-level protocol evidence; stop behavior on board 2255 remains unverified until the capture succeeds.
