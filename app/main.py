@@ -197,13 +197,36 @@ class Main(QMainWindow):
         self.log.setPlainText(collect(inventory, inventory_error))
 
     def refresh_connection_status(self):
-        """Refresh lightweight HID presence/state without touching the device."""
+        """Refresh HID presence and stop streaming if its interface pair disappears."""
         try:
             inventory = inspect_keyboard_interfaces()
             state = evaluate_connection(inventory)
             self.connection_status.setText(f"USB connection: {state.message}")
+            if self.stream_session.active and not state.analog_pair_candidate:
+                self._abort_analog_stream(
+                    "Keyboard connection lost or analog interface pair is no longer unique."
+                )
         except IdentifyError as exc:
             self.connection_status.setText(f"USB connection scan failed: {exc}")
+            if self.stream_session.active:
+                self._abort_analog_stream(
+                    "USB/HID enumeration failed while the analog monitor was running."
+                )
+
+    def _abort_analog_stream(self, reason):
+        """Close a lost stream promptly; stop command is best-effort on disconnect."""
+        self.stream_timer.stop()
+        try:
+            self.stream_session.stop()
+        except AnalogStreamError as exc:
+            self.log.append(f"\\n\\nANALOG MONITOR STOP WARNING: {exc}")
+        finally:
+            self.latest_samples.clear()
+            self.stream_button.setText("Start Analog Monitor")
+            self.stream_button.setEnabled(True)
+            self.identify_button.setEnabled(True)
+            self.analog_status.setText("Analog monitor: stopped — connection lost")
+            self.log.append(f"\\n\\nANALOG MONITOR: {reason}")
 
     def export_diagnostics(self):
         """Save a privacy-filtered support report; this performs no HID I/O."""
@@ -283,6 +306,7 @@ class Main(QMainWindow):
 
     def closeEvent(self, event):
         self.stream_timer.stop()
+        self.connection_timer.stop()
         try:
             self.stream_session.stop()
         except Exception:
