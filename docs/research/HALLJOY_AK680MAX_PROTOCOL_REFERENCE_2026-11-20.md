@@ -103,3 +103,10 @@ The Universal Analog Plugin repository's issue #23 and its Wooting SDK integrati
 The project's Ubuntu GUI has now completed its read-only Identify transaction against the user's physical keyboard. The application reports board-reported device ID `2255`. Its HIDAPI inventory simultaneously confirms interface 2 (`1-1:1.2`, Feature-control candidate) and interface 1 (`1-1:1.1`, Report ID 5 analog-input candidate) share USB parent `1-1`; the app's pairing check reports PASS. This validates the board 2255 / VID:PID `3151:502d` association for this physical unit, rather than relying solely on the public model table.
 
 This live test does not yet validate firmware metadata, travel units, analog streaming, or any writable settings. No `0x1B` stream command or configuration write has been sent. Keep the next protocol step GET-only and validate exact response bytes before adding any further feature.
+
+
+## gen2 revision metadata clarification (2026-11-20)
+
+The live physical Identify result confirms board 2255 / gen2. A current review of the ROYUAN protocol reference clarifies that wired gen2 keyboards return zero for GET `0x80`; the firmware revision is instead encoded in the Identify response at bytes 7–8, decoded as `(reply[8] << 8) | reply[7]`. The current app's Identify parser extracts only the 32-bit board ID, so this metadata is not yet retained or displayed. Implementing the revision display should reuse the same validated Identify response and must not send a separate `0x80` request. Byte 9's meaning remains unconfirmed for this board.
+
+Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md (Families and Other).
