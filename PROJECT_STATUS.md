@@ -65,3 +65,37 @@ Observed:
 Implications:
 - Need inspect USB interface descriptors and HID report descriptors to distinguish interface roles.
 - Later, if direct application access is required, design a narrowly scoped udev rule for the verified VID/PID and intended interfaces; do not use broad chmod or run the GUI as root.
+
+
+## USB interface descriptor analysis (2026-11-20)
+User provided filtered output from `sudo lsusb -v -d 3151:502d`.
+
+Device:
+- VID:PID `3151:502d`
+- Three interfaces total.
+
+Interface 0:
+- HID class (3), Boot Interface subclass (1), Keyboard protocol (1)
+- Report descriptor length: 59 bytes
+- Interrupt IN endpoint `0x81`, max packet 64 bytes, interval 1
+
+Interface 1:
+- HID class (3), Boot Interface subclass (1), Keyboard protocol (1)
+- Report descriptor length: 171 bytes
+- Interrupt IN endpoint `0x82`, max packet 64 bytes, interval 1
+
+Interface 2:
+- HID class (3), subclass 0, protocol 0
+- Report descriptor length: 20 bytes
+- Interrupt IN endpoint `0x83`, max packet 64 bytes, interval 1
+
+Interpretation / caveats:
+- Interfaces 0 and 1 identify as boot-keyboard HID interfaces.
+- Interface 2 is a non-boot HID interface and is a candidate for vendor-specific functions, but its purpose is not proven.
+- The shown interrupt endpoints are IN only. This does not establish the device's configuration-write path; HID control transfers or other mechanisms may exist, but must be established from descriptors/documentation.
+- No reports have been sent to the keyboard and no configuration changes have been attempted.
+
+Next investigation:
+- Obtain the actual report descriptor bytes for each interface (prefer sysfs/kernel-exposed descriptors or a safe HID descriptor inspection utility).
+- Decode report usages, report IDs, and input/output/feature report sizes.
+- Do not probe by sending guessed SET_REPORT or vendor commands.
