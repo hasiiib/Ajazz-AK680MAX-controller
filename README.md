@@ -37,7 +37,7 @@ Running the install command again updates the application.
 
 ## Current status
 
-**Phase 1 / protocol handshake preparation.** The app lists USB devices, Linux HID raw interfaces, hidapi collection metadata, and whether the Feature-control candidate (interface 2) and Report ID 5 input candidate (interface 1) resolve to the same physical USB device. It also offers a read-only 0x8F Identify request. The live board ID and the physical-device handshake are not yet verified.
+**Phase 2 / hardware identity verified; analog monitor implementation in opt-in testing.** The physical keyboard has completed the read-only 0x8F Identify handshake and reported board ID `2255`, matching the public AK680 MAX gen2 record. Interface 2 (Feature control) and interface 1 (Report ID 5 input) are verified as belonging to the same USB device. The GUI now includes an opt-in Start / Stop Analog Monitor. It re-identifies the board before enabling the temporary stream, reads raw travel reports, and attempts to stop the stream on stop or app exit. Physical analog streaming, travel units, and full-scale range remain unverified.
 
 Features such as RGB control, per-key actuation, Rapid Trigger, DKS, macros, remapping, and profiles are not claimed as supported yet. They will be added only after the AK680 MAX's actual USB protocol and firmware behavior are verified.
 
@@ -65,6 +65,6 @@ GitHub Actions also runs these tests on pushes and pull requests.
 
 ## Optional HID permissions (one-time setup)
 
-The app needs access to the vendor Feature collection on USB interface 2 to perform the documented read-only Identify request. A narrowly scoped udev rule is provided at `udev/70-ak680-controller.rules`. It matches only USB ID `3151:502d`, interface number `02`, and adds the `uaccess` tag for the active desktop user. It does not grant access to the keyboard's other HID interfaces.
+The Python hidapi build uses libusb and therefore needs access to the matching USB device node as well as the vendor Feature collection. The narrowly scoped rule at `udev/70-ak680-controller.rules` grants `uaccess` only to USB device ID `3151:502d` and retains the interface-02-only hidraw rule. It does not grant direct hidraw access to the keyboard's standard keyboard interfaces or other USB devices.
 
 To install the rule, create `/etc/udev/rules.d/70-ak680-controller.rules` with the contents of that repository file, reload udev rules, then unplug and reconnect the keyboard. Do not run the GUI with sudo. The rule has not been tested on the target machine until the user verifies access after reconnecting.
