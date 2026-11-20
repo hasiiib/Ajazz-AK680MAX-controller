@@ -29,6 +29,7 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - [ ] Determine raw travel units and calibrated physical range from evidence.
 
 ## Phase 4 — Core controls (research before implementation)
+- [x] Separate the 3151:502D / board-2255 RongYuan protocol from incompatible AK680 MAX 3151:502C lightless and 0C45:80B2 RGB protocols; document explicit non-applicability.
 - [ ] Map exact board-2255 GET operations and response formats.
 - [ ] Identify supported RGB capabilities and safe read/write protocol.
 - [ ] Identify keymap/remapping capabilities and profile format.
