@@ -61,12 +61,13 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.sleeps = []
 
     def test_sends_one_exact_read_only_get_and_preserves_response(self):
-        raw = capture_once(
+        raw, sent = capture_once(
             self.hid,
             identify=self.identity,
             sleep=self.sleeps.append,
         )
         self.assertEqual(raw, self.device.response)
+        self.assertEqual(sent, 65)
         self.assertEqual(len(self.device.sent), 1)
         self.assertEqual(len(self.device.sent[0]), 65)
         self.assertEqual(self.device.sent[0][0], 0)
