@@ -18,7 +18,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - USB interface pairing checks.
 - Automatic connection-state refresh through metadata-only HID enumeration; no periodic device commands.
 - Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a temporary stop is attempted best-effort.
-- Privacy-filtered diagnostic export with serial-number redaction.
+- Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
 - Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
 - Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
@@ -40,4 +40,4 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest CI run passed **90 tests** on commit `dc0159a54d0f70d2247e76d14ccceda46173fa19`, including fail-safe handling of non-byte HID parser inputs: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44769538037.
+The latest CI run passed **93 tests** on commit `97b02fbea2d6a36375954b43277a8273bbfe4244`, including fail-closed HID inventory validation and expanded USB serial-number redaction coverage: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44770039431.
