@@ -181,3 +181,14 @@ Safety and verification:
 - The user's earlier permissions output showed hidraw nodes as `root:root` mode `0600`; therefore the Identify button may currently report an access/udev permission error. The app deliberately does not request sudo and no permission rule has been installed.
 - Next: user updates the app and clicks Identify. If access is denied, inspect the udev attribute hierarchy and add a narrowly scoped rule for the verified settings interface only; do not loosen permissions on all keyboard interfaces.
 - Public reference implementation inspected for the transport framing and Identify behavior: https://github.com/dniminenn/sharkfin/blob/master/app/src-tauri/src/hid.rs and https://github.com/dniminenn/sharkfin/blob/master/app/src-tauri/src/protocol/mod.rs
+
+
+## Current session handoff (2026-11-20)
+Code is committed. The pure packet-builder / response-parser smoke checks passed in the development environment. The committed unittest suite has not yet been run in the target Ubuntu installation, and no physical-device Identify transaction has been attempted.
+
+User's next action:
+1. Reinstall/update from the latest main branch using the documented installer command.
+2. Launch the app and click **Identify Keyboard (read-only)** once.
+3. Share the exact result shown in the inspector.
+
+Expected possible blocker: the earlier `root:root 0600` hidraw permissions may prevent opening the settings interface. If so, the app will explain this without elevating privileges. Then request the udev attribute walk for `/dev/hidraw4` and design a precise rule; do not add a broad permission rule.
