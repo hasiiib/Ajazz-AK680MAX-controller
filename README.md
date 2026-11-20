@@ -65,9 +65,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run for commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7` passed: **51 tests** covering Identify, analog stream lifecycle, magnetic settings pages, keymap pages, and active-profile metadata.
+GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run for commit `e19b648753ca41c3d144fc67231381c00952db0c` passed: **55 tests** covering Identify, analog stream lifecycle, magnetic settings pages, keymap pages, active-profile metadata, installer shell syntax, rollback structure, and narrow udev permissions.
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761830077
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803
 
 ## Project status and research
 
