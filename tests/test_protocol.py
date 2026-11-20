@@ -108,9 +108,11 @@ class IdentifyProtocolTests(unittest.TestCase):
         payload = identify_packet()
         self.assertEqual(_feature_payload(payload), payload)
 
-    def test_reject_short_feature_report(self):
-        with self.assertRaises(IdentifyError):
-            _feature_payload(b"short")
+    def test_reject_short_and_oversized_feature_reports(self):
+        for raw in (b"short", bytes(65), bytes([0]) + bytes(65)):
+            with self.subTest(length=len(raw)):
+                with self.assertRaises(IdentifyError):
+                    _feature_payload(raw)
 
     def test_sysfs_details_resolves_hidapi_usb_interface_path(self):
         resolved = (
