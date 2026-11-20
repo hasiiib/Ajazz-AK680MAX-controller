@@ -164,3 +164,20 @@ Next step:
 1. Implement a read-only identification transaction for opcode `0x8F` on Interface 2 using the documented 64-byte Feature-report transport, with strict VID/PID/interface checks and no fallback writes.
 2. Decode and validate the returned device ID; expect 2255 as a hypothesis, not a hardcoded assumption.
 3. Only after device ID/family verification, implement GET-only reads and compare replies. Keep all SET/configuration operations disabled until a separate reviewed test plan exists.
+
+
+## Read-only Identify implementation (2026-11-20)
+Implemented and committed the first protocol-aware UI step:
+- Added `app/protocol.py` with a narrowly scoped HID Identify operation.
+- The operation enumerates only VID:PID `3151:502D`, then requires interface 2 with Usage Page `0xFFFF` and Usage `0x0002`. It refuses zero or multiple matches.
+- The only transmitted payload is the documented 64-byte `0x8F` Identify GET packet with the Bit7 checksum, using the unnumbered report-ID convention required by hidapi.
+- The response parser accepts the documented 32-bit little-endian board ID and rejects malformed replies / the documented refusal echo.
+- Added an “Identify Keyboard (read-only)” button to the desktop UI. It reports the live board ID and compares it with 2255 as a reference hypothesis; it does not select a command family or send any family-specific command.
+- Added standard-library unit tests for packet construction, checksum, response decoding, refusal handling, and hidapi report framing in `tests/test_protocol.py`.
+
+Safety and verification:
+- No configuration SET command, RGB command, keymap command, calibration command, reset, or firmware command is implemented or sent.
+- The new operation has not yet been run against the user's physical keyboard. Unit tests are committed but have not yet been run in the user's Ubuntu environment.
+- The user's earlier permissions output showed hidraw nodes as `root:root` mode `0600`; therefore the Identify button may currently report an access/udev permission error. The app deliberately does not request sudo and no permission rule has been installed.
+- Next: user updates the app and clicks Identify. If access is denied, inspect the udev attribute hierarchy and add a narrowly scoped rule for the verified settings interface only; do not loosen permissions on all keyboard interfaces.
+- Public reference implementation inspected for the transport framing and Identify behavior: https://github.com/dniminenn/sharkfin/blob/master/app/src-tauri/src/hid.rs and https://github.com/dniminenn/sharkfin/blob/master/app/src-tauri/src/protocol/mod.rs
