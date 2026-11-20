@@ -330,3 +330,24 @@ Still unverified:
 - The read-only `0x8F` request has not yet been tested against the physical keyboard after the ACL change.
 - The live board ID is unknown; 2255 remains a reference candidate, not a verified result.
 - No analog stream or configuration write has been sent.
+
+
+## Linux hidapi backend permission diagnosis (2026-11-20)
+
+The user tested both HIDAPI paths and native device-node access:
+
+- Python hidapi enumerates the three collections as 1-1:1.0, 1-1:1.1, and 1-1:1.2.
+- hid.device().open_path() fails for both the HIDAPI interface path and /dev/hidraw4.
+- Native os.open("/dev/hidraw4", O_RDWR | O_NONBLOCK) succeeds; the user ACL on /dev/hidraw4 is confirmed.
+- ldd shows the installed hid.cpython-314 extension links to a bundled libusb shared library. This explains why granting access to hidraw alone did not let this hidapi build open the collection.
+- The corresponding USB device node is /dev/bus/usb/001/013. It is root:root mode 0664 without an ACL for user ayon; a native open fails with PermissionError(13).
+
+Change:
+- Extended udev/70-ak680-controller.rules with a second narrowly scoped TAG+="uaccess" rule matching only USB device VID:PID 3151:502d. The existing interface-2-only hidraw rule remains in place.
+- This does not grant access to other USB devices or all HID nodes. The user must install the updated rule, reconnect the keyboard, and verify the USB node ACL before retrying Identify.
+
+Safety / current state:
+- No HID Feature or Output report has been sent during these diagnostics.
+- No keyboard settings have been changed.
+- The USB-node ACL and successful HIDAPI open remain to be verified. The live board ID is still unknown.
+- If HIDAPI opens after the scoped USB-node ACL is applied, the next operation remains the single documented read-only Identify request (0x8F).
