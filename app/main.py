@@ -1,9 +1,10 @@
 import sys
 import subprocess
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QTextEdit, QFrame, QTimer,
+    QLabel, QPushButton, QTextEdit, QFrame,
 )
 
 from analog_stream import AnalogStreamError, AnalogStreamSession
