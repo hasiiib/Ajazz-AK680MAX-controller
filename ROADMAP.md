@@ -41,4 +41,4 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest completed CI run passed **82 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44767479013. Automatic connection refresh is metadata-only and does not issue Identify or configuration commands. Physical analog stream validation and read-only configuration response validation remain hardware gates.
+The latest completed CI run passed **87 tests**: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44768533533. Snapshot inputs and the keymap, magnetic-settings, and active-profile parsers now reject malformed dimensions and non-byte payloads. Automatic connection refresh is metadata-only and does not issue Identify or configuration commands. Physical analog stream validation and read-only configuration response validation remain hardware gates.
