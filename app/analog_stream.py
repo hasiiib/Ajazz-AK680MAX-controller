@@ -14,7 +14,7 @@ import os
 from protocol import (
     ANALOG_REPORT_LENGTH,
     AnalogSample,
-    identify_keyboard_details,
+    identify_exchange_details,
     inspect_keyboard_interfaces,
     paired_keyboard_interfaces,
     parse_analog_report,
@@ -80,17 +80,9 @@ class AnalogStreamSession:
             return
         hid = self._hid_module()
 
-        # Re-identify before the 0x1B command; its target-board effect is unverified.
-        try:
-            identity = identify_keyboard_details()
-        except Exception as exc:
-            raise AnalogStreamError(f"Read-only identity check failed: {exc}") from exc
-        if identity.device_id != EXPECTED_BOARD_ID:
-            raise AnalogStreamError(
-                f"Refusing analog stream: expected board {EXPECTED_BOARD_ID}, "
-                f"keyboard reported {identity.device_id}."
-            )
-
+        # Inspect first, then identify the exact control handle that will receive
+        # the experimental stream command. A separate identify/open cycle could
+        # race with a reconnect and accidentally authorize a different board.
         try:
             inventory = inspect_keyboard_interfaces(hid)
         except Exception as exc:
@@ -118,6 +110,17 @@ class AnalogStreamSession:
         enable_attempted = False
         try:
             control.open_path(os.fsencode(control_info["path"]))
+            try:
+                identity = identify_exchange_details(control)
+            except Exception as exc:
+                raise AnalogStreamError(
+                    f"Read-only identity check on the selected control handle failed: {exc}"
+                ) from exc
+            if identity.device_id != EXPECTED_BOARD_ID:
+                raise AnalogStreamError(
+                    f"Refusing analog stream: selected control handle reported board "
+                    f"{identity.device_id}; expected {EXPECTED_BOARD_ID}."
+                )
             input_device.open_path(os.fsencode(input_info["path"]))
             enable_attempted = True
             self._send_flag(control, True)
