@@ -35,7 +35,7 @@ Read-only protocol groundwork now includes pure request builders and strict resp
 
 The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
 
-USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands.
+USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands. If the analog monitor is active and its paired input/control interfaces disappear, the app stops polling, attempts the temporary stream-stop command, closes both handles, clears stale samples, and restores the controls. The same cleanup runs after an input error.
 
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
 
