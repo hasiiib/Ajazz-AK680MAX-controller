@@ -73,6 +73,17 @@ def _safe_identify_failure(exc: Exception) -> str:
     return category
 
 
+def _feature_result_note(raw: object) -> str:
+    """Describe an unexpected hidapi result without exposing payload contents."""
+    if isinstance(raw, (bytes, bytearray)):
+        return f"type={type(raw).__name__}, length={len(raw)}"
+    if isinstance(raw, (list, tuple)):
+        if any(type(value) is not int or not 0 <= value <= 255 for value in raw):
+            return f"type={type(raw).__name__}, length={len(raw)}, invalid byte elements"
+        return f"type={type(raw).__name__}, length={len(raw)}"
+    return f"type={type(raw).__name__}, unsupported return type"
+
+
 def capture_once(
     hid_module,
     *,
@@ -131,8 +142,22 @@ def capture_once(
                 f"Incomplete 0x84 GET send ({sent!r}/{len(request)} bytes); no retry attempted."
             )
         sleep(0.010)
-        raw = device.get_feature_report(0, 65)
-        return feature_report_bytes(raw), sent
+        try:
+            raw = device.get_feature_report(0, 65)
+        except Exception as exc:
+            raise CaptureError(
+                f"0x84 GET was sent successfully ({sent}/65 bytes), but the "
+                f"Feature read raised {exc.__class__.__name__}; no retry attempted."
+            ) from exc
+        try:
+            normalized = feature_report_bytes(raw)
+        except Exception as exc:
+            note = _feature_result_note(raw)
+            raise CaptureError(
+                f"0x84 GET was sent successfully ({sent}/65 bytes), but its "
+                f"Feature response was unusable ({note}); no retry attempted."
+            ) from exc
+        return normalized, sent
     except CaptureError:
         raise
     except Exception as exc:
