@@ -1,6 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
@@ -11,6 +12,7 @@ from protocol import (
     parse_device_id,
     _feature_payload,
     identify_exchange,
+    identify_keyboard,
     paired_keyboard_interfaces,
     _sysfs_details,
 )
@@ -83,6 +85,32 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertIsNone(
             paired_keyboard_interfaces([control, analog, dict(control)])
         )
+
+    def test_identify_open_error_includes_os_detail_and_closes_device(self):
+        class FakeDevice:
+            closed = False
+
+            def open_path(self, path):
+                raise OSError("Permission denied")
+
+            def close(self):
+                self.closed = True
+
+        device = FakeDevice()
+        fake_hid = SimpleNamespace(device=lambda: device)
+        inventory = [{
+            "interface_number": 2,
+            "path": "1-1:1.2",
+            "usage_page": 0,
+            "usage": 0,
+            "usb_parent": "1-1",
+        }]
+        with patch.dict(sys.modules, {"hid": fake_hid}), patch(
+            "protocol.inspect_keyboard_interfaces", return_value=inventory
+        ):
+            with self.assertRaisesRegex(IdentifyError, "Permission denied"):
+                identify_keyboard()
+        self.assertTrue(device.closed)
 
     def test_identify_exchange_sends_once_then_polls_for_reply(self):
         class FakeDevice:
