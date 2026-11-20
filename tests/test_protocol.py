@@ -1,7 +1,6 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
@@ -100,7 +99,7 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(device.sent[0][0], 0)
         self.assertEqual(device.sent[0][1:], identify_packet())
         self.assertEqual(device.reads, 2)
-        self.assertEqual(delays, [0.010, 0.010])
+        self.assertEqual(delays, [0.010, 0.010, 0.010])
 
     def test_identify_exchange_does_not_resend_on_timeout(self):
         class SilentDevice:
