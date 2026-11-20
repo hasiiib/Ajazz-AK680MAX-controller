@@ -291,3 +291,22 @@ The user's latest scan confirms the keyboard is visible as USB VID:PID `3151:502
 - Fix commits: `4a31620b969c3917d26032359b29a48ee62b07ec`, `7178c13b59acba6fef9175758b56fcd42c362631`, `f8356208fa1b6ec2f8571e72966fc0273e2a3f07`.
 - The reported Identify failure is consistent with the current user's inability to open the HID settings node. Do not add a udev permission rule until the updated pairing diagnostic is confirmed on the user's machine.
 - Target Ubuntu verification remains pending.
+
+
+## HID permission rule preparation (2026-11-20)
+
+The user supplied the complete udev attribute walk and property set for `/dev/hidraw4`.
+
+Verified properties:
+- USB vendor ID: `3151`
+- USB product ID: `502d`
+- USB interface number: `02`
+- Interface class: HID (`03`), bound to `usbhid`
+- hidraw node resolves through USB interface `1-1:1.2`, the previously descriptor-confirmed Feature-control interface.
+
+A narrowly scoped udev rule has been added at `udev/70-ak680-controller.rules`. It matches the udev-imported USB identity and interface-number properties, then adds only the `uaccess` tag. It does not change permissions for interfaces 0 or 1, other USB devices, or all hidraw nodes.
+
+Important:
+- The rule is committed but has not yet been installed on the user's system.
+- Access must be verified after installing the rule and reconnecting the keyboard.
+- No HID report or keyboard configuration command has been sent as part of this permission work.
