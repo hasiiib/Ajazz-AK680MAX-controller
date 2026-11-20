@@ -28,7 +28,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Not yet verified on the physical keyboard
 - Live analog stream start, travel reports, hold/release behavior, and physical confirmation of disconnect recovery.
 - Raw travel units and calibrated travel range.
-- Live magnetic settings, keymap, and active-profile reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O.
+- Live magnetic settings, keymap, and active-profile reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
 
 ## Safety boundaries
