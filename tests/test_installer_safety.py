@@ -38,6 +38,12 @@ class InstallerSafetyTests(unittest.TestCase):
         self.assertNotIn("/usr/local/bin", script)
         self.assertNotIn("/usr/lib", script)
 
+    def test_all_application_modules_compile_without_importing_hardware_dependencies(self):
+        for source_path in sorted((ROOT / "app").glob("*.py")):
+            with self.subTest(module=source_path.name):
+                source = source_path.read_text(encoding="utf-8")
+                compile(source, str(source_path), "exec")
+
     def test_udev_access_is_scoped_to_target_usb_identity_and_control_interface(self):
         rules = UDEV_RULES.read_text(encoding="utf-8")
         self.assertIn('ATTR{idVendor}=="3151"', rules)
