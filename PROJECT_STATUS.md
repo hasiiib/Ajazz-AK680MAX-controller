@@ -59,3 +59,14 @@ The [sharkfin AK680 MAX record](https://getsharkfin.com/boards/ajazzmouse-ak680-
 The sharkfin protocol reference describes gen2 GET 0xE5 magnetic-setting pages and GET 0x8A keymap pages, but its detailed magnetic handler evidence is firmware-derived from other named gen2 boards. The next software step is to build strict, read-only parsers and tests around these documented response formats while preserving an explicit “not yet hardware-verified on board 2255” state. No magnetic SET (0x65), keymap write, profile write, LED write, reset, or flash command has been sent or implemented.
 
 Reference: [sharkfin ROYUAN protocol reference](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md).
+
+
+## Read-only magnetic settings parser groundwork (2026-11-20)
+
+Added `app/magnetic_settings.py` as a pure protocol module. It builds the documented gen2 `0xE5` GET page request and parses raw response pages without performing HID I/O. Supported layouts are the documented u16 columns (sub-ops 0–4 and 6), byte columns (5, 7, 9), and read-only four-byte DKS action records (10). It validates sub-operation support, page bounds, exact 64-byte payload length, report-ID prefix handling, little-endian decoding, and slot offsets. The write-only sub-operation 8 and all `0x65` SET operations are excluded.
+
+Automated tests were added for request checksum/layout, supported page ranges, invalid requests, u16 and byte decoding, DKS grouping, report-ID normalization, and malformed pages.
+
+Evidence boundary: the public gen2 reference labels the `0xE5` layout and detailed handlers as firmware-derived from other gen2 boards; the exact AK680 MAX 2255 page independently corroborates that the model is gen2 and supports magnetic settings, but no `0xE5` request or response has been observed on this physical keyboard. This module is deliberately disconnected from the GUI and cannot send a report. Do not enable device reads or show these values as live settings until a separately authorized hardware GET test validates response timing, page structure, and semantics.
+
+No configuration SET, calibration, reset, profile change, or flash operation was added or sent.
