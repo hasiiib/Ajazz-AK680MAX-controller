@@ -17,6 +17,10 @@ from snapshot_view import SnapshotView, project_snapshot_for_display
 class ReadOnlySnapshotPanel(QWidget):
     """Browse raw keymap and magnetic values without assigning meanings."""
 
+    EMPTY_STATUS = (
+        "No verified snapshot loaded. Device configuration reads are not enabled."
+    )
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._view: SnapshotView | None = None
@@ -44,21 +48,40 @@ class ReadOnlySnapshotPanel(QWidget):
         self.table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self.table)
 
-        self.status = QLabel(
-            "No verified snapshot loaded. Device configuration reads are not enabled."
-        )
+        self.status = QLabel(self.EMPTY_STATUS)
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
 
         self.layer_selector.setEnabled(False)
         self.magnetic_selector.setEnabled(False)
 
+    def clear_snapshot(self) -> None:
+        """Remove all displayed data and reset selectors to a safe empty state."""
+        self._view = None
+        for selector in (self.layer_selector, self.magnetic_selector):
+            selector.blockSignals(True)
+            selector.clear()
+            selector.setCurrentIndex(-1)
+            selector.setEnabled(False)
+            selector.blockSignals(False)
+        self.table.clearContents()
+        self.table.setRowCount(0)
+        self.profile_label.setText("Active profile: —")
+        self.status.setText(self.EMPTY_STATUS)
+
     def set_snapshot(self, snapshot: ReadOnlyConfigurationSnapshot) -> None:
         """Accept only a validated immutable snapshot; perform no device I/O."""
-        self.set_snapshot_view(project_snapshot_for_display(snapshot))
+        self.clear_snapshot()
+        try:
+            view = project_snapshot_for_display(snapshot)
+        except (TypeError, ValueError):
+            self.clear_snapshot()
+            raise
+        self.set_snapshot_view(view)
 
     def set_snapshot_view(self, view: SnapshotView) -> None:
         """Display an existing immutable projection, without interpreting it."""
+        self.clear_snapshot()
         if not isinstance(view, SnapshotView):
             raise TypeError("Expected a validated SnapshotView.")
         self._view = view
@@ -67,23 +90,19 @@ class ReadOnlySnapshotPanel(QWidget):
         )
 
         self.layer_selector.blockSignals(True)
-        self.layer_selector.clear()
         for layer in view.keymap_layers:
             self.layer_selector.addItem(
                 f"Profile {layer.profile_index} / sublayer {layer.sublayer_index}"
             )
         self.layer_selector.blockSignals(False)
-        self.layer_selector.setCurrentIndex(-1)
         self.layer_selector.setEnabled(bool(view.keymap_layers))
 
         self.magnetic_selector.blockSignals(True)
-        self.magnetic_selector.clear()
         for column in view.magnetic_columns:
             self.magnetic_selector.addItem(
                 f"GET sub-op {column.get_subop} · {column.value_width_bytes}-byte values"
             )
         self.magnetic_selector.blockSignals(False)
-        self.magnetic_selector.setCurrentIndex(-1)
         self.magnetic_selector.setEnabled(bool(view.magnetic_columns))
 
         if view.keymap_layers:
