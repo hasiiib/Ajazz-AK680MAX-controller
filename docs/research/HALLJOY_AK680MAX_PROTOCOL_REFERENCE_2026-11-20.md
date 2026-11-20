@@ -110,3 +110,18 @@ This live test does not yet validate firmware metadata, travel units, analog str
 The live physical Identify result confirms board 2255 / gen2. A current review of the ROYUAN protocol reference clarifies that wired gen2 keyboards return zero for GET `0x80`; the firmware revision is instead encoded in the Identify response at bytes 7–8, decoded as `(reply[8] << 8) | reply[7]`. The current app's Identify parser extracts only the 32-bit board ID, so this metadata is not yet retained or displayed. Implementing the revision display should reuse the same validated Identify response and must not send a separate `0x80` request. Byte 9's meaning remains unconfirmed for this board.
 
 Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md (Families and Other).
+
+
+## Analog travel stream protocol review and Linux implementation (2026-11-20)
+
+The ROYUAN protocol reference's Magnetic switches section documents the gen2 travel stream:
+- Control command `0x1B [flag]`, Bit7 checksum; nonzero starts and zero stops the volatile stream flag.
+- Input is a 32-byte Report ID 5 frame on the vendor input collection (`0xFFFF:1`): byte 0 report ID `0x05`, byte 1 opcode `0x1B`, bytes 2–3 little-endian raw travel, byte 4 physical slot 0–127.
+- The stream is cable-only. Reports are emitted when a key's travel changes and once with zero on release; an unchanged held key may produce no new report.
+- The protocol reference reports substantial burst rates and finite host input queues, so the Linux reader uses nonblocking reads in bounded batches and retains the latest value per slot instead of appending every frame to the GUI log.
+
+The application now contains an opt-in session implementation. Before start it performs a fresh read-only Identify and requires board ID 2255, then verifies a unique interface-2 / interface-1 pair on one USB parent. It sends the temporary start flag, reads interface 1, and best-effort sends the stop flag on user stop, startup failure after an attempted enable, input error, or app close. Unit tests cover packet checksum, identity gate, pairing, parsing, polling, and cleanup.
+
+Important evidence boundary: the protocol document's firmware disassembly / hardware observations cover several gen2 boards; the user's own board has not yet been physically tested with the stream command. HallJoy lists AJAZZ AK680 MAX HE as supported, but our app must still verify actual samples and stop behavior on this unit. Raw travel units and full-scale range are not inferred from the 4000 µm profile note. No analog stream command has been sent to the user's keyboard by this development work.
+
+Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#magnetic-switches
