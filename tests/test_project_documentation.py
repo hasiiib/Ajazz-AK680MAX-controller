@@ -47,6 +47,17 @@ class Board2255DocumentationTests(unittest.TestCase):
         self.assertIn("8+1K", self.evidence)
         self.assertIn("8+8K", self.evidence)
 
+    def test_application_code_never_targets_incompatible_board_protocols(self):
+        forbidden = ("3151:502c", "0x502c", "0c45:80b2", "0x80b2")
+        source_paths = list((ROOT / "app").rglob("*.py")) + list((ROOT / "udev").glob("*"))
+        for source_path in source_paths:
+            source = source_path.read_text(encoding="utf-8").lower()
+            for token in forbidden:
+                with self.subTest(path=source_path.relative_to(ROOT), token=token):
+                    self.assertNotIn(token, source)
+        protocol = (ROOT / "app" / "protocol.py").read_text(encoding="utf-8")
+        self.assertIn("PRODUCT_ID = 0x502D", protocol)
+
     def test_public_docs_link_evidence_and_keep_analog_unverified(self):
         for path in ("README.md", "PROJECT_STATUS.md", "ROADMAP.md", "HARDWARE_VERIFICATION.md"):
             doc_path = ROOT / path if path != "HARDWARE_VERIFICATION.md" else ROOT / "docs" / path
