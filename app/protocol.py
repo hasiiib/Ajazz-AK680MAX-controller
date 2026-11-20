@@ -214,7 +214,7 @@ def identify_exchange_details(device, sleep=time.sleep) -> IdentifyResult:
         sent = device.send_feature_report(wire_request)
     except Exception as exc:
         raise IdentifyError(f"Could not send the read-only Identify request: {exc}") from exc
-    if sent is not None and sent != len(wire_request):
+    if sent != len(wire_request):
         raise IdentifyError(
             f"hidapi sent an incomplete Identify request ({sent}/{len(wire_request)} bytes)."
         )
