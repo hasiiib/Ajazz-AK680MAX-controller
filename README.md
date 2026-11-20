@@ -31,7 +31,7 @@ The physical keyboard has completed the read-only Identify handshake and reporte
 
 An opt-in Analog Monitor is implemented. It re-identifies the board before starting, validates the control/input interface pair, temporarily requests raw travel reports, and attempts cleanup when stopped or when the application exits. **Physical analog streaming has not yet been verified**, and raw travel values have no confirmed physical unit or calibrated range.
 
-Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). These modules are not connected to live HID reads and have not been exercised against the physical board. A separate display-only projection prepares validated snapshots for a future GUI view, showing keymap entries as raw hex and magnetic values in protocol-native form without guessing their meanings. It performs no HID I/O and does not write or alter keyboard settings.
+Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). These modules are not connected to live HID reads and have not been exercised against the physical board. A separate **Configuration (read-only)** GUI tab can browse an already validated snapshot, showing keymap entries as raw hex and magnetic values in protocol-native form without guessing their meanings. The viewer starts empty: live configuration acquisition is deliberately not connected until board-2255 response framing is physically verified. The viewer itself performs no HID I/O and cannot write or alter keyboard settings.
 
 The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
 
@@ -69,9 +69,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run passed: **74 tests**, including analog-monitor disconnect recovery and GUI cleanup regression checks.
+GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **101 tests**, including snapshot validation and read-only viewer coverage. CI installs the application dependencies and runs the Qt tests in offscreen mode.
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44766230771
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 
 ## Project status
 
