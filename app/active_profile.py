@@ -24,6 +24,8 @@ def active_profile_get_packet() -> bytes:
 
 def parse_active_profile_reply(reply: bytes | bytearray) -> int:
     """Return the zero-based active profile from a validated 0x84 reply."""
+    if not isinstance(reply, (bytes, bytearray)):
+        raise ProfileProtocolError("Profile reply must be bytes or bytearray.")
     data = bytes(reply)
     if len(data) == REPORT_LENGTH + 1 and data[0] == 0:
         data = data[1:]
