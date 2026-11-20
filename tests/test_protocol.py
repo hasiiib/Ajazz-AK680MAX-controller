@@ -89,6 +89,25 @@ class IdentifyProtocolTests(unittest.TestCase):
         reply[8] = 0x01
         self.assertIsNone(parse_gen2_firmware_revision(reply))
 
+    def test_device_id_parser_requires_exact_normalized_report_length(self):
+        valid = bytearray(64)
+        valid[0] = 0x8F
+        valid[1:5] = (2255).to_bytes(4, "little")
+        for reply in (bytes(4), bytes(valid[:5]), bytes(valid[:63]),
+                      bytes(valid) + b"\\x00", bytes([0]) + bytes(valid)):
+            with self.subTest(length=len(reply)):
+                self.assertIsNone(parse_device_id(reply))
+
+    def test_firmware_parser_requires_exact_normalized_report_length(self):
+        valid = bytearray(64)
+        valid[0] = 0x8F
+        valid[7] = 0x02
+        valid[8] = 0x01
+        for reply in (bytes(valid[:63]), bytes(valid) + b"\\x00",
+                      bytes([0]) + bytes(valid)):
+            with self.subTest(length=len(reply)):
+                self.assertIsNone(parse_gen2_firmware_revision(reply))
+
     def test_reject_wrong_opcode_and_zero_id(self):
         self.assertIsNone(parse_device_id(bytes(64)))
         reply = bytearray(64)
