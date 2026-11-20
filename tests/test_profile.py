@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
-from profile import (
+from active_profile import (
     ProfileProtocolError,
     active_profile_get_packet,
     parse_active_profile_reply,
