@@ -22,7 +22,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer that prepares launcher metadata before activation and restores the previous application directory after post-swap failures; a shell-level integration test simulates a failed desktop-entry activation.
-- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET and one keymap page-0 GET have each been accepted; the keymap entries remain opaque and wire byte 4 semantics remain unresolved. A separate, opt-in one-shot magnetic page-0 capture helper is prepared.
+- Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET and one keymap page-0 GET have each been accepted; the keymap entries remain opaque and wire byte 4 semantics remain unresolved. A separate, opt-in one-shot magnetic page-0 capture helper has one accepted physical capture: sub-operation 0/page 0 returned 32 raw u16 values, all 200.
 - Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
 - Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
@@ -31,21 +31,21 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - The independent Sharkfin registry maps board ID 2255 / USB 3151:502D to the AK680 MAX gen2 family and controller string `ry5088_sg9005_rt004_dm_hall_8k`; this is third-party host-software metadata, not stock-firmware proof.
 - The same AK680 MAX name covers four device IDs; 2336/2343/2371 use PID 3151:502F and different controller strings. PID 3151:502D is also shared by unrelated device IDs, so Identify ID 2255 remains essential.
 - One physical `0x84` active-profile GET and one `0x8A` keymap page-0 GET have been accepted on target board 2255. The `0x8A` parser accepted 16 opaque four-byte entries; upstream documentation and code still disagree on the meaning of byte 4 in that request.
-- Public `0xE5` magnetic-settings findings are firmware-image-derived from other gen2 IDs (2268, 2116, 3708), not a board-2255 hardware test.
+- Public `0xE5` protocol details remain firmware-image-derived from other gen2 IDs (2268, 2116, 3708); board 2255 has one accepted physical sub-operation-0/page-0 capture (32 raw u16 values, all 200), but this does not establish other pages or value meanings.
 - Public `0x1B` travel-stream findings are from other firmware images and other hardware; target transport, stop behavior, and report semantics remain unverified.
 - Stock firmware provenance is not established by the Identify ID alone; this project has not flashed firmware and no board-2255 stock image/hash has been matched. Full sources and exclusions are in [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 
 ## Not yet verified on the physical keyboard
 - Live analog stream start, transport, stop behavior, travel reports, hold/release behavior, and physical confirmation of disconnect recovery. Keep the GUI warning visible until tested on board 2255.
 - Raw travel units and calibrated travel range.
-- Live magnetic settings and broader keymap page coverage remain unverified; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated `0x84` GET (Profile 1 / index 0) and one `0x8A` GET (profile 0/page 0) have been physically accepted, but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
+- Other magnetic sub-operations/pages and broader keymap page coverage remain unverified; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated `0x84` GET (Profile 1 / index 0) and one `0x8A` GET (profile 0/page 0) have been physically accepted, but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
 
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated and experimental; before any attempt, the exact opened control handle is re-identified as board 2255. This host-side identity guard does not verify the 0x1B command, transport, stop behavior, or travel scale, all of which remain unverified on this physical board.
-- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; standalone one-shot `0x84`, `0x8A`, and `0xE5` capture helpers are separate and require explicit flags. The `0x84` and `0x8A` helpers each have one accepted physical capture; the `0xE5` helper is prepared but not yet run. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
+- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; standalone one-shot `0x84`, `0x8A`, and `0xE5` capture helpers are separate and require explicit flags. The `0x84`, `0x8A`, and `0xE5` helpers each have one accepted physical capture; `0xE5` evidence is limited to sub-operation 0/page 0 and its raw values remain uninterpreted. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
