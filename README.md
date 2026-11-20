@@ -69,9 +69,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run passed: **70 tests**, including automatic GUI connection-refresh safety and inventory-reuse regression checks.
+GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run passed: **71 tests**, including automatic GUI connection-refresh safety, inventory reuse, and diagnostic formatting regression checks.
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44764800372
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44765017962
 
 ## Project status
 
