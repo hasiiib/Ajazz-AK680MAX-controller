@@ -63,9 +63,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The run for commit `e0f498c9b46205515cdf9e0277316ccb6fcf5f4c` passed:
+GitHub Actions runs this suite on pushes and pull requests. The latest run for commit `74ea205541d894b6451332dd69d26fad248b1a6c` passed, including incomplete HID transfer handling:
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44759576825
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44760074233
 
 ## Project status and research
 
