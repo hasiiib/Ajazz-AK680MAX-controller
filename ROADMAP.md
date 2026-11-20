@@ -65,3 +65,16 @@ Only implement features supported by verified firmware/protocol behavior.
 - Reference protocol: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md
 - Protocol doc describes 64-byte Feature reports on Usage Page `0xFFFF`, Usage `0x02`, and identify GET opcode `0x8F` returning a 32-bit little-endian device ID. Gen2 and yc500 opcodes collide; never guess family.
 - Next development milestone: add a narrowly scoped, GET-only identify operation (0x8F), verify device ID, and disable all writes/configuration changes. No protocol command has yet been sent to the user's keyboard.
+
+
+## Read-only Identify UI milestone (2026-11-20)
+- [x] Add guarded 0x8F Identify packet builder and response parser.
+- [x] Restrict discovery to VID:PID 3151:502D, interface 2, Usage Page 0xFFFF / Usage 0x0002; refuse ambiguous matches.
+- [x] Add an explicit read-only Identify button to the GUI.
+- [x] Add unit tests for packet framing, checksum, response parsing, and malformed/refusal responses.
+- [ ] Run the automated tests in the target Ubuntu environment.
+- [ ] Run Identify against the physical keyboard and record the live board-reported device ID.
+- [ ] If hidapi access is denied, inspect udev ancestry and add a narrowly scoped permission rule for only the verified settings interface.
+- [ ] Confirm device ID and family before implementing any further GET operations.
+
+Safety boundary: Identify is the only command currently implemented. No configuration writes or settings controls have been added. A public reference maps 3151:502D to candidate device ID 2255 / gen2, but the live board response remains unverified.
