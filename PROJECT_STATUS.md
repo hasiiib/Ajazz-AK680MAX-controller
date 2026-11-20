@@ -81,3 +81,10 @@ This code is pure and disconnected from HID/GUI. The protocol shape is family-le
 The magnetic settings and keymap modules are both request builders/parsers only. No GET or SET command was sent to the physical keyboard during these changes.
 
 The combined 47-test suite passed on commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389.
+
+
+## Read-only active-profile parser groundwork (2026-11-20)
+
+Added `app/profile.py` and `tests/test_profile.py`. The module builds the gen2 `0x84` GET request and validates the zero-based active profile index in response byte 1, accepting only profile indices 0–3. It validates the full 64-byte payload, opcode, and optional zero report-ID prefix. It does not switch profiles and performs no HID I/O.
+
+The sharkfin AK680 MAX board record lists four onboard profiles, but no `0x84` request or response has been captured from the user's physical board. The module remains disconnected from the GUI pending a board-2255 hardware read-only validation. No profile SET command has been added or sent.
