@@ -73,8 +73,8 @@ python3 -m venv "$STAGE_DIR/.venv"
 
 # Prepare launcher metadata before touching the active installation. Writing
 # temporary files first keeps existing launchers intact if generation fails.
-LAUNCHER_TMP="${BIN_DIR}/.${APP_NAME}-launcher-$"
-DESKTOP_TMP="${DESKTOP_DIR}/.${APP_NAME}.desktop-$"
+LAUNCHER_TMP="$BIN_DIR/.$APP_NAME-launcher-$BASHPID"
+DESKTOP_TMP="$DESKTOP_DIR/.$APP_NAME.desktop-$BASHPID"
 [[ ! -e "$LAUNCHER_TMP" && ! -e "$DESKTOP_TMP" ]] || fail "A temporary launcher path already exists; please retry."
 
 cat > "$LAUNCHER_TMP" <<'LAUNCH'
