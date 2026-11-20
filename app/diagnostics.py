@@ -9,7 +9,7 @@ import re
 from datetime import datetime, timezone
 
 _SERIAL_PATTERNS = (
-    re.compile(r"(\b(?:iSerialNumber|serial(?:_number)?|ID_SERIAL_SHORT)\s*[:=]\s*)(\S+)", re.IGNORECASE),
+    re.compile(r"(\b(?:iSerialNumber|serial(?:_?number)?|ID_SERIAL(?:_SHORT)?)\s*[:=]\s*)(\S+)", re.IGNORECASE),
     re.compile(r"(\bSerial Number\s*:\s*)(\S+)", re.IGNORECASE),
     re.compile(r"(\bserial\s+)([A-Za-z0-9_-]{6,})", re.IGNORECASE),
 )
