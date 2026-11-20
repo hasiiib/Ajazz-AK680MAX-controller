@@ -56,10 +56,10 @@ def _safe_identify_failure(exc: Exception) -> str:
     else:
         # Preserve the useful diagnostic while removing identifying host details.
         detail = " | ".join(chain)
-        detail = re.sub(r"/dev/[^\\s,;:)]+", "<hid-device-path>", detail, flags=re.IGNORECASE)
+        detail = re.sub(r"/dev/[^\s,;:)]+", "<hid-device-path>", detail, flags=re.IGNORECASE)
         detail = re.sub(
-            r"(serial(?:_?number)?|iSerialNumber|ID_SERIAL(?:_SHORT)?)\\s*[:=]\\s*[^\\s,;]+",
-            r"\\1=<redacted>",
+            r"(serial(?:_?number)?|iSerialNumber|ID_SERIAL(?:_SHORT)?)\s*[:=]\s*[^\s,;]+",
+            r"\1=<redacted>",
             detail,
             flags=re.IGNORECASE,
         )
