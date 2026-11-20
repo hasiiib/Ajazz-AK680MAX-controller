@@ -4,11 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
-from keymap import (
-    KeymapProtocolError,
-    keymap_get_packet,
-    parse_keymap_page,
-)
+from keymap import KeymapProtocolError, keymap_get_packet, parse_keymap_page
 
 
 class KeymapRequestTests(unittest.TestCase):
@@ -23,11 +19,29 @@ class KeymapRequestTests(unittest.TestCase):
         invalid = (
             (-1, 0, 0), (4, 0, 0), (0, -1, 0), (0, 8, 0),
             (0, 0, -1), (0, 0, 4), (True, 0, 0), (0, False, 0),
+            (0, 0, True),
         )
         for args in invalid:
             with self.subTest(args=args):
                 with self.assertRaises(KeymapProtocolError):
                     keymap_get_packet(*args)
+
+    def test_every_valid_page_has_exact_slot_offset(self):
+        for profile in range(4):
+            for sublayer in range(4):
+                for page in range(8):
+                    with self.subTest(profile=profile, sublayer=sublayer, page=page):
+                        parsed = parse_keymap_page(
+                            profile, page, sublayer, bytes(range(64))
+                        )
+                        self.assertEqual(parsed.first_slot, page * 16)
+                        self.assertEqual(len(parsed.entries), 16)
+
+    def test_parser_rejects_invalid_metadata_before_payload(self):
+        for args in ((4, 0, 0), (0, 8, 0), (0, 0, 4), (True, 0, 0)):
+            with self.subTest(args=args):
+                with self.assertRaises(KeymapProtocolError):
+                    parse_keymap_page(*args, bytes(64))
 
 
 class KeymapParserTests(unittest.TestCase):
@@ -58,6 +72,13 @@ class KeymapParserTests(unittest.TestCase):
             with self.subTest(length=len(raw)):
                 with self.assertRaises(KeymapProtocolError):
                     parse_keymap_page(0, 0, 0, raw)
+
+    def test_bytearray_input_is_copied_to_immutable_entries(self):
+        raw = bytearray(range(64))
+        result = parse_keymap_page(0, 0, 0, raw)
+        raw[0] = 255
+        self.assertEqual(result.entries[0], bytes([0, 1, 2, 3]))
+        self.assertIsInstance(result.entries[0], bytes)
 
 
 if __name__ == "__main__":
