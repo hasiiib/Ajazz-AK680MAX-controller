@@ -33,6 +33,8 @@ An opt-in Analog Monitor is implemented. It re-identifies the board before start
 
 Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). These modules are not connected to the GUI, perform no HID I/O, and have not been exercised against the physical board. They do not write or alter keyboard settings.
 
+The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
+
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
 
 ## Installation and data safety
@@ -65,9 +67,9 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run for commit `e19b648753ca41c3d144fc67231381c00952db0c` passed: **55 tests** covering Identify, analog stream lifecycle, magnetic settings pages, keymap pages, active-profile metadata, installer shell syntax, rollback structure, and narrow udev permissions.
+GitHub Actions runs this suite on pushes and pull requests. The latest full unit-test run for commit `a10c459c51319fe53740da82f91b034be0773e3d` passed: **59 tests** covering protocol parsers, analog stream lifecycle, diagnostic privacy, installer/udev safety, and Python syntax compilation of every app module.
 
-https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803
+https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456
 
 ## Project status and research
 
