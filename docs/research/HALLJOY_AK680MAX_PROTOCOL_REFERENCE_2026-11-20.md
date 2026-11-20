@@ -180,3 +180,17 @@ References:
 - [sharkfin AK680 MAX exact model/revision support page](https://getsharkfin.com/boards/ajazzmouse-ak680-max)
 - [sharkfin ROYUAN protocol reference](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md), especially Families, Keymap, Profiles, Settings, and Magnetic switches
 - [sharkfin source repository and license](https://github.com/dniminenn/sharkfin)
+
+
+## Read-only magnetic GET parser implementation (2026-11-20)
+
+The repository now contains an independent, pure-Python parser for the documented gen2 magnetic-page GET format in `app/magnetic_settings.py`, with regression tests in `tests/test_magnetic_settings.py`. The request builder creates a 64-byte `0xE5` Bit7-checksummed payload with `[subop, 1, page]` in bytes 1–3. The response parser expects the documented raw 64-byte page without an echoed opcode; it also accepts hidapi's 65-byte form with a leading zero report ID.
+
+Supported page layouts are:
+- u16 columns 0–4 and 6: 32 little-endian values per page, four pages (128 slots);
+- byte columns 5, 7 and 9: 64 values per page, two pages;
+- read-only DKS action column 10: sixteen four-byte records per page, eight pages.
+
+The write-only sub-operation 8, all `0x65` magnetic SET operations, and firmware-specific columns 251/252/254 are deliberately not exposed. The parser performs no HID I/O and the GUI does not call it. This is parser/test groundwork only, not proof that board 2255 returns these pages. The public protocol reference marks the detailed `0xE5` handler evidence as firmware-derived from other gen2 boards, so an actual board-2255 GET-only capture is still required before connecting this module to the device. No GET or SET command was sent to the physical keyboard during this development step.
+
+Reference: [sharkfin ROYUAN protocol reference — Magnetic switches](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#magnetic-switches).
