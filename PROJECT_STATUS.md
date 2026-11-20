@@ -116,3 +116,22 @@ Interpretation / safety:
 - Interface 1's vendor-defined Report ID 5 is input-only according to this descriptor; do not assume it is a configuration channel.
 - No Feature or Output reports have been sent. No keyboard settings have been changed.
 - Do not probe with guessed payloads. Seek official software/documentation or credible protocol evidence first.
+
+
+## External protocol research and USB identity discrepancy (2026-11-20)
+Initial public research surfaced a potentially important model/USB-ID mismatch:
+- The community reverse-engineering repository `shorekeeper/ajazzdesktopify` describes AK680 MAX lightless as VID:PID `3151:502C` and AK680 MAX RGB as `0C45:80B2`; it explicitly documents different protocols for those variants. Source: https://github.com/shorekeeper/ajazzdesktopify
+- A separate OpenRGB issue reports the same USB ID `3151:502D` and the same three-interface descriptor lengths (59/171/20) for an Epomaker HE68 Mag. Source: https://gitlab.com/CalcProgrammer1/OpenRGB/-/work_items/5703
+- A device database result also associates `3151:502D` with Attack Shark X82HE. Source: https://getsharkfin.com/boards/attack-shark-x82he
+- Official AJAZZ driver pages list multiple AK680 MAX wired/magnetic variants, reinforcing that exact model/variant selection matters: https://ajazz.net/pages/ajazz-drivers and https://www.a-jazz.com/en/col.jsp?id=160
+
+Caution:
+- The user's detected VID:PID is `3151:502D`, which does not match the two AK680 MAX IDs described in the cited reverse-engineering repository.
+- Similar descriptor layout does not prove identical firmware or command protocol. Do not apply the `3151:502C` or `0C45:80B2` protocol to this device.
+- Treat the keyboard identity as unresolved until the physical label/packaging and full USB device descriptor (including bcdDevice, manufacturer/product strings where present) are checked.
+- The 64-byte vendor-defined Feature report found on Interface 2 is only a structural observation; no command semantics are known and no reports have been sent.
+
+Next handoff:
+1. Ask the user to confirm the exact model/variant printed on the keyboard underside or box (and whether it is RGB or no-backlight).
+2. Obtain full USB identity fields with `sudo lsusb -v -d 3151:502d | grep -E '(^Bus|bcdUSB|bcdDevice|iManufacturer|iProduct|iSerial|idVendor|idProduct|bNumInterfaces)'`.
+3. Reconcile the hardware identity before any protocol-specific implementation. Continue read-only; do not send Feature/Output reports.
