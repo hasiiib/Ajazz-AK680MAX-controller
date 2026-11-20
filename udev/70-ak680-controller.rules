@@ -1,3 +1,6 @@
-# Grant the active desktop user access only to the AK680 MAX vendor Feature interface.
-# The matching USB properties and interface number were verified on hidraw4.
+# Grant the active desktop user access only to the AK680 MAX control interface.
+# hidapi bundled Linux backend uses libusb, so it must open the USB device node.
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="3151", ATTR{idProduct}=="502d", TAG+="uaccess"
+
+# Also retain narrowly scoped access to the descriptor-confirmed Feature hidraw node.
 SUBSYSTEM=="hidraw", ENV{ID_BUS}=="usb", ENV{ID_USB_VENDOR_ID}=="3151", ENV{ID_USB_MODEL_ID}=="502d", ENV{ID_USB_INTERFACE_NUM}=="02", TAG+="uaccess"
