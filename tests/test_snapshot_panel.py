@@ -58,9 +58,11 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
         self.assertIn("provenance are not verified", panel.status.text())
+
         panel.magnetic_selector.setCurrentIndex(0)
-        self.assertEqual(panel.table.rowCount(), 128)
         self.assertEqual(panel.table.item(0, 1).text(), "512 (0x0200)")
+        panel.layer_selector.setCurrentIndex(0)
+        self.assertEqual(panel.table.item(0, 1).text(), "10 20 30 00")
         panel.close()
 
     def test_rejected_replacement_clears_previous_snapshot(self):
@@ -75,6 +77,16 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertIsNone(panel._view)
         self.assertFalse(panel.layer_selector.isEnabled())
         self.assertFalse(panel.magnetic_selector.isEnabled())
+        self.assertIn("No verified snapshot", panel.status.text())
+        panel.close()
+
+    def test_invalid_snapshot_replacement_clears_previous_snapshot(self):
+        panel = ReadOnlySnapshotPanel()
+        panel.set_snapshot(self.make_snapshot())
+        with self.assertRaises(TypeError):
+            panel.set_snapshot(object())
+        self.assertEqual(panel.table.rowCount(), 0)
+        self.assertIsNone(panel._view)
         self.assertIn("No verified snapshot", panel.status.text())
         panel.close()
 
