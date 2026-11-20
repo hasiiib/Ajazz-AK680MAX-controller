@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
-from protocol import identify_packet, parse_device_id, _feature_payload
+from protocol import IdentifyError, identify_packet, parse_device_id, _feature_payload
 
 
 class IdentifyProtocolTests(unittest.TestCase):
@@ -41,7 +41,7 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(_feature_payload(payload), payload)
 
     def test_reject_short_feature_report(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IdentifyError):
             _feature_payload(b"short")
 
 
