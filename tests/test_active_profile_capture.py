@@ -200,9 +200,31 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.assertEqual(len(self.device.read_calls), 2)
         self.assertTrue(self.device.closed)
 
-    def test_profile_read_failure_closes_handle_without_retry(self):
+    def test_profile_read_failure_reports_confirmed_send_and_exception_type(self):
         self.device.read_error_on = 2
-        with self.assertRaisesRegex(CaptureError, "no retry attempted"):
+        with self.assertRaisesRegex(
+            CaptureError, r"0x84 GET was sent successfully \(65/65 bytes\).*OSError"
+        ):
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(len(self.device.sent), 2)
+        self.assertEqual(len(self.device.read_calls), 2)
+        self.assertTrue(self.device.closed)
+
+    def test_profile_read_unsupported_return_reports_safe_type_and_length(self):
+        self.device.responses[1] = None
+        with self.assertRaisesRegex(
+            CaptureError, r"0x84 GET was sent successfully \(65/65 bytes\).*type=NoneType"
+        ):
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(len(self.device.sent), 2)
+        self.assertEqual(len(self.device.read_calls), 2)
+        self.assertTrue(self.device.closed)
+
+    def test_profile_read_invalid_sequence_reports_type_without_payload(self):
+        self.device.responses[1] = [0, 0, 256]
+        with self.assertRaisesRegex(
+            CaptureError, r"type=list, length=3, invalid byte elements"
+        ):
             capture_once(self.hid, sleep=self.sleeps.append)
         self.assertEqual(len(self.device.sent), 2)
         self.assertEqual(len(self.device.read_calls), 2)
