@@ -21,7 +21,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Analog session setup now closes partially allocated HID handles on second-handle creation or input-open failure, rejects invalid poll batch limits, and performs read-only Identify on the exact opened control handle before any experimental stream command; a reconnect cannot silently substitute a different control handle between identity check and use.
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
-- User-local staged installer with rollback protection.
+- User-local staged installer that prepares launcher metadata before activation and restores the previous application directory after post-swap failures; a shell-level integration test simulates a failed desktop-entry activation.
 - Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages. One physical active-profile GET and one keymap page-0 GET have each been accepted; the keymap entries remain opaque and wire byte 4 semantics remain unresolved. A separate, opt-in one-shot magnetic page-0 capture helper is prepared.
 - Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
 - Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
@@ -51,7 +51,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The suite contains **174 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
+The suite contains **175 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
 
 
 The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile and `0x8A` keymap page-0 response framing each have one accepted physical capture; `0xE5` magnetic response framing remains unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
