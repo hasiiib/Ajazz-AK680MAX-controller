@@ -5,7 +5,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from read_only_snapshot import build_read_only_snapshot
-from snapshot_view import project_snapshot_for_display
+from snapshot_view import (
+    KeymapEntryView, KeymapLayerView, MagneticColumnView, MagneticValueView,
+    SnapshotView, project_snapshot_for_display,
+)
 
 
 def make_snapshot():
@@ -57,6 +60,22 @@ class SnapshotViewTests(unittest.TestCase):
         self.assertIsInstance(view.magnetic_columns[0].values, tuple)
         with self.assertRaises(AttributeError):
             view.active_profile_index = 0
+
+    def test_display_value_objects_reject_forged_or_mutable_shapes(self):
+        with self.assertRaises(ValueError):
+            KeymapEntryView(1, "not hex")
+        with self.assertRaises(ValueError):
+            KeymapEntryView(True, "AA BB CC DD")
+        with self.assertRaises(ValueError):
+            KeymapLayerView(0, 0, [])
+        with self.assertRaises(ValueError):
+            MagneticValueView(0, "1 (0x01)")
+        with self.assertRaises(ValueError):
+            MagneticColumnView(8, 1, ())
+        with self.assertRaises(ValueError):
+            MagneticColumnView(0, 2, [])
+        with self.assertRaises(ValueError):
+            SnapshotView(0, (), ())
 
     def test_projection_rejects_unvalidated_objects(self):
         for value in (None, {}, object()):
