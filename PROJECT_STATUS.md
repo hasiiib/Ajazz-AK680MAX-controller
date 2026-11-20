@@ -360,3 +360,19 @@ After installing the VID:PID-scoped USB-device uaccess rule and reconnecting the
 The user then reran the Python hidapi open test against interface 2 (path 1-1:1.2): HIDAPI OPEN: SUCCESS. This confirms the bundled libusb-backed hidapi can now open the keyboard control interface as the ordinary desktop user.
 
 Next: user should launch the GUI and click the explicit read-only Identify action once. Record the returned board ID or exact error. No Feature report has yet been sent in this permission test; no keyboard settings have been changed. Board ID 2255 remains a public-reference candidate until read from the physical device.
+
+
+## Physical keyboard Identify verified: board ID 2255 (2026-11-20)
+
+The user ran the application on Ubuntu and supplied the complete scan / identification output.
+
+Observed on the physical keyboard:
+- USB device `3151:502d`, currently enumerated as Bus 001 Device 014.
+- HIDAPI collections: interface 0 at `1-1:1.0`, interface 1 at `1-1:1.1`, interface 2 at `1-1:1.2`; all resolve to USB parent `1-1`.
+- Pairing diagnostic: PASS — control interface 2 and analog-input candidate interface 1 belong to the same physical USB device.
+- Read-only Identify completed and returned board-reported device ID `2255`.
+- The returned ID matches the public AK680 MAX board record for VID:PID `3151:502d`, protocol family `gen2`.
+
+This supersedes earlier status notes saying the live board ID was unknown or that Identify remained pending. The physical identity is now confirmed as board ID 2255 by the device's own read-only response. The application has not yet read firmware/precision metadata or analog input frames. No stream-enable command, configuration write, calibration, RGB change, remap, or other setting change has been sent.
+
+Next safe development step: review the existing protocol implementation and tests, then add only documented GET/read operations for firmware/device metadata (starting with the public protocol's 0x80 query) if response framing and parsing can be validated. Keep the 0x1B live-stream state change and all configuration writes disabled until separately reviewed and explicitly tested.
