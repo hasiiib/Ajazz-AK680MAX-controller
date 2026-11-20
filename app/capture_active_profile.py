@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -30,23 +31,44 @@ class CaptureError(RuntimeError):
 
 
 def _safe_identify_failure(exc: Exception) -> str:
-    """Map Identify failures to useful diagnostics without exposing HID paths."""
-    message = str(exc).lower()
-    if "could not open" in message or "permission" in message or "access denied" in message:
-        return "could not open settings interface 2 (check USB connection and hidraw permissions)"
-    if "could not send" in message or "incomplete identify request" in message:
-        return "read-only Identify request could not be sent completely"
-    if "feature read failed" in message:
-        return "HID Feature read failed while waiting for the Identify response"
-    if "not a valid 0x8f" in message or "refused the request" in message:
-        return "Feature report arrived, but it was not a valid 0x8F Identify response"
-    if "did not return a valid 0x8f" in message:
-        return "no valid 0x8F Identify response arrived within the timeout"
-    if "could not select usb interface 2" in message or "matching settings interfaces" in message:
-        return "could not uniquely select HID settings interface 2"
-    if "hidapi python package is missing" in message:
-        return "hidapi Python package is missing from the installed environment"
-    return f"read-only Identify failed ({exc.__class__.__name__}; details withheld)"
+    """Return useful error context while redacting device paths and serials."""
+    chain = []
+    current = exc
+    seen = set()
+    while current is not None and id(current) not in seen and len(chain) < 4:
+        seen.add(id(current))
+        chain.append(f"{current.__class__.__name__}: {current}")
+        current = current.__cause__ or current.__context__
+    message = " | ".join(chain).lower()
+
+    if any(token in message for token in ("could not open", "permission", "access denied", "hidapi_error")):
+        category = "could not open settings interface 2; check USB connection and hidraw permissions"
+    elif any(token in message for token in ("could not send", "incomplete identify request")):
+        category = "read-only Identify request could not be sent completely"
+    elif "feature read failed" in message:
+        category = "HID Feature read failed while waiting for the Identify response"
+    elif any(token in message for token in ("not a valid 0x8f", "refused the request", "did not return a valid 0x8f")):
+        category = "no valid 0x8F Identify response arrived; the reply may have timed out or had unexpected framing"
+    elif any(token in message for token in ("could not select usb interface 2", "matching settings interfaces", "no matching vid/pid")):
+        category = "could not uniquely select HID settings interface 2"
+    elif "hidapi python package is missing" in message:
+        category = "hidapi Python package is missing from the installed environment"
+    else:
+        # Preserve the useful diagnostic while removing identifying host details.
+        detail = " | ".join(chain)
+        detail = re.sub(r"/dev/[^\\s,;:)]+", "<hid-device-path>", detail, flags=re.IGNORECASE)
+        detail = re.sub(
+            r"(serial(?:_?number)?|iSerialNumber|ID_SERIAL(?:_SHORT)?)\\s*[:=]\\s*[^\\s,;]+",
+            r"\\1=<redacted>",
+            detail,
+            flags=re.IGNORECASE,
+        )
+        detail = re.sub(r"(?i)(?:path=|path:)[^,;]+", "path=<redacted>", detail)
+        detail = " ".join(detail.split())
+        if len(detail) > 240:
+            detail = detail[:237] + "..."
+        category = detail or f"Identify failed ({exc.__class__.__name__}; no further details)"
+    return category
 
 
 def capture_once(
