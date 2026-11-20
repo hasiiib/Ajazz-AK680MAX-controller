@@ -68,7 +68,11 @@ def assemble_keymap_layer(pages: tuple[KeymapPage, ...] | list[KeymapPage]) -> K
             raise SnapshotValidationError("Keymap pages belong to different profiles or sublayers.")
         if page.page in by_page:
             raise SnapshotValidationError(f"Duplicate keymap page {page.page}.")
-        if len(page.entries) != 16 or any(len(entry) != 4 for entry in page.entries):
+        if page.page not in range(KEYMAP_PAGE_COUNT):
+            raise SnapshotValidationError(f"Keymap page index {page.page} is out of range.")
+        if page.first_slot != page.page * 16:
+            raise SnapshotValidationError(f"Keymap page {page.page} has an inconsistent first-slot offset.")
+        if len(page.entries) != 16 or any(not isinstance(entry, bytes) or len(entry) != 4 for entry in page.entries):
             raise SnapshotValidationError(f"Keymap page {page.page} has an invalid entry shape.")
         by_page[page.page] = page
     expected_pages = set(range(KEYMAP_PAGE_COUNT))
@@ -100,8 +104,24 @@ def assemble_magnetic_column(
             raise SnapshotValidationError("Magnetic pages belong to different sub-operations.")
         if page.page in by_page:
             raise SnapshotValidationError(f"Duplicate magnetic page {page.page}.")
+        if page.page not in range(expected_count):
+            raise SnapshotValidationError(f"Magnetic page index {page.page} is out of range.")
         if page.value_width != pages[0].value_width:
             raise SnapshotValidationError("Magnetic pages use inconsistent value widths.")
+        expected_width = 4 if subop == 10 else (2 if subop in {0, 1, 2, 3, 4, 6} else 1)
+        expected_values = 16 if expected_width == 4 else (32 if expected_width == 2 else 64)
+        if page.value_width != expected_width or len(page.values) != expected_values:
+            raise SnapshotValidationError(f"Magnetic page {page.page} has an invalid value shape.")
+        if page.first_slot != page.page * expected_values:
+            raise SnapshotValidationError(f"Magnetic page {page.page} has an inconsistent first-slot offset.")
+        if expected_width == 4:
+            if any(not isinstance(value, tuple) or len(value) != 4 or any(
+                not isinstance(part, int) or isinstance(part, bool) or not 0 <= part <= 255
+                for part in value
+            ) for value in page.values):
+                raise SnapshotValidationError(f"Magnetic page {page.page} has an invalid four-byte record.")
+        elif any(not isinstance(value, int) or isinstance(value, bool) or not 0 <= value < (1 << (8 * expected_width)) for value in page.values):
+            raise SnapshotValidationError(f"Magnetic page {page.page} has an invalid numeric value.")
         by_page[page.page] = page
     if set(by_page) != set(range(expected_count)):
         raise SnapshotValidationError("Magnetic pages do not cover the complete page range.")
