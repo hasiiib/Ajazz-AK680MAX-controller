@@ -12,8 +12,9 @@
 - [x] Conservative connection-state classification.
 - [x] Automatic metadata-only USB/HID connection refresh.
 - [x] Ensure background refresh sends no device commands.
-- [x] Temporary analog stream lifecycle and bounded input polling.
-- [ ] Verify analog start/stop, press/hold/release, and disconnect behavior on the physical keyboard.
+- [x] Automatically abort analog monitoring when the paired interfaces disappear or input/enumeration fails.
+- [x] Stop polling, clear stale samples, restore GUI controls, and attempt temporary stream stop during abort.
+- [ ] Verify analog start/stop, press/hold/release, and disconnect recovery on the physical keyboard.
 - [ ] Establish raw travel units and calibrated range.
 
 ## Read-only configuration foundation
