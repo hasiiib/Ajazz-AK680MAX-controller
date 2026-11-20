@@ -6,7 +6,7 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "app"))
 
-from capture_active_profile import CaptureError, capture_once, main
+from capture_active_profile import CaptureError, capture_once, main, _safe_identify_failure
 
 
 class FakeDevice:
@@ -110,6 +110,20 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 2)
         self.assertEqual(self.hid.enumerate_calls, 0)
         self.assertEqual(self.device.sent, [])
+
+    def test_identify_failure_message_is_actionable_without_exposing_paths(self):
+        detail = _safe_identify_failure(
+            RuntimeError("Could not open /dev/hidraw7. serial_number=UNIQUE123")
+        )
+        self.assertIn("permissions", detail)
+        self.assertNotIn("/dev/hidraw7", detail)
+        self.assertNotIn("UNIQUE123", detail)
+
+    def test_identify_timeout_has_distinct_safe_diagnostic(self):
+        detail = _safe_identify_failure(
+            RuntimeError("The keyboard did not return a valid 0x8F Identify reply.")
+        )
+        self.assertIn("within the timeout", detail)
 
     def test_identify_failure_stops_before_enumeration(self):
         with self.assertRaisesRegex(CaptureError, "Fresh read-only Identify failed"):
