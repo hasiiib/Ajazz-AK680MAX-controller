@@ -73,24 +73,48 @@ def identify_keyboard() -> int:
     except Exception as exc:
         raise IdentifyError(f"Could not enumerate HID devices: {exc}") from exc
 
+    # Linux hidapi may report Usage Page / Usage as zero for a Feature-only
+    # top-level collection even though the kernel HID descriptor exposes it.
+    # We already inspected this keyboard's Interface 2 descriptor: it is the
+    # sole 64-byte Feature-report collection (0xFFFF / 0x0002). Therefore use
+    # the stable USB interface number plus VID/PID as the selector, and log
+    # the hidapi usage fields for diagnostics rather than rejecting it.
     candidates = [
         item for item in devices
         if item.get("interface_number") == SETTINGS_INTERFACE
-        and item.get("usage_page") == USAGE_PAGE
-        and item.get("usage") == USAGE
         and item.get("path")
     ]
     if not candidates:
+        details = []
+        for item in devices:
+            details.append(
+                "interface={interface!r}, usage_page={page!r}, usage={usage!r}, "
+                "path={path!r}".format(
+                    interface=item.get("interface_number"),
+                    page=item.get("usage_page"),
+                    usage=item.get("usage"),
+                    path=item.get("path"),
+                )
+            )
+        detail_text = "; ".join(details) if details else "hidapi returned no matching VID/PID entries"
         raise IdentifyError(
-            "The expected settings interface was not found. Check that the "
-            "keyboard is connected by USB and that interface 2 exposes "
-            "Usage Page 0xFFFF / Usage 0x0002."
+            "Could not select USB interface 2. hidapi enumeration: "
+            + detail_text
         )
     if len(candidates) != 1:
         raise IdentifyError(
             f"Found {len(candidates)} matching settings interfaces; refusing "
             "an ambiguous device selection."
         )
+
+    # If hidapi does expose collection metadata, make it visible in the
+    # eventual error message; the known interface-2 report descriptor is the
+    # authority for this particular board revision.
+    selected = candidates[0]
+    usage_note = (
+        f" (hidapi usage_page={selected.get('usage_page')!r}, "
+        f"usage={selected.get('usage')!r})"
+    )
 
     device = hid.device()
     try:
@@ -109,7 +133,7 @@ def identify_keyboard() -> int:
         # Match the documented hidapi convention: leading zero is the
         # unnumbered report ID; the following 64 bytes are the Feature data.
         wire_request = bytes([0]) + request
-        last_error = "The keyboard did not answer the Identify request."
+        last_error = "The keyboard did not answer the Identify request." + usage_note
         for attempt in range(3):
             try:
                 sent = device.send_feature_report(wire_request)
