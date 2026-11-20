@@ -6,12 +6,14 @@ from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QTextEdit, QFrame, QFileDialog,
+    QLabel, QPushButton, QTextEdit, QFrame, QFileDialog, QTabWidget,
 )
 
 from analog_stream import AnalogStreamError, AnalogStreamSession
 from diagnostics import build_diagnostic_report
 from device_state import evaluate_connection
+
+from snapshot_panel import ReadOnlySnapshotPanel
 
 from protocol import (
     IdentifyError,
@@ -124,6 +126,9 @@ class Main(QMainWindow):
         layout.addWidget(hero)
         layout.addWidget(subtitle)
 
+        tabs = QTabWidget()
+        inspector_tab = QWidget()
+        inspector_layout = QVBoxLayout(inspector_tab)
         panel = QFrame()
         panel.setObjectName("panel")
         panel_layout = QVBoxLayout(panel)
@@ -132,7 +137,12 @@ class Main(QMainWindow):
         self.log.setReadOnly(True)
         self.log.setMinimumHeight(400)
         panel_layout.addWidget(self.log)
-        layout.addWidget(panel)
+        inspector_layout.addWidget(panel)
+
+        self.snapshot_panel = ReadOnlySnapshotPanel()
+        tabs.addTab(inspector_tab, "Device Inspector")
+        tabs.addTab(self.snapshot_panel, "Configuration (read-only)")
+        layout.addWidget(tabs)
 
         self.connection_status = QLabel("USB connection: not scanned")
         self.connection_status.setObjectName("sub")
