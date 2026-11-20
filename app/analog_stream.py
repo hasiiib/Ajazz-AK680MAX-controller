@@ -66,8 +66,10 @@ class AnalogStreamSession:
     def _send_flag(device, enabled: bool) -> None:
         report = bytes([0]) + stream_control_packet(enabled)
         sent = device.send_feature_report(report)
-        if sent is not None and sent <= 0:
-            raise AnalogStreamError("hidapi did not send the analog stream command.")
+        if sent is not None and sent != len(report):
+            raise AnalogStreamError(
+                f"hidapi sent an incomplete analog stream command ({sent}/{len(report)} bytes)."
+            )
 
     def start(self) -> None:
         if self._active:
