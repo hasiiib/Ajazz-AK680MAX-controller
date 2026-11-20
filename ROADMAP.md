@@ -27,7 +27,8 @@
 - [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
 - [x] Audit public board-2255 registry/protocol evidence and document family-level versus firmware-image evidence, the upstream `0x8A` byte-4 ambiguity, stock/custom firmware limits, and incompatible-board exclusions.
 - [x] Validate one physical 0x84 active-profile GET response on board 2255 (accepted profile index 0; one capture only).
-- [ ] Validate 0x8A and 0xE5 response framing and values on physical board 2255 before connecting these reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
+- [x] Validate one physical 0x8A keymap page-0 response on board 2255; preserve its 16 entries as opaque four-byte values.
+- [ ] Validate one physical 0xE5 magnetic sub-operation-0/page-0 response on board 2255 before connecting magnetic reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
@@ -44,15 +45,16 @@
 - [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
-- Physical Identify result 2255 and one read-only 0x84 active-profile GET (Profile 1 / index 0) are verified; 0x8A/0xE5 reads and analog streaming are not yet physically verified.
+- Physical Identify result 2255, one read-only 0x84 active-profile GET (Profile 1 / index 0), and one read-only 0x8A keymap page-0 GET (16 opaque entries) are verified; 0xE5 and analog streaming are not yet physically verified.
 - Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
 - Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **167 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, and strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0x8A`/`0xE5` read-only response validation remain hardware gates; `0x84` has one accepted physical capture. The latest full run passed on commit `9d5863e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44784448456).
+The suite contains **173 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. CI verification for the latest capture-tooling changes is pending.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
+- [x] Add an explicitly confirmed, one-shot 0xE5 page-0 capture helper with no retries or writes.
 - [x] Publish board-2255-specific protocol evidence and variant exclusions.
