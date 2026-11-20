@@ -30,6 +30,95 @@ class InstallerSafetyTests(unittest.TestCase):
         self.assertIn('mv -- "$STAGE_DIR" "$APP_DIR"', script)
         self.assertIn("the previous version was restored", script)
 
+    def test_installer_restores_previous_app_if_post_swap_activation_fails(self):
+        bash = shutil.which("bash")
+        if bash is None:
+            self.skipTest("bash is not available")
+
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "home"
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            app_dir = home / ".local" / "opt" / "ak680-controller"
+            launcher_dir = home / ".local" / "bin"
+            desktop_dir = home / ".local" / "share" / "applications"
+            app_dir.mkdir(parents=True)
+            launcher_dir.mkdir(parents=True)
+            desktop_dir.mkdir(parents=True)
+            (app_dir / "previous.marker").write_text("previous-version", encoding="utf-8")
+            (launcher_dir / "ak680-controller").write_text("old-launcher", encoding="utf-8")
+            (desktop_dir / "ak680-controller.desktop").write_text("old-desktop", encoding="utf-8")
+
+            fake_git = fake_bin / "git"
+            fake_git.write_text(
+                "#!/bin/sh\n"
+                "[ \"$1\" = clone ] || exit 2\n"
+                "target=\"$4\"\n"
+                "mkdir -p \"$target/app\"\n"
+                "printf 'pass\\n' > \"$target/app/main.py\"\n"
+                ": > \"$target/requirements.txt\"\n",
+                encoding="utf-8",
+            )
+            fake_python = fake_bin / "python3"
+            fake_python.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1\" = -m ] && [ \"$2\" = venv ] && [ \"$3\" = --help ]; then exit 0; fi\n"
+                "if [ \"$1\" = -m ] && [ \"$2\" = venv ]; then\n"
+                "  mkdir -p \"$3/bin\"\n"
+                "  printf '#!/bin/sh\\nexit 0\\n' > \"$3/bin/python\"\n"
+                "  chmod 755 \"$3/bin/python\"\n"
+                "  exit 0\n"
+                "fi\n"
+                "exit 2\n",
+                encoding="utf-8",
+            )
+            fake_mv = fake_bin / "mv"
+            fake_mv.write_text(
+                "#!/bin/sh\n"
+                "for arg in \"$@\"; do\n"
+                "  case \"$arg\" in\n"
+                "    */.ak680-controller.desktop-*)\n"
+                "      if [ \"${FAIL_DESKTOP_MOVE:-0}\" = 1 ]; then exit 42; fi\n"
+                "      ;;\n"
+                "  esac\n"
+                "done\n"
+                "exec /bin/mv \"$@\"\n",
+                encoding="utf-8",
+            )
+            for path in (fake_git, fake_python, fake_mv):
+                path.chmod(0o755)
+
+            env = os.environ.copy()
+            env.update({
+                "HOME": str(home),
+                "PATH": f"{fake_bin}:/usr/bin:/bin",
+                "FAIL_DESKTOP_MOVE": "1",
+            })
+            result = subprocess.run(
+                [bash, str(INSTALLER)],
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(
+                (app_dir / "previous.marker").read_text(encoding="utf-8"),
+                "previous-version",
+            )
+            self.assertFalse((app_dir / "app" / "main.py").exists())
+            self.assertEqual(
+                (desktop_dir / "ak680-controller.desktop").read_text(encoding="utf-8"),
+                "old-desktop",
+            )
+            self.assertFalse(list((home / ".local" / "opt").glob(".ak680-controller-backup-*")))
+            self.assertFalse(list((home / ".local" / "opt").glob(".ak680-controller-staging-*")))
+
     def test_installer_never_executes_sudo_or_broad_permission_changes(self):
         script = INSTALLER.read_text(encoding="utf-8")
         executable_sudo = re.compile(r"^\s*sudo(?:\s|$)", re.MULTILINE)
