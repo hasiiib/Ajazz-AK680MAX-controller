@@ -33,6 +33,10 @@ class MagneticSettingsRequestTests(unittest.TestCase):
         with self.assertRaises(MagneticSettingsProtocolError):
             magnetic_settings_get_packet(0, True)
 
+    def test_request_rejects_bool_as_subop(self):
+        with self.assertRaises(MagneticSettingsProtocolError):
+            magnetic_settings_get_packet(True, 0)
+
 
 class MagneticSettingsParserTests(unittest.TestCase):
     def test_u16_page_decodes_little_endian_values_and_slot_offset(self):
