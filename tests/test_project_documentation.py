@@ -23,17 +23,9 @@ class Board2255DocumentationTests(unittest.TestCase):
         for token in ("2268", "2116", "3708"):
             with self.subTest(token=token):
                 self.assertIn(token.lower(), self.evidence_lower)
-        self.assertTrue(
-            any(
-                phrase in self.evidence_lower
-                for phrase in (
-                    "not captured on board 2255",
-                    "no board-2255 hardware capture",
-                    "no target-board capture",
-                )
-            ),
-            "Magnetic GET evidence must remain explicitly unverified on board 2255.",
-        )
+        self.assertIn("physically verified once", self.evidence_lower)
+        self.assertIn("other magnetic sub-operations/pages", self.evidence_lower)
+        self.assertIn("value meanings remain unverified", self.evidence_lower)
         self.assertIn("upstream source ambiguity", self.evidence_lower)
         self.assertIn("not verified on board 2255", self.evidence_lower)
 
@@ -100,7 +92,7 @@ class Board2255DocumentationTests(unittest.TestCase):
         ):
             with self.subTest(token=token):
                 self.assertIn(token.lower(), (plan + evidence).lower())
-        self.assertIn("not connected to HID", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
+        self.assertIn("not connected to hid", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
 
 if __name__ == "__main__":
     unittest.main()
