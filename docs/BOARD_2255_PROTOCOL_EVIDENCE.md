@@ -62,7 +62,7 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 
 - The public protocol notes are reverse-engineering documentation. Their named firmware-image findings are from other device IDs (2268, 2116, 3708, etc.), not a published board-2255 stock image.
 - Sharkfin is a GPL-3.0-or-later **host configurator**. Its README says it never flashes firmware, and its board page says it is not affiliated with or endorsed by keyboard vendors. Its support registry and protocol source are therefore not custom firmware for this keyboard.
-- AJAZZ-branded software pages list AK680 MAX driver/online-driver options and distinguish wired variants, but the pages reviewed do not provide a board-2255 firmware image, cryptographic hash, or a mapping from a specific stock image to device ID 2255. A host driver download is not a firmware binary.
+- The AJAZZ UK software page currently lists two distinct AK680 MAX wired entries: “Single-Mode Wired Dual-Mode Magnetic Switch” and “Single-Mode Wired RGB with Magnetic Switch”. It does not map either entry to USB PID 3151:502D or device ID 2255, and it does not publish a stock firmware image/hash. The AJAZZ driver listing separately labels AK680 Max Wireless packages as 8+1K and 8+8K and links an online driver; these are host-software/variant listings, not a firmware manifest for this RY1B-2255 unit. Neither page supplies a cryptographic stock-image hash or confirms which binary belongs to board 2255. A host driver download is not a firmware binary.
 - This project has not flashed firmware or installed custom firmware. The Identify result 2255 proves the board's reported ID, not the provenance or hash of every byte in its firmware. Do not label the physical unit's firmware “stock” or “custom” without a matching image/hash or vendor confirmation.
 - No firmware update, bootloader, reset, calibration, or flash path is part of this project.
 
@@ -78,6 +78,7 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 - `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure packet builders/parsers only.
 - `read_only_snapshot.py` validates supplied response payloads and assembles complete snapshots; it does not communicate with the keyboard.
 - `hardware_verification.py` assesses manually supplied byte captures or copied hex text offline; it never opens HID, sends a command, retries, or persists a capture.
+- `capture_active_profile.py` is an optional CLI requiring an explicit confirmation flag. It opens one unique interface-2 handle, performs the read-only `0x8F` Identify on that handle, and only for ID 2255 sends one `0x84` GET on the same handle; it is not run by the GUI, installer, or background refresh.
 - `snapshot_panel.py` and `snapshot_view.py` render only a validated in-memory snapshot and do not perform HID I/O.
 - The Analog Monitor is opt-in and intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility and behavior are unverified on board 2255. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
 
@@ -91,7 +92,8 @@ All Sharkfin source links below are pinned to repository commit `8c999ba7d44254f
 - [Sharkfin gen2 keymap implementation](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/app/src-tauri/src/protocol/gen2.rs) — source of the sub-layer interpretation for byte 4, tied to device 2268 firmware.
 - [Sharkfin magnetic/analog implementation](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/app/src-tauri/src/protocol/hall.rs) — host-side request builders and analog stream notes.
 - [Sharkfin README](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/README.md) — open-source host configurator; states that it never flashes firmware.
-- [AJAZZ UK software page](https://ajazz.co.uk/pages/ajazz-software) and [AJAZZ driver listing](https://ajazz.net/pages/ajazz-drivers) — host software listings, not a board-2255 stock firmware manifest.
+- [AJAZZ UK software page](https://ajazz.co.uk/pages/ajazz-software) — lists two distinct wired AK680 MAX variants, but does not identify a matching USB PID/device ID or provide a firmware image/hash.
+- [AJAZZ driver listing](https://ajazz.net/pages/ajazz-drivers) — separates 8+1K and 8+8K wireless packages and an online driver; it does not map a package to board 2255 or provide a stock firmware manifest.
 
 ## Next evidence gate
 

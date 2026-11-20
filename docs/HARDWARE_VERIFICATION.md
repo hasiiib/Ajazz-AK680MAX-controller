@@ -46,7 +46,7 @@ For the first physical test, do not run a bulk snapshot, keymap read, magnetic r
 
 ### Optional one-shot capture helper
 
-The repository includes `app/capture_active_profile.py` as an isolated, explicitly invoked diagnostic. Importing it or displaying its help sends no device command. It requires the explicit `--confirm-one-read-only-0x84` flag, performs a fresh Identify check for board 2255, refuses anything other than one interface-2 candidate, sends one `0x84` GET, reads one Feature response, and closes the handle. It never retries, saves a file, or prints a serial number or device path. A partial send or transport error stops the operation.
+The repository includes `app/capture_active_profile.py` as an isolated, explicitly invoked diagnostic. Importing it or displaying its help sends no device command. It requires the explicit `--confirm-one-read-only-0x84` flag, selects exactly one interface-2 candidate, opens that handle once, and performs the fresh read-only `0x8F` Identify on that same handle. Only if that opened handle reports board ID 2255 does it send one `0x84` GET and read one Feature response. Reusing the same handle prevents a disconnect/re-enumeration race from redirecting the profile request to another keyboard that shares the PID. It never retries either command, saves a file, or prints a serial number or device path. An Identify failure, wrong board ID, partial send, or transport error stops the operation before any later step.
 
 After updating the installed application files, the user can start the one-shot test from a terminal with:
 

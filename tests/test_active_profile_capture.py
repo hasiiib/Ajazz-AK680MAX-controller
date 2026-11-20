@@ -1,18 +1,45 @@
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "app"))
 
+from active_profile import active_profile_get_packet
 from capture_active_profile import CaptureError, capture_once, main, _safe_identify_failure
+from protocol import identify_packet
+
+
+def identify_reply(device_id=2255):
+    reply = bytearray(64)
+    reply[0] = 0x8F
+    reply[1:5] = device_id.to_bytes(4, "little")
+    return bytes([0]) + bytes(reply)
+
+
+def profile_reply(profile=2):
+    reply = bytearray(64)
+    reply[0] = 0x84
+    reply[1] = profile
+    return bytes([0]) + bytes(reply)
 
 
 class FakeDevice:
-    def __init__(self, response=None, send_result=65):
-        self.response = response if response is not None else bytes([0x84, 2]) + bytes(62)
-        self.send_result = send_result
+    def __init__(
+        self,
+        *,
+        device_id=2255,
+        profile=2,
+        send_results=None,
+        read_error_on=None,
+        open_error=False,
+    ):
+        self.identify_response = identify_reply(device_id)
+        self.profile_response = profile_reply(profile)
+        self.responses = [self.identify_response, self.profile_response]
+        self.send_results = list(send_results or [])
+        self.read_error_on = read_error_on
+        self.open_error = open_error
         self.opened_path = None
         self.sent = []
         self.read_calls = []
@@ -20,14 +47,20 @@ class FakeDevice:
 
     def open_path(self, path):
         self.opened_path = path
+        if self.open_error:
+            raise OSError("permission denied")
 
     def send_feature_report(self, report):
         self.sent.append(bytes(report))
-        return self.send_result
+        if self.send_results:
+            return self.send_results.pop(0)
+        return len(report)
 
     def get_feature_report(self, report_id, length):
         self.read_calls.append((report_id, length))
-        return self.response
+        if self.read_error_on == len(self.read_calls):
+            raise OSError("device disconnected")
+        return self.responses.pop(0) if self.responses else b""
 
     def close(self):
         self.closed = True
@@ -57,51 +90,52 @@ class ActiveProfileCaptureTests(unittest.TestCase):
             [{"interface_number": 2, "path": "fake-interface-2"}],
             self.device,
         )
-        self.identity = lambda: SimpleNamespace(device_id=2255)
         self.sleeps = []
 
-    def test_sends_one_exact_read_only_get_and_preserves_response(self):
+    def test_identify_and_one_profile_get_use_the_same_handle(self):
         raw, sent = capture_once(
             self.hid,
-            identify=self.identity,
             sleep=self.sleeps.append,
         )
-        self.assertEqual(raw, self.device.response)
+        self.assertEqual(raw, self.device.profile_response)
         self.assertEqual(sent, 65)
-        self.assertEqual(len(self.device.sent), 1)
-        self.assertEqual(len(self.device.sent[0]), 65)
-        self.assertEqual(self.device.sent[0][0], 0)
-        self.assertEqual(self.device.sent[0][1], 0x84)
-        self.assertEqual(self.device.sent[0][8], 0x7B)
-        self.assertEqual(self.device.read_calls, [(0, 65)])
-        self.assertEqual(self.sleeps, [0.010])
-        self.assertTrue(self.device.closed)
+        self.assertEqual(
+            self.device.sent,
+            [bytes([0]) + identify_packet(), bytes([0]) + active_profile_get_packet()],
+        )
+        self.assertEqual(self.device.read_calls, [(0, 65), (0, 65)])
+        self.assertEqual(self.sleeps, [0.010, 0.010, 0.010, 0.010])
+        self.assertEqual(self.hid.device_calls, 1)
+        self.assertEqual(self.hid.enumerate_calls, 1)
         self.assertEqual(self.hid.asserted_ids, (0x3151, 0x502D))
+        self.assertEqual(self.device.opened_path, b"fake-interface-2")
+        self.assertTrue(self.device.closed)
 
-    def test_wrong_board_id_sends_nothing_and_does_not_enumerate(self):
+    def test_wrong_board_id_sends_identify_only_and_never_sends_profile_get(self):
+        self.device = FakeDevice(device_id=1234)
+        self.hid.fake_device = self.device
         with self.assertRaisesRegex(CaptureError, "board ID 2255"):
-            capture_once(
-                self.hid,
-                identify=lambda: SimpleNamespace(device_id=1234),
-                sleep=self.sleeps.append,
-            )
-        self.assertEqual(self.hid.enumerate_calls, 0)
-        self.assertEqual(self.hid.device_calls, 0)
-        self.assertEqual(self.device.sent, [])
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(self.device.sent, [bytes([0]) + identify_packet()])
+        self.assertEqual(self.device.read_calls, [(0, 65)])
+        self.assertEqual(self.hid.device_calls, 1)
+        self.assertTrue(self.device.closed)
 
     def test_ambiguous_control_interface_is_rejected_before_open(self):
         self.hid.devices.append({"interface_number": 2, "path": "other-interface-2"})
         with self.assertRaisesRegex(CaptureError, "exactly one"):
-            capture_once(self.hid, identify=self.identity, sleep=self.sleeps.append)
+            capture_once(self.hid, sleep=self.sleeps.append)
         self.assertEqual(self.hid.device_calls, 0)
         self.assertEqual(self.device.sent, [])
 
-    def test_partial_send_is_not_retried_or_read(self):
-        self.device.send_result = 64
+    def test_partial_profile_send_is_not_retried_or_read(self):
+        self.device.send_results = [65, 64]
         with self.assertRaisesRegex(CaptureError, "no retry attempted"):
-            capture_once(self.hid, identify=self.identity, sleep=self.sleeps.append)
-        self.assertEqual(len(self.device.sent), 1)
-        self.assertEqual(self.device.read_calls, [])
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(len(self.device.sent), 2)
+        self.assertEqual(self.device.sent[0], bytes([0]) + identify_packet())
+        self.assertEqual(self.device.sent[1], bytes([0]) + active_profile_get_packet())
+        self.assertEqual(self.device.read_calls, [(0, 65)])
         self.assertTrue(self.device.closed)
 
     def test_cli_requires_explicit_confirmation_before_any_device_access(self):
@@ -135,15 +169,29 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         )
         self.assertIn("within the timeout", detail)
 
-    def test_identify_failure_stops_before_enumeration(self):
+    def test_identify_failure_stops_before_profile_get_and_closes_handle(self):
+        self.device.responses[0] = bytes(63)
         with self.assertRaisesRegex(CaptureError, "Fresh read-only Identify failed"):
-            capture_once(
-                self.hid,
-                identify=lambda: (_ for _ in ()).throw(OSError("no keyboard")),
-                sleep=self.sleeps.append,
-            )
-        self.assertEqual(self.hid.enumerate_calls, 0)
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(self.device.sent, [bytes([0]) + identify_packet()])
+        self.assertEqual(self.device.read_calls, [(0, 65)])
+        self.assertTrue(self.device.closed)
+
+    def test_profile_read_failure_closes_handle_without_retry(self):
+        self.device.read_error_on = 2
+        with self.assertRaisesRegex(CaptureError, "no retry attempted"):
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(len(self.device.sent), 2)
+        self.assertEqual(len(self.device.read_calls), 2)
+        self.assertTrue(self.device.closed)
+
+    def test_open_failure_closes_handle_without_sending_a_command(self):
+        self.device.open_error = True
+        with self.assertRaisesRegex(CaptureError, "One-shot 0x84 capture failed"):
+            capture_once(self.hid, sleep=self.sleeps.append)
         self.assertEqual(self.device.sent, [])
+        self.assertEqual(self.device.read_calls, [])
+        self.assertTrue(self.device.closed)
 
     def test_imported_helper_does_not_perform_device_io(self):
         self.assertEqual(self.hid.enumerate_calls, 0)

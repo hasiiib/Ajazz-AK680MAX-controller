@@ -31,6 +31,10 @@ class Board2255DocumentationTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertIn(token, self.evidence_lower)
         self.assertIn("has not flashed firmware", self.evidence_lower)
+        self.assertIn("Single-Mode Wired Dual-Mode Magnetic Switch", self.evidence)
+        self.assertIn("Single-Mode Wired RGB", self.evidence)
+        self.assertIn("8+1K", self.evidence)
+        self.assertIn("8+8K", self.evidence)
 
     def test_public_docs_link_evidence_and_keep_analog_unverified(self):
         for path in ("README.md", "PROJECT_STATUS.md", "ROADMAP.md", "HARDWARE_VERIFICATION.md"):
@@ -54,7 +58,9 @@ class Board2255DocumentationTests(unittest.TestCase):
             "app/capture_active_profile.py",
             "~/.local/opt/ak680-controller/capture_active_profile.py",
             "--confirm-one-read-only-0x84",
-            "never retries, saves a file",
+            "never retries either command",
+            "same handle",
+            "one `0x84` GET",
         ):
             with self.subTest(token=token):
                 self.assertIn(token, plan)

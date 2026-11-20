@@ -1,8 +1,9 @@
 """One-shot, user-confirmed active-profile GET capture for board 2255.
 
-This isolated CLI sends exactly one read-only 0x84 GET. It never writes
-persistent settings, retries a command, saves a capture, or prints USB paths
-or serial numbers. Importing this module performs no device I/O.
+This isolated CLI sends exactly one read-only 0x84 GET after identifying the
+same opened HID handle as board 2255. It never writes persistent settings,
+retries a command, saves a capture, or prints USB paths or serial numbers.
+Importing this module performs no device I/O.
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from active_profile import active_profile_get_packet  # noqa: E402
 from hardware_verification import assess_capture  # noqa: E402
 from protocol import (  # noqa: E402
     SETTINGS_INTERFACE,
-    identify_keyboard_details,
+    identify_exchange_details,
     inspect_keyboard_interfaces,
 )
 
@@ -74,31 +75,24 @@ def _safe_identify_failure(exc: Exception) -> str:
 def capture_once(
     hid_module,
     *,
-    identify: Callable = identify_keyboard_details,
+    identify: Callable = identify_exchange_details,
     sleep: Callable[[float], None] = time.sleep,
 ):
-    """Identify board 2255, send one 0x84 GET, and return exact raw bytes.
+    """Identify the opened board, send one 0x84 GET, and return exact raw bytes.
 
-    Feature polling is deliberately performed once. Any malformed, empty, or
-    ambiguous response is returned to the offline assessor or raised; the
-    command is never resent.
+    The 0x8F Identify and the 0x84 GET use the same uniquely selected,
+    already-open interface-2 handle. This prevents a disconnect/re-enumeration
+    race from moving the profile request to a different same-PID keyboard.
+    Feature polling for each command is deliberately bounded; neither command
+    is resent. A wrong board ID stops before the 0x84 request.
     """
-    try:
-        identity = identify()
-    except Exception as exc:
-        raise CaptureError(
-            f"Fresh read-only Identify failed: {_safe_identify_failure(exc)}; "
-            "no 0x84 request sent."
-        ) from exc
-    if getattr(identity, "device_id", None) != 2255:
-        raise CaptureError("Fresh Identify did not report board ID 2255; no 0x84 request sent.")
-
     try:
         inventory = inspect_keyboard_interfaces(hid_module)
     except Exception as exc:
         raise CaptureError(
-            f"Could not inspect HID interfaces ({exc.__class__.__name__}); no 0x84 request sent."
+            f"Could not inspect HID interfaces ({exc.__class__.__name__}); no command sent."
         ) from exc
+
     candidates = [
         item for item in inventory
         if item.get("interface_number") == SETTINGS_INTERFACE and item.get("path")
@@ -112,6 +106,23 @@ def capture_once(
     try:
         device = hid_module.device()
         device.open_path(os.fsencode(candidates[0]["path"]))
+
+        try:
+            identity = identify(device, sleep=sleep)
+        except Exception as exc:
+            raise CaptureError(
+                f"Fresh read-only Identify failed: {_safe_identify_failure(exc)}; "
+                "no 0x84 request sent."
+            ) from exc
+
+        if getattr(identity, "device_id", None) != 2255:
+            raise CaptureError(
+                "Fresh Identify on the selected HID handle did not report board ID 2255; "
+                "no 0x84 request sent."
+            )
+
+        # Preserve the reviewed transport gap between distinct Feature commands.
+        sleep(0.010)
         request = bytes([0]) + active_profile_get_packet()
         sent = device.send_feature_report(request)
         if type(sent) is not int or sent != len(request):
@@ -135,7 +146,6 @@ def capture_once(
                 device.close()
             except Exception:
                 pass
-
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
