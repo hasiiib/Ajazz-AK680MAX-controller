@@ -78,6 +78,14 @@ class HardwareCaptureAssessmentTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     assess_hex_capture("active-profile", raw_hex)
 
+    def test_metadata_rejects_boolean_and_non_string_stage_values(self):
+        for kwargs in ({"page": False}, {"sublayer": True}):
+            with self.subTest(kwargs=kwargs):
+                result = assess_capture("active-profile", bytes([0x84, 0]) + bytes(62), **kwargs)
+                self.assertFalse(result.accepted)
+        with self.assertRaises(TypeError):
+            assess_capture(None, bytes(64))
+
     def test_hex_capture_requires_text(self):
         with self.assertRaises(TypeError):
             assess_hex_capture("active-profile", bytes(64))
