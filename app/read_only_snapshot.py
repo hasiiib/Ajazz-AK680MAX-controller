@@ -56,14 +56,32 @@ class ReadOnlyConfigurationSnapshot:
 
 def assemble_keymap_layer(pages: tuple[KeymapPage, ...] | list[KeymapPage]) -> KeymapLayerSnapshot:
     """Require exactly pages 0..7 for one profile/sublayer before assembly."""
+    if not isinstance(pages, (tuple, list)):
+        raise SnapshotValidationError("Keymap pages must be supplied as a list or tuple.")
     if len(pages) != KEYMAP_PAGE_COUNT:
         raise SnapshotValidationError(
             f"Keymap layer is incomplete: received {len(pages)} of {KEYMAP_PAGE_COUNT} pages."
         )
+    if any(not isinstance(page, KeymapPage) for page in pages):
+        raise SnapshotValidationError("Every keymap page must be a validated KeymapPage.")
     first = pages[0]
+    if (
+        not isinstance(first.profile, int) or isinstance(first.profile, bool)
+        or not 0 <= first.profile < 4
+        or not isinstance(first.sublayer, int) or isinstance(first.sublayer, bool)
+        or not 0 <= first.sublayer < 4
+    ):
+        raise SnapshotValidationError("Keymap page has an invalid profile or sublayer.")
     expected_identity = (first.profile, first.sublayer)
     by_page: dict[int, KeymapPage] = {}
     for page in pages:
+        if (
+            not isinstance(page.profile, int) or isinstance(page.profile, bool)
+            or not isinstance(page.sublayer, int) or isinstance(page.sublayer, bool)
+            or not isinstance(page.page, int) or isinstance(page.page, bool)
+            or not isinstance(page.first_slot, int) or isinstance(page.first_slot, bool)
+        ):
+            raise SnapshotValidationError("Keymap page metadata must contain integers, not booleans.")
         if (page.profile, page.sublayer) != expected_identity:
             raise SnapshotValidationError("Keymap pages belong to different profiles or sublayers.")
         if page.page in by_page:
@@ -72,7 +90,9 @@ def assemble_keymap_layer(pages: tuple[KeymapPage, ...] | list[KeymapPage]) -> K
             raise SnapshotValidationError(f"Keymap page index {page.page} is out of range.")
         if page.first_slot != page.page * 16:
             raise SnapshotValidationError(f"Keymap page {page.page} has an inconsistent first-slot offset.")
-        if len(page.entries) != 16 or any(not isinstance(entry, bytes) or len(entry) != 4 for entry in page.entries):
+        if not isinstance(page.entries, tuple) or len(page.entries) != 16 or any(
+            not isinstance(entry, bytes) or len(entry) != 4 for entry in page.entries
+        ):
             raise SnapshotValidationError(f"Keymap page {page.page} has an invalid entry shape.")
         by_page[page.page] = page
     expected_pages = set(range(KEYMAP_PAGE_COUNT))
@@ -86,8 +106,10 @@ def assemble_magnetic_column(
     pages: tuple[MagneticSettingsPage, ...] | list[MagneticSettingsPage],
 ) -> MagneticColumnSnapshot:
     """Require every page for a supported GET sub-operation, in page order."""
-    if not pages:
-        raise SnapshotValidationError("At least one magnetic-settings page is required.")
+    if not isinstance(pages, (tuple, list)) or not pages:
+        raise SnapshotValidationError("Magnetic pages must be a non-empty list or tuple.")
+    if any(not isinstance(page, MagneticSettingsPage) for page in pages):
+        raise SnapshotValidationError("Every magnetic page must be a validated MagneticSettingsPage.")
     subop = pages[0].subop
     try:
         expected_count = _page_count(subop)
@@ -100,12 +122,19 @@ def assemble_magnetic_column(
         )
     by_page: dict[int, MagneticSettingsPage] = {}
     for page in pages:
+        if any(
+            not isinstance(value, int) or isinstance(value, bool)
+            for value in (page.subop, page.page, page.first_slot, page.value_width)
+        ):
+            raise SnapshotValidationError("Magnetic page metadata must contain integers, not booleans.")
         if page.subop != subop:
             raise SnapshotValidationError("Magnetic pages belong to different sub-operations.")
         if page.page in by_page:
             raise SnapshotValidationError(f"Duplicate magnetic page {page.page}.")
         if page.page not in range(expected_count):
             raise SnapshotValidationError(f"Magnetic page index {page.page} is out of range.")
+        if not isinstance(page.values, tuple):
+            raise SnapshotValidationError(f"Magnetic page {page.page} values must be an immutable tuple.")
         if page.value_width != pages[0].value_width:
             raise SnapshotValidationError("Magnetic pages use inconsistent value widths.")
         expected_width = 4 if subop == 10 else (2 if subop in {0, 1, 2, 3, 4, 6} else 1)
