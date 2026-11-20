@@ -51,6 +51,8 @@ def keymap_get_packet(profile: int, page: int, sublayer: int = 0) -> bytes:
     packet[3] = page
     packet[4] = sublayer
     packet[7] = (0xFF - (sum(packet[:7]) & 0xFF)) & 0xFF
+    # Match the RongYuan snapshot transport's invalid-response sentinel tail.
+    packet[8:] = bytes([0xFF]) * (REPORT_LENGTH - 8)
     return bytes(packet)
 
 
