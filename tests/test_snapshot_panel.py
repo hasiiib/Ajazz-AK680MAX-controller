@@ -57,6 +57,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertEqual(panel.table.item(0, 1).text(), "10 20 30 00")
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
+        self.assertIn("provenance are not verified", panel.status.text())
         panel.magnetic_selector.setCurrentIndex(0)
         self.assertEqual(panel.table.rowCount(), 128)
         self.assertEqual(panel.table.item(0, 1).text(), "512 (0x0200)")
