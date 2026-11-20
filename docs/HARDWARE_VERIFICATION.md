@@ -46,6 +46,15 @@ For each manually initiated observation, record only:
 
 Keep the first raw response unchanged. Do not silently trim, pad, or repair a response to make it pass a parser. Raw captures should be reviewed before changing parser assumptions.
 
+## Offline capture assessment
+
+`assess_capture()` accepts one manually supplied byte sequence and one explicit
+stage (`active-profile`, `keymap`, or `magnetic`). Keymap and magnetic stages
+require their corresponding metadata. The assessor calls only the existing
+pure parsers; it cannot open the keyboard, send a request, or initiate a retry.
+Synthetic unit tests cover opcode-echo distinctions, report-ID prefixes,
+malformed lengths, invalid metadata, and preservation of the original capture.
+
 ## Exit criteria
 
 A read path may be connected to the application only after the physical captures establish the exact report framing and the board-2255 response semantics, and regression tests cover both valid captures and malformed variants. The GUI must remain read-only and user-initiated.
