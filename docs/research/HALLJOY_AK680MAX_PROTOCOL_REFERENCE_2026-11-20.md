@@ -125,3 +125,21 @@ The application now contains an opt-in session implementation. Before start it p
 Important evidence boundary: the protocol document's firmware disassembly / hardware observations cover several gen2 boards; the user's own board has not yet been physically tested with the stream command. HallJoy lists AJAZZ AK680 MAX HE as supported, but our app must still verify actual samples and stop behavior on this unit. Raw travel units and full-scale range are not inferred from the 4000 µm profile note. No analog stream command has been sent to the user's keyboard by this development work.
 
 Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#magnetic-switches
+
+
+## Variant separation: similarly named AK680 MAX protocols (2026-11-20)
+
+A separate public repository, [shorekeeper/ajazzdesktopify](https://github.com/shorekeeper/ajazzdesktopify), documents two different AK680 MAX products and explicitly warns that their firmware/protocols are incompatible:
+
+- Its lightless model is VID:PID `3151:502C`, using a different 64-byte Feature-report protocol.
+- Its RGB model is VID:PID `0C45:80B2`, using vendor interfaces `0xFF68` / `0xFF67` and an `0xAA/0x55` chunked command protocol.
+- Our physical keyboard is VID:PID `3151:502D`, and its live Identify response is board ID 2255. HallJoy's exact board profile identifies this as `AJAZZ AK680 MAX HE`, product `RY1B-2255`, with a nominal 4000 µm profile range.
+
+Therefore neither the `3151:502C` lightless command set nor the `0C45:80B2` RGB command set is applicable to this unit. In particular, do not use the other repository's RGB commands `0x10`–`0x28`, chunk offsets, interface `0xFF68`, or its reported key/RGB tables with this device. The fact that product names overlap is not protocol evidence.
+
+The exact HallJoy RongYuan stream source separately contains the 2255 / VID 3151 / PID 502D profile. It documents the 32-byte Report ID 5 / opcode 0x1B stream path used by this project. Its generic optional GET `0xE6` precision query and version fallback are useful research leads, but the profile marks precision-enum support as false; do not infer millimetres from the 4000 µm profile value. Any new read-only metadata query must validate the full response and remain optional. Writable feature work still needs board-2255-specific command/response evidence and physical acceptance.
+
+References:
+- [AK680 MAX variant/protocol analysis](https://github.com/shorekeeper/ajazzdesktopify)
+- [HallJoy RongYuan stream protocol](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_stream_protocol.h)
+- [HallJoy board profile database](https://github.com/PashOK7/HallJoy/blob/main/docs/research/rongyuan-stream/profiles.json)
