@@ -47,6 +47,12 @@ class KeymapParserTests(unittest.TestCase):
         result = parse_keymap_page(0, 0, 0, raw)
         self.assertEqual(result.entries[0], bytes([0xA5] * 4))
 
+    def test_parser_rejects_non_byte_payloads(self):
+        for raw in (64, "x" * 64, None):
+            with self.subTest(raw_type=type(raw).__name__):
+                with self.assertRaises(KeymapProtocolError):
+                    parse_keymap_page(0, 0, 0, raw)
+
     def test_parser_rejects_malformed_payload_lengths(self):
         for raw in (bytes(63), bytes([1]) + bytes(64), bytes([0]) + bytes(65)):
             with self.subTest(length=len(raw)):
