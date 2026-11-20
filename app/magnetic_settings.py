@@ -71,6 +71,10 @@ def magnetic_settings_get_packet(subop: int, page: int) -> bytes:
     packet[2] = 1
     packet[3] = page
     packet[7] = (0xFF - (sum(packet[:7]) & 0xFF)) & 0xFF
+    # The reviewed RongYuan snapshot transport fills the unused request tail
+    # with 0xFF for matrix-style GETs, so a partially produced reply cannot
+    # accidentally resemble an all-zero valid page.
+    packet[8:] = bytes([0xFF]) * (REPORT_LENGTH - 8)
     return bytes(packet)
 
 
