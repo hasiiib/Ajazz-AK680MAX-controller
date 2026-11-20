@@ -105,3 +105,10 @@ The sharkfin AK680 MAX board record lists four onboard profiles, but no `0x84` r
 A further source review of HallJoy's RongYuan snapshot transport identified a request-tail sentinel for matrix GET opcodes `0xE5` and `0x8A`: after the opcode/arguments/checksum, the unused bytes are initialized to `0xFF` so an incomplete firmware snapshot cannot be mistaken for a valid all-zero page. The pure Python request builders now match this framing, with regression assertions for the tail. The `0x84` active-profile request remains zero-filled.
 
 This is source-derived protocol detail, not a physical capture from board 2255. No request was transmitted; the parsers remain software-only and disconnected from HID.
+
+
+## Related AJAZZ repository review and connection-state model (2026-11-20)
+
+Reviewed `xyzmean/ajazz-driver-electron`, `ajazz-driver-reverse`, and `ajazz-tauri`. Their reverse-engineered `AJAZZ AK680 MAX` model entries use VID:PID `0C45:80B2` and `0C45:80B4`, not this project's physical `3151:502D` / board 2255. Their `0xAA/0x55` packet protocol, `0x10` device-info, `0x17` Rapid Trigger, 64-byte report assumptions, and RGB/control writes are therefore reference-only and must not be transplanted to our board. Detailed evidence and source links: [XYZMEAN repository review](docs/research/XYZMEAN_AJAZZ_REPOSITORIES_REVIEW_2026-11-20.md).
+
+Useful architectural ideas were retained without copying incompatible commands. Added pure `app/device_state.py` classification for disconnected, control-only, input-only, ambiguous, and same-parent control/input-paired candidate states. The GUI displays this assessment during USB/HID scan. Pairing is explicitly not equivalent to a successful Identify or verified analog stream. The classifier performs no HID I/O; seven regression tests cover its state transitions.
