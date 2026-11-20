@@ -104,13 +104,16 @@ class AnalogStreamSession:
         if not control_info.get("path") or not input_info.get("path"):
             raise AnalogStreamError("The paired HID interface path is missing.")
 
+        # Retain each handle as soon as it is created so a failure while
+        # allocating the second handle cannot leak the first one.
         try:
-            control = hid.device()
-            input_device = hid.device()
+            self._control = hid.device()
+            self._input = hid.device()
         except Exception as exc:
+            self._close_handles()
             raise AnalogStreamError(f"Could not create HID handles: {exc}") from exc
-        self._control = control
-        self._input = input_device
+        control = self._control
+        input_device = self._input
         enable_attempted = False
         try:
             control.open_path(os.fsencode(control_info["path"]))
@@ -131,6 +134,8 @@ class AnalogStreamSession:
             raise AnalogStreamError(f"Could not start analog stream: {exc}") from exc
 
     def poll(self, max_reports: int = 128) -> list[AnalogSample]:
+        if type(max_reports) is not int or max_reports < 1:
+            raise AnalogStreamError("max_reports must be a positive integer.")
         if not self._active or self._input is None:
             return []
         samples = []
