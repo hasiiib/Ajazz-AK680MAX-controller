@@ -77,6 +77,7 @@ class GuiConnectionRefreshTests(unittest.TestCase):
             and node.name == "_abort_analog_stream"
         )
         source = ast.get_source_segment(self.source, abort)
+        self.assertNotIn("\\\\n", source)
         for required in (
             "self.stream_timer.stop()",
             "self.stream_session.stop()",
