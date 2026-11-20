@@ -109,13 +109,14 @@ def _feature_payload(raw: bytes | bytearray) -> bytes:
     if not isinstance(raw, (bytes, bytearray)):
         raise IdentifyError("HID Feature report must be bytes or bytearray.")
     data = bytes(raw)
-    if len(data) >= REPORT_LENGTH + 1 and data[0] == 0:
-        return data[1:REPORT_LENGTH + 1]
-    if len(data) >= REPORT_LENGTH:
-        return data[:REPORT_LENGTH]
+    if len(data) == REPORT_LENGTH + 1 and data[0] == 0:
+        return data[1:]
+    if len(data) == REPORT_LENGTH:
+        return data
     raise IdentifyError(
-        f"Keyboard returned a short Feature report ({len(data)} bytes; "
-        f"expected at least {REPORT_LENGTH})."
+        f"Keyboard returned a malformed Feature report ({len(data)} bytes); "
+        f"expected exactly {REPORT_LENGTH} bytes, or {REPORT_LENGTH + 1} "
+        "bytes with a leading zero report ID."
     )
 
 
