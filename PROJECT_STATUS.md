@@ -21,7 +21,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
 - Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
-- Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.\n- Immutable display-only snapshot projection for future GUI integration; keymap entries remain raw hex and magnetic values remain explicitly protocol-native, with no guessed setting labels.
+- Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.\n- Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
 
 ## Not yet verified on the physical keyboard
@@ -34,10 +34,10 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated and temporary.
-- The magnetic, keymap, active-profile, and snapshot modules are pure framing/validation code only; they are not connected to HID or the GUI.
+- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest CI run passed **98 tests** on commit `8cc257dee7c9ecae9e5a18136338f1ae2b92e96c`, including the semantics-neutral snapshot display projection: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44770655088.
+The latest completed CI run passed **101 tests** (3 Qt tests were skipped because PySide6 was not installed in that run). CI has now been updated to install application dependencies and execute the Qt viewer tests offscreen; that dependency-enabled run is pending.
