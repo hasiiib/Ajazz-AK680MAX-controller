@@ -180,8 +180,8 @@ class Main(QMainWindow):
             "and closed both HID handles. SUSTAINED ANALOG MONITORING IS NOT VERIFIED ON PHYSICAL BOARD 2255 as a complete feature. The monitor remains EXPERIMENTAL: sustained "
             "streaming, press/hold/release behavior; disconnect recovery and stop "
             "effectiveness are not yet verified. Values are raw counts; their "
-            "physical unit and calibrated range are unknown. No persistent "
-            "used; the effect/volatility of the temporary stream flag is not fully "
+            "physical unit and calibrated range are unknown. No persistent setting-write opcode is used; "
+            "the effect/volatility of the temporary stream flag is not fully "
             "characterized."
         )
         self.analog_warning.setObjectName("warning")
