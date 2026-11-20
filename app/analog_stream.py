@@ -152,6 +152,10 @@ class AnalogStreamSession:
         if self._control is not None and self._active:
             try:
                 self._send_flag(self._control, False)
+            except Exception as exc:
+                raise AnalogStreamError(
+                    f"Could not confirm analog stream stop: {exc}"
+                ) from exc
             finally:
                 self._close_handles()
         else:
