@@ -192,3 +192,17 @@ The board ID is no longer an assumption: it came from the keyboard's successful 
 - [ ] Confirm the meaning of Identify byte 9 before exposing it.
 
 Do not send 0x80 for the wired gen2 firmware version. Keep all other configuration and stream operations disabled.
+
+
+## gen2 firmware revision metadata implementation (2026-11-20)
+
+- [x] Confirm board 2255 / gen2 from the physical keyboard.
+- [x] Parse gen2 firmware revision from Identify reply bytes 7–8; no extra HID command.
+- [x] Preserve the validated Identify response in an immutable result object.
+- [x] Add parser and response-preservation unit tests.
+- [x] Add GUI display for the decoded revision, with a safe unavailable state.
+- [ ] Verify the updated GUI's revision display on the physical keyboard.
+- [ ] Obtain a verifiable CI run / test result before claiming automated tests pass.
+- [ ] Only after this, plan an explicitly user-visible and safely stoppable analog stream test.
+
+The implementation does not send GET 0x80, stream opcode 0x1B, or any configuration write.
