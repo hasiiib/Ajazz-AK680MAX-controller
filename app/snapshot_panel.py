@@ -91,7 +91,7 @@ class ReadOnlySnapshotPanel(QWidget):
         elif view.magnetic_columns:
             self._show_magnetic(0)
         self.status.setText(
-            "Snapshot loaded · raw protocol values only · no key names or setting meanings inferred"
+            "Snapshot data loaded · raw protocol values only · device source and provenance are not verified here"
         )
 
     def _populate(self, rows) -> None:
