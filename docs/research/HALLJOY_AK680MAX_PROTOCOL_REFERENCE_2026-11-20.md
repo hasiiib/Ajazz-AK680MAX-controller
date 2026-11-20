@@ -209,7 +209,7 @@ Reference: [sharkfin ROYUAN protocol reference — Keymap sub-layers](https://gi
 
 ## Read-only active-profile GET parser implementation (2026-11-20)
 
-Added `app/profile.py` with tests in `tests/test_profile.py`. The module constructs the gen2 `0x84` Feature GET packet and parses the zero-based active profile from response byte 1, accepting only the four indices 0–3. The response must have opcode `0x84` and exactly 64 payload bytes (optionally preceded by hidapi's zero report-ID byte).
+Added `app/active_profile.py` with tests in `tests/test_profile.py`. The module constructs the gen2 `0x84` Feature GET packet and parses the zero-based active profile from response byte 1, accepting only the four indices 0–3. The response must have opcode `0x84` and exactly 64 payload bytes (optionally preceded by hidapi's zero report-ID byte).
 
 This parser is pure and not connected to HID or the GUI. It does not switch profiles. Although the exact AK680 MAX 2255 software-support record lists four onboard profiles, the `0x84` transaction has not been tested on the physical unit. No profile GET or SET was sent during this development step.
 
