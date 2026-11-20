@@ -174,13 +174,15 @@ class Main(QMainWindow):
         layout.addLayout(row)
 
         self.analog_warning = QLabel(
-            "Identify sends one read-only 0x8F request. ANALOG MONITOR IS EXPERIMENTAL — "
-            "NOT VERIFIED ON PHYSICAL BOARD 2255. The 0x1B command, host transport, "
-            "stop behavior, and Report ID 5 samples have not been validated on this "
-            "keyboard. Values are raw counts; their physical unit and calibrated range "
-            "are unknown. The app sends no known persistent setting-write opcode, but "
-            "the effect of 0x1B on board 2255 is unverified. Stopping or closing the "
-            "app attempts to clear its stream flag."
+            "Identify sends one read-only 0x8F request. A bounded physical probe on "
+            "board 2255 successfully sent the temporary 0x1B start request, received "
+            "16 valid Report ID 5 samples (slot 15 observed), sent the stop request, "
+            "and closed both HID handles. The monitor remains EXPERIMENTAL: sustained "
+            "streaming, press/hold/release behavior, stop effectiveness, and disconnect "
+            "recovery are not yet verified. Values are raw counts; their physical unit "
+            "and calibrated range are unknown. No persistent setting-write opcode is "
+            "used; the effect/volatility of the temporary stream flag is not fully "
+            "characterized."
         )
         self.analog_warning.setObjectName("warning")
         self.analog_warning.setWordWrap(True)
