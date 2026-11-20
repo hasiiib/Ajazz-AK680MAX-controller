@@ -21,8 +21,28 @@ Build a polished, user-friendly Ubuntu application for the wired AJAZZ AK680 MAX
 - Installer uses a staged update/rollback approach and does not use sudo.
 - User has been given the public install command, but successful installation and runtime behavior have not yet been confirmed in this project log.
 
+## Latest hardware detection result (2026-11-20)
+User provided the application's USB/HID scan output from Ubuntu.
+
+Observed USB device:
+- VID:PID: `3151:502D`
+- Product string: `Gaming Keyboard`
+- USB path: `1-1`
+- Interfaces exposed in sysfs: `1.0`, `1.1`, and `1.2`
+
+Observed hidraw nodes:
+- `/dev/hidraw2` — USB interface `1-1:1.0`, HID ID `3151:502D`
+- `/dev/hidraw3` — USB interface `1-1:1.1`, HID ID `3151:502D`
+- `/dev/hidraw4` — USB interface `1-1:1.2`, HID ID `3151:502D`
+
+Interpretation:
+- The keyboard is successfully visible to the Linux USB stack.
+- Three HID interfaces are exposed. Their purposes and report descriptors are not yet established.
+- The reported product string is generic ("Gaming Keyboard"); exact marketing model/revision still needs confirmation.
+- No configuration protocol or writable report format has been verified.
+
 ## Verified hardware features
-No keyboard configuration features have been verified yet. USB/HID discovery in the application is a software capability; it does not prove that configuration protocols are understood.
+USB enumeration and presence of three HID interfaces are verified from the user's scan output. No keyboard configuration features have been verified yet.
 
 ## Pending verification
 - User installation result and application launch.
@@ -30,4 +50,4 @@ No keyboard configuration features have been verified yet. USB/HID discovery in 
 - Exact USB VID/PID, interfaces, report descriptors, and safe protocol documentation.
 
 ## Session handoff
-Next action: collect the user's installer output or screenshot, confirm the app launches, then record the observed device identifiers and discovery results. Continue with read-only protocol research before implementing any keyboard settings.
+Next action: inspect the three HID report descriptors and kernel metadata using read-only commands, then map interface roles. Do not send output reports or modify keyboard settings until protocol behavior is documented.
