@@ -32,6 +32,12 @@ class ActiveProfileProtocolTests(unittest.TestCase):
         reply[1] = 2
         self.assertEqual(parse_active_profile_reply(bytes([0]) + reply), 2)
 
+    def test_parser_rejects_non_byte_payloads(self):
+        for reply in (64, "x" * 64, None):
+            with self.subTest(reply_type=type(reply).__name__):
+                with self.assertRaises(ProfileProtocolError):
+                    parse_active_profile_reply(reply)
+
     def test_parser_rejects_wrong_opcode_invalid_index_and_bad_lengths(self):
         wrong_opcode = bytearray(64)
         wrong_opcode[0] = 0x85
