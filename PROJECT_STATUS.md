@@ -351,3 +351,12 @@ Safety / current state:
 - No keyboard settings have been changed.
 - The USB-node ACL and successful HIDAPI open remain to be verified. The live board ID is still unknown.
 - If HIDAPI opens after the scoped USB-node ACL is applied, the next operation remains the single documented read-only Identify request (0x8F).
+
+
+## libusb access verified; HIDAPI interface opens (2026-11-20)
+
+After installing the VID:PID-scoped USB-device uaccess rule and reconnecting the keyboard, the user located its current USB node as /dev/bus/usb/001/014. Its ACL includes user:ayon:rw-. The earlier interface-2 hidraw ACL remains narrowly scoped.
+
+The user then reran the Python hidapi open test against interface 2 (path 1-1:1.2): HIDAPI OPEN: SUCCESS. This confirms the bundled libusb-backed hidapi can now open the keyboard control interface as the ordinary desktop user.
+
+Next: user should launch the GUI and click the explicit read-only Identify action once. Record the returned board ID or exact error. No Feature report has yet been sent in this permission test; no keyboard settings have been changed. Board ID 2255 remains a public-reference candidate until read from the physical device.
