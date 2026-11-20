@@ -50,3 +50,12 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 ## Protocol variant guard (2026-11-20)
 
 A further protocol comparison established that similarly named AK680 MAX variants are not interchangeable. The physical board is 3151:502D / board 2255 / RY1B-2255. A public AK680 MAX lightless implementation targets 3151:502C, while a separate RGB implementation targets 0C45:80B2 and a different 0xAA/0x55 chunk protocol. Those command sets are explicitly excluded from this project. Future controls must be sourced from board-2255 RongYuan evidence only. See [the research note](docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md#variant-separation-similarly-named-ak680-max-protocols-2026-11-20).
+
+
+## Independent board-2255 capability cross-check (2026-11-20)
+
+The [sharkfin AK680 MAX record](https://getsharkfin.com/boards/ajazzmouse-ak680-max) independently lists the exact 2255 / 3151:502D revision and identifies it as a gen2 magnetic keyboard with four onboard profiles, 18 backlight effects, and per-key actuation/release/Rapid Trigger/dead-zone controls. This confirms that the product family has a richer feature surface worth implementing; it does not prove that every documented sub-command or scale has been physically validated on this particular unit.
+
+The sharkfin protocol reference describes gen2 GET 0xE5 magnetic-setting pages and GET 0x8A keymap pages, but its detailed magnetic handler evidence is firmware-derived from other named gen2 boards. The next software step is to build strict, read-only parsers and tests around these documented response formats while preserving an explicit “not yet hardware-verified on board 2255” state. No magnetic SET (0x65), keymap write, profile write, LED write, reset, or flash command has been sent or implemented.
+
+Reference: [sharkfin ROYUAN protocol reference](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md).
