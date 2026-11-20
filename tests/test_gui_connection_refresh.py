@@ -156,5 +156,22 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("super().closeEvent(event)", source)
 
 
+    def test_manual_stop_clears_stale_samples_and_restores_controls(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        stop = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "stop_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, stop)
+        self.assertIn("finally:", source)
+        self.assertIn("self.latest_samples.clear()", source)
+        self.assertIn('self.stream_button.setText("Start Analog Monitor")', source)
+        self.assertIn("self.stream_button.setEnabled(True)", source)
+        self.assertIn("self.identify_button.setEnabled(True)", source)
+
+
 if __name__ == "__main__":
     unittest.main()
