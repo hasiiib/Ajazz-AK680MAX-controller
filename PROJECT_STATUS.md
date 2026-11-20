@@ -376,3 +376,12 @@ Observed on the physical keyboard:
 This supersedes earlier status notes saying the live board ID was unknown or that Identify remained pending. The physical identity is now confirmed as board ID 2255 by the device's own read-only response. The application has not yet read firmware/precision metadata or analog input frames. No stream-enable command, configuration write, calibration, RGB change, remap, or other setting change has been sent.
 
 Next safe development step: review the existing protocol implementation and tests, then add only documented GET/read operations for firmware/device metadata (starting with the public protocol's 0x80 query) if response framing and parsing can be validated. Keep the 0x1B live-stream state change and all configuration writes disabled until separately reviewed and explicitly tested.
+
+
+## gen2 firmware metadata path correction (2026-11-20)
+
+Follow-up review of the current public ROYUAN protocol reference shows that the generic GET 0x80 is not the right firmware-version query for wired gen2 boards: it returns zeros over the cable. For gen2, the keyboard firmware revision is encoded in the successful Identify reply at bytes 7 and 8, decoded as `(reply[8] << 8) | reply[7]`. Therefore, do not add or send a separate 0x80 request for this purpose.
+
+The current application parser returns only the board ID and discards the rest of the Identify reply. The next implementation task is to retain the validated 64-byte Identify response internally, parse the gen2 revision from bytes 7–8 with strict length/opcode checks, and add unit tests. Before showing a human-readable version, confirm the precise display convention and whether byte 9 has a documented meaning for this board. No additional HID transaction is required for this metadata step; it reuses the already successful read-only Identify response.
+
+Reference: https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md (Families / Other).
