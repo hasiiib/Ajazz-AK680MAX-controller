@@ -355,10 +355,52 @@ class AnalogStreamSessionTests(unittest.TestCase):
 
     def test_poll_rejects_invalid_batch_limits(self):
         session = AnalogStreamSession(hid_module=SimpleNamespace())
-        for value in (0, -1, True, 1.5, "4", None):
+        for value in (0, -1, True, 1.5, "4", None, 129):
             with self.subTest(value=value):
-                with self.assertRaisesRegex(AnalogStreamError, "positive integer"):
+                with self.assertRaisesRegex(AnalogStreamError, "integer from 1 to 128"):
                     session.poll(value)
+
+
+    def test_poll_read_error_attempts_stop_and_closes_both_handles(self):
+        class FakeDevice:
+            def __init__(self, fail_read=False):
+                self.fail_read = fail_read
+                self.sent = []
+                self.closed = False
+            def open_path(self, path):
+                pass
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                return len(report)
+            def read(self, length, timeout):
+                if self.fail_read:
+                    raise OSError("input disconnected")
+                return []
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice()
+        input_device = FakeDevice(fail_read=True)
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        session = AnalogStreamSession(hid_module=fake_hid)
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            session.start()
+            with self.assertRaisesRegex(AnalogStreamError, "input read failed"):
+                session.poll()
+
+        self.assertFalse(session.active)
+        self.assertEqual(len(control.sent), 2)
+        self.assertEqual(control.sent[1][2], 0)
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
 
 
 if __name__ == "__main__":
