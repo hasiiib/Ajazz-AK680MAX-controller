@@ -214,8 +214,10 @@ def identify_exchange_details(device, sleep=time.sleep) -> IdentifyResult:
         sent = device.send_feature_report(wire_request)
     except Exception as exc:
         raise IdentifyError(f"Could not send the read-only Identify request: {exc}") from exc
-    if sent is not None and sent <= 0:
-        raise IdentifyError("hidapi did not send the Feature report.")
+    if sent is not None and sent != len(wire_request):
+        raise IdentifyError(
+            f"hidapi sent an incomplete Identify request ({sent}/{len(wire_request)} bytes)."
+        )
 
     last_reply_note = "The keyboard did not return a valid 0x8F Identify reply."
     poll_count = int(IDENTIFY_TIMEOUT_SECONDS / EXCHANGE_GAP_SECONDS)
