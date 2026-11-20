@@ -71,7 +71,7 @@ def parse_gen2_firmware_revision(reply: bytes | bytearray) -> str | None:
     if not isinstance(reply, (bytes, bytearray)):
         return None
     data = bytes(reply)
-    if len(data) < REPORT_LENGTH or data[0] != IDENTIFY_OPCODE:
+    if len(data) != REPORT_LENGTH or data[0] != IDENTIFY_OPCODE:
         return None
     encoded = (data[8] << 8) | data[7]
     digits = f"{encoded:04X}"
@@ -96,9 +96,9 @@ def parse_device_id(reply: bytes | bytearray) -> int | None:
     request = identify_packet()
     refused = bytearray(request)
     refused[3] = 0xFF
-    if data[:REPORT_LENGTH] == bytes(refused):
+    if len(data) != REPORT_LENGTH or data[0] != IDENTIFY_OPCODE:
         return None
-    if len(data) < 5 or data[0] != IDENTIFY_OPCODE:
+    if data == bytes(refused):
         return None
     device_id = int.from_bytes(data[1:5], "little")
     return device_id if device_id > 0 else None
