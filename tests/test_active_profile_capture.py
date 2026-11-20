@@ -177,6 +177,29 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.assertEqual(self.device.read_calls, [(0, 65)])
         self.assertTrue(self.device.closed)
 
+    def test_profile_read_accepts_hidapi_list_and_tuple_results(self):
+        for container in (list, tuple):
+            with self.subTest(container=container.__name__):
+                device = FakeDevice()
+                device.responses[1] = container(device.profile_response)
+                hid = FakeHid(
+                    [{"interface_number": 2, "path": "fake-interface-2"}],
+                    device,
+                )
+                raw, _ = capture_once(hid, sleep=lambda _: None)
+                self.assertEqual(raw, device.profile_response)
+                self.assertEqual(len(device.sent), 2)
+                self.assertTrue(device.closed)
+
+    def test_profile_read_rejects_invalid_sequence_values_without_retry(self):
+        self.device.responses[1] = list(self.device.profile_response)
+        self.device.responses[1][-1] = 256
+        with self.assertRaisesRegex(CaptureError, "no retry attempted"):
+            capture_once(self.hid, sleep=self.sleeps.append)
+        self.assertEqual(len(self.device.sent), 2)
+        self.assertEqual(len(self.device.read_calls), 2)
+        self.assertTrue(self.device.closed)
+
     def test_profile_read_failure_closes_handle_without_retry(self):
         self.device.read_error_on = 2
         with self.assertRaisesRegex(CaptureError, "no retry attempted"):

@@ -105,18 +105,28 @@ def parse_device_id(reply: bytes | bytearray) -> int | None:
     return device_id if device_id > 0 else None
 
 
-def _feature_payload(raw: bytes | bytearray | list[int] | tuple[int, ...]) -> bytes:
-    """Normalize hidapi bytes or its documented list-of-byte return form."""
+def feature_report_bytes(
+    raw: bytes | bytearray | list[int] | tuple[int, ...],
+) -> bytes:
+    """Return the exact hidapi Feature bytes without stripping a report-ID byte.
+
+    hidapi builds may return bytes/bytearray or a list/tuple of integer bytes.
+    Reject bools and out-of-range values rather than coercing or truncating.
+    """
     if isinstance(raw, (bytes, bytearray)):
-        data = bytes(raw)
-    elif isinstance(raw, (list, tuple)):
+        return bytes(raw)
+    if isinstance(raw, (list, tuple)):
         if any(type(value) is not int or not 0 <= value <= 255 for value in raw):
             raise IdentifyError("HID Feature report contains invalid byte values.")
-        data = bytes(raw)
-    else:
-        raise IdentifyError(
-            "HID Feature report must be bytes, bytearray, or a sequence of byte integers."
-        )
+        return bytes(raw)
+    raise IdentifyError(
+        "HID Feature report must be bytes, bytearray, or a sequence of byte integers."
+    )
+
+
+def _feature_payload(raw: bytes | bytearray | list[int] | tuple[int, ...]) -> bytes:
+    """Normalize hidapi Feature bytes while preserving strict report framing."""
+    data = feature_report_bytes(raw)
     if len(data) == REPORT_LENGTH + 1 and data[0] == 0:
         return data[1:]
     if len(data) == REPORT_LENGTH:

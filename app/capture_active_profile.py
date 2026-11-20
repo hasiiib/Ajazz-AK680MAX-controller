@@ -22,6 +22,7 @@ from active_profile import active_profile_get_packet  # noqa: E402
 from hardware_verification import assess_capture  # noqa: E402
 from protocol import (  # noqa: E402
     SETTINGS_INTERFACE,
+    feature_report_bytes,
     identify_exchange_details,
     inspect_keyboard_interfaces,
 )
@@ -131,9 +132,7 @@ def capture_once(
             )
         sleep(0.010)
         raw = device.get_feature_report(0, 65)
-        if not isinstance(raw, (bytes, bytearray)):
-            raise CaptureError("HID Feature read did not return bytes; no retry attempted.")
-        return bytes(raw), sent
+        return feature_report_bytes(raw), sent
     except CaptureError:
         raise
     except Exception as exc:

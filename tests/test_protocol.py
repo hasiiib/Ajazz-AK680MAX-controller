@@ -14,6 +14,7 @@ from protocol import (
     parse_analog_report,
     identify_exchange_details,
     _feature_payload,
+    feature_report_bytes,
     identify_exchange,
     identify_keyboard,
     paired_keyboard_interfaces,
@@ -126,6 +127,16 @@ class IdentifyProtocolTests(unittest.TestCase):
     def test_normalize_report_without_prefix(self):
         payload = identify_packet()
         self.assertEqual(_feature_payload(payload), payload)
+
+    def test_feature_report_bytes_preserves_prefix_and_validates_sequences(self):
+        raw = bytes([0]) + identify_packet()
+        self.assertEqual(feature_report_bytes(raw), raw)
+        self.assertEqual(feature_report_bytes(list(raw)), raw)
+        self.assertEqual(feature_report_bytes(tuple(raw)), raw)
+        for invalid in ([0, True], [0, -1], [0, 256], "not bytes", None):
+            with self.subTest(value=invalid):
+                with self.assertRaises(IdentifyError):
+                    feature_report_bytes(invalid)
 
     def test_normalize_hidapi_list_and_tuple_return_values(self):
         payload = bytes([0]) + identify_packet()
