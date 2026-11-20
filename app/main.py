@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QTextEdit, QFrame,
 )
 
+from analog_stream import AnalogStreamError, AnalogStreamSession
+
 from protocol import (
     IdentifyError,
     identify_keyboard_details,
@@ -124,6 +126,10 @@ class Main(QMainWindow):
         panel_layout.addWidget(self.log)
         layout.addWidget(panel)
 
+        self.analog_status = QLabel("Analog monitor: stopped")
+        self.analog_status.setObjectName("sub")
+        layout.addWidget(self.analog_status)
+
         row = QHBoxLayout()
         scan_button = QPushButton("Scan USB / HID")
         scan_button.clicked.connect(self.scan)
@@ -132,6 +138,10 @@ class Main(QMainWindow):
         self.identify_button = QPushButton("Identify Keyboard (read-only)")
         self.identify_button.clicked.connect(self.identify)
         row.addWidget(self.identify_button)
+
+        self.stream_button = QPushButton("Start Analog Monitor")
+        self.stream_button.clicked.connect(self.toggle_analog_stream)
+        row.addWidget(self.stream_button)
         row.addStretch()
         layout.addLayout(row)
 
@@ -143,10 +153,74 @@ class Main(QMainWindow):
         layout.addWidget(info)
 
         self.setCentralWidget(root)
+        self.stream_session = AnalogStreamSession()
+        self.latest_samples = {}
+        self.stream_timer = QTimer(self)
+        self.stream_timer.setInterval(5)
+        self.stream_timer.timeout.connect(self.poll_analog_stream)
         self.scan()
 
     def scan(self):
         self.log.setPlainText(collect())
+
+    def toggle_analog_stream(self):
+        if self.stream_session.active:
+            self.stop_analog_stream()
+            return
+        self.stream_button.setEnabled(False)
+        try:
+            self.stream_session.start()
+            self.latest_samples.clear()
+            self.stream_timer.start()
+            self.stream_button.setText("Stop Analog Monitor")
+            self.analog_status.setText("Analog monitor: running; press and release keys to view raw travel.")
+            self.log.append("\\n\\nANALOG MONITOR: started (temporary; no settings are saved)")
+        except AnalogStreamError as exc:
+            self.analog_status.setText("Analog monitor: could not start")
+            self.log.append(f"\\n\\nANALOG MONITOR ERROR: {exc}")
+        finally:
+            self.stream_button.setEnabled(True)
+
+    def poll_analog_stream(self):
+        try:
+            for sample in self.stream_session.poll():
+                self.latest_samples[sample.slot] = sample.raw_travel
+            active = [(slot, value) for slot, value in self.latest_samples.items() if value > 0]
+            active.sort(key=lambda item: item[0])
+            preview = ", ".join(f"{slot}:{value}" for slot, value in active[:8])
+            suffix = f" | {preview}" if preview else " | no keys currently moving/held"
+            self.analog_status.setText(
+                f"Analog monitor: running | active slots: {len(active)}{suffix}"
+            )
+        except AnalogStreamError as exc:
+            self.stream_timer.stop()
+            try:
+                self.stream_session.stop()
+            except Exception:
+                pass
+            self.stream_button.setText("Start Analog Monitor")
+            self.analog_status.setText("Analog monitor: stopped after input error")
+            self.log.append(f"\\n\\nANALOG MONITOR ERROR: {exc}")
+
+    def stop_analog_stream(self):
+        self.stream_timer.stop()
+        try:
+            self.stream_session.stop()
+            self.analog_status.setText("Analog monitor: stopped")
+            self.log.append("\\n\\nANALOG MONITOR: stopped")
+        except AnalogStreamError as exc:
+            self.analog_status.setText("Analog monitor: stop attempted; check device connection")
+            self.log.append(f"\\n\\nANALOG MONITOR STOP WARNING: {exc}")
+        finally:
+            self.stream_button.setText("Start Analog Monitor")
+
+    def closeEvent(self, event):
+        self.stream_timer.stop()
+        try:
+            self.stream_session.stop()
+        except Exception:
+            pass
+        super().closeEvent(event)
 
     def identify(self):
         self.identify_button.setEnabled(False)
