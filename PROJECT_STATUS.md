@@ -41,4 +41,4 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest completed CI run passed **102 tests**, including all three offscreen Qt viewer tests and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44772624039.
+The latest completed CI run passed **103 tests**, including all three offscreen Qt viewer tests and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44773434353.
