@@ -30,7 +30,8 @@ This roadmap reflects the current repository and physical-device evidence. A che
 
 ## Phase 4 — Core controls (research before implementation)
 - [x] Separate the 3151:502D / board-2255 RongYuan protocol from incompatible AK680 MAX 3151:502C lightless and 0C45:80B2 RGB protocols; document explicit non-applicability.
-- [ ] Map exact board-2255 GET operations and response formats.
+- [x] Cross-check board 2255 capabilities against an independent AK680 MAX software record (magnetic settings, profiles, lighting); retain firmware-level vs exact-board evidence grades.
+- [ ] Validate board-2255 GET operations and response formats; public gen2 references now describe keymap, profile, lighting, and magnetic GETs, but magnetic packet details are firmware-derived from other gen2 boards and remain unverified on 2255.
 - [ ] Identify supported RGB capabilities and safe read/write protocol.
 - [ ] Identify keymap/remapping capabilities and profile format.
 - [ ] Design transactional writes, read-back verification, and recovery before exposing controls.
@@ -53,6 +54,7 @@ This roadmap reflects the current repository and physical-device evidence. A che
 ## Evidence and safety rules
 - Physical Identify result 2255 is verified; analog stream behavior is not yet physically verified.
 - The 4000 µm travel range found in a public profile is provisional, not a measurement of this unit.
+- An independent AK680 MAX software record lists board 2255 / 3151:502D as a gen2 magnetic keyboard with four profiles and lighting; this is exact-model capability corroboration, not a physical test of every command on this firmware.
 - No guessed command, persistent configuration write, calibration, reset, or firmware operation.
 - Do not copy HallJoy source code; it is AGPL-3.0. Protocol facts may be independently implemented with attribution and license awareness.
 - Preserve user settings and keep installation within the dedicated application directories.
