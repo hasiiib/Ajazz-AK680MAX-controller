@@ -43,6 +43,37 @@ def _frame_details(data: bytes) -> tuple[bool, int | None]:
     return False, None
 
 
+
+def assess_hex_capture(
+    stage: str,
+    raw_hex: str,
+    *,
+    profile: int | None = None,
+    sublayer: int = 0,
+    page: int = 0,
+    subop: int | None = None,
+) -> CaptureAssessment:
+    """Assess a manually copied hexadecimal capture without changing its bytes.
+
+    ASCII whitespace between byte pairs is accepted. Prefixes, separators, and
+    non-hex characters are rejected rather than guessed.
+    """
+    if not isinstance(raw_hex, str):
+        raise TypeError("Hex capture must be a string.")
+    try:
+        raw = bytes.fromhex(raw_hex)
+    except ValueError as exc:
+        raise ValueError("Hex capture must contain complete hexadecimal byte pairs.") from exc
+    return assess_capture(
+        stage,
+        raw,
+        profile=profile,
+        sublayer=sublayer,
+        page=page,
+        subop=subop,
+    )
+
+
 def assess_capture(
     stage: str,
     raw: bytes | bytearray,
