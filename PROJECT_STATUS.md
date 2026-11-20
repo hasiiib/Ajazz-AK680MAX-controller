@@ -23,9 +23,9 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - Standard-library unit tests and GitHub Actions workflow.
 
 ## Automated verification
-- GitHub Actions run for commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7`: **success**.
-- The workflow's `unittest` job passed **51 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings pages, keymap pages, and active-profile metadata.
-- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761830077
+- GitHub Actions run for commit `e19b648753ca41c3d144fc67231381c00952db0c`: **success**.
+- The workflow's `unittest` job passed **55 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings pages, keymap pages, active-profile metadata, installer syntax/rollback structure, and udev rule scope.
+- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803
 
 ## Not yet physically verified
 - The analog stream has not yet been tested on the physical keyboard.
@@ -81,6 +81,10 @@ This code is pure and disconnected from HID/GUI. The protocol shape is family-le
 The magnetic settings and keymap modules are both request builders/parsers only. No GET or SET command was sent to the physical keyboard during these changes.
 
 The combined 51-test suite passed on commit `ee49492e52fc136f458c2cd79b49ae66fa1f0aa7`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761830077.
+
+## Installer and udev safety regression coverage (2026-11-20)
+
+Added `tests/test_installer_safety.py` with checks for Bash syntax, staged activation/rollback structure, absence of executable sudo or broad permission changes, and exact VID/PID/interface scoping of the udev access rules. The latest 55-test GitHub Actions run passed these checks on commit `e19b648753ca41c3d144fc67231381c00952db0c`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803.
 
 
 ## Read-only active-profile parser groundwork (2026-11-20)
