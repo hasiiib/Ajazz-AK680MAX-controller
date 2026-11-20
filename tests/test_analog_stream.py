@@ -319,5 +319,47 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertTrue(input_device.closed)
 
 
+    def test_second_hid_handle_creation_failure_closes_first_handle(self):
+        class FirstDevice:
+            def __init__(self):
+                self.closed = False
+            def close(self):
+                self.closed = True
+
+        first = FirstDevice()
+        calls = iter([first, OSError("second handle allocation failed")])
+
+        def make_device():
+            value = next(calls)
+            if isinstance(value, Exception):
+                raise value
+            return value
+
+        fake_hid = SimpleNamespace(device=make_device)
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch(
+            "analog_stream.inspect_keyboard_interfaces",
+            return_value=[
+                {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+                {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+            ],
+        ):
+            with self.assertRaisesRegex(AnalogStreamError, "create HID handles"):
+                session.start()
+
+        self.assertTrue(first.closed)
+        self.assertFalse(session.active)
+
+    def test_poll_rejects_invalid_batch_limits(self):
+        session = AnalogStreamSession(hid_module=SimpleNamespace())
+        for value in (0, -1, True, 1.5, "4", None):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(AnalogStreamError, "positive integer"):
+                    session.poll(value)
+
+
 if __name__ == "__main__":
     unittest.main()
