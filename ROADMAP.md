@@ -14,6 +14,7 @@
 - [x] Ensure background refresh sends no device commands.
 - [x] Automatically abort analog monitoring when the paired interfaces disappear or input/enumeration fails.
 - [x] Stop polling, clear stale samples, restore GUI controls, and attempt temporary stream stop during abort.
+- [x] Close partially allocated analog HID handles on setup failures and validate poll batch bounds.
 - [x] Add a prominent GUI warning that analog streaming is not verified on physical board 2255 and raw travel units/range are unknown.
 - [ ] Verify analog start/stop, transport, press/hold/release, and disconnect recovery on the physical keyboard.
 - [ ] Establish raw travel units and calibrated range.
@@ -49,7 +50,7 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **130 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, and strict immutable display-projection validation. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates. See the [Actions history](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions).
+The suite contains **136 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, and strict immutable display-projection validation. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates. The latest full run passed on commit `4c71d2c`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44778487305).
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
