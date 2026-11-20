@@ -58,6 +58,22 @@ After updating the installed application files, the user can start the one-shot 
 
 The explicit flag is the user's confirmation to send one read-only GET. This Stage 1 capture has already been completed successfully on the user's board; do not rerun it merely to reproduce the result. The helper prints exact response HEX and offline assessment; it does not change any keyboard setting. Share only that output and any error text, never serial numbers or device paths.
 
+### Stage 2 one-shot keymap capture helper (0x8A)
+
+The repository includes `app/capture_keymap_page.py` for a separately invoked, one-page read-only probe. It performs a fresh Identify on the same interface-2 handle, confirms board ID 2255, then sends exactly one `0x8A` GET for profile 0, page 0, with wire byte 4 set to zero. It reads one Feature response, closes the handle, and prints the exact raw bytes and offline assessment. It does not retry, save a capture, or print a serial number or device path.
+
+Wire byte 4 is deliberately zero for this first page probe. Because zero has the same value under either upstream interpretation, this capture does **not** resolve whether byte 4 means host layer or sub-layer. The parser preserves sixteen opaque four-byte entries and does not guess keycodes or meanings.
+
+This command is not authorized by the earlier `0x84` confirmation. Run it only after the user explicitly authorizes this separate one-shot `0x8A` read:
+
+```bash
+~/.local/opt/ak680-controller/.venv/bin/python \\
+  ~/.local/opt/ak680-controller/capture_keymap_page.py \\
+  --confirm-one-read-only-0x8a
+```
+
+A fresh Identify failure, wrong board ID, ambiguous interface, partial send, read failure, or malformed response stops the helper. Do not automatically rerun after an ambiguous result.
+
 ### Stage 1 capture worksheet
 
 Record the following without including the USB serial number or unique device path:
