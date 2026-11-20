@@ -95,14 +95,15 @@ class ReadOnlyPipelineIntegrationTests(unittest.TestCase):
         with self.assertRaises(SnapshotValidationError):
             build_read_only_snapshot(make_profile_reply(), keymaps, magnetics)
 
-    def test_mismatched_profile_and_keymap_metadata_cannot_be_projected(self):
-        keymaps = make_keymap_replies()
-        with self.assertRaises(SnapshotValidationError):
-            build_read_only_snapshot(
-                make_profile_reply(1),
-                keymaps,
-                make_magnetic_replies(),
-            )
+    def test_active_profile_is_carried_into_every_assembled_keymap_layer(self):
+        snapshot = build_read_only_snapshot(
+            make_profile_reply(1),
+            make_keymap_replies(),
+            make_magnetic_replies(),
+        )
+        view = project_snapshot_for_display(snapshot)
+        self.assertEqual(view.active_profile_index, 1)
+        self.assertEqual(view.keymap_layers[0].profile_index, 1)
 
 
 if __name__ == "__main__":
