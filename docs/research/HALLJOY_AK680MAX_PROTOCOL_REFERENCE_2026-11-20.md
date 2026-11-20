@@ -214,3 +214,14 @@ Added `app/active_profile.py` with tests in `tests/test_profile.py`. The module 
 This parser is pure and not connected to HID or the GUI. It does not switch profiles. Although the exact AK680 MAX 2255 software-support record lists four onboard profiles, the `0x84` transaction has not been tested on the physical unit. No profile GET or SET was sent during this development step.
 
 Reference: [sharkfin ROYUAN protocol reference — Profiles](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#profiles).
+
+
+## Matrix GET request-tail sentinel clarification (2026-11-20)
+
+A focused review of HallJoy's RongYuan snapshot transport found an additional request-framing detail: its shared 65-byte report builder fills the unused tail with `0xFF` for matrix-style GET opcodes `0xE5` and `0x8A`. The source comment explains this as an invalid initial tail so a partially produced snapshot cannot be accepted as a complete page. The checksum remains at full-report byte 8 (payload byte 7 after the leading report ID).
+
+The independent Python builders in `app/magnetic_settings.py` and `app/keymap.py` now reproduce that request-tail sentinel: payload bytes 8–63 are `0xFF` for these two matrix GETs. The active-profile `0x84` request is unchanged and retains its zero-filled unused tail. Regression tests assert the distinct tail behavior.
+
+Evidence boundary: this is source-level transport behavior from HallJoy's shared RongYuan implementation; the exact 2255 model is present in its stream-profile table, but the request-tail behavior has not been captured on the user's physical unit. These changes only construct bytes in pure Python; no HID request was sent. The modules remain disconnected from device I/O.
+  
+Reference: [HallJoy RongYuan snapshot protocol](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_snapshot_protocol.h) and [RongYuan stream profiles](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_stream_protocol.h).
