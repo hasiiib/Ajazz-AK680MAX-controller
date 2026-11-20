@@ -130,10 +130,14 @@ class KeymapCaptureTests(unittest.TestCase):
         self.assertEqual(self.hid.enumerate_calls, 0)
         self.assertEqual(self.device.sent, [])
 
-    def test_partial_send_is_not_retried_or_read(self):
-        self.device.send_feature_report = lambda report: (
-            self.device.sent.append(bytes(report)) or 64
-        )
+    def test_partial_keymap_send_is_not_retried_or_read(self):
+        original_send = self.device.send_feature_report
+
+        def partial_keymap_send(report):
+            sent = original_send(report)
+            return sent - 1 if len(self.device.sent) == 2 else sent
+
+        self.device.send_feature_report = partial_keymap_send
         with self.assertRaisesRegex(CaptureError, "no retry attempted"):
             capture_once(self.hid, identify=self.identify, sleep=lambda _: None)
         self.assertEqual(len(self.device.sent), 2)
