@@ -42,5 +42,17 @@ class Board2255DocumentationTests(unittest.TestCase):
         self.assertIn("not verified on physical board 2255", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
 
 
+    def test_first_hardware_stage_is_one_read_only_084_capture(self):
+        plan = (ROOT / "docs" / "HARDWARE_VERIFICATION.md").read_text(encoding="utf-8")
+        for token in (
+            "Stage 1 request envelope (0x84 only)",
+            "Byte 7: `0x7B`",
+            "65-byte host buffer",
+            "one explicitly user-started `0x84` GET",
+            "assess_hex_capture(\"active-profile\", \"...\")",
+            "Do not continue to another opcode",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, plan)
 if __name__ == "__main__":
     unittest.main()
