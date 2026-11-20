@@ -51,6 +51,45 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertEqual(called_names, {"inspect_keyboard_interfaces", "evaluate_connection"})
         self.assertNotIn("identify_keyboard_details", called_names)
 
+    def test_disconnect_refresh_aborts_stream_when_analog_pair_disappears(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        refresh = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "refresh_connection_status"
+        )
+        source = ast.get_source_segment(self.source, refresh)
+        self.assertIn("state.analog_pair_candidate", source)
+        self.assertIn("self._abort_analog_stream(", source)
+        self.assertIn("except IdentifyError", source)
+
+    def test_abort_cleanup_stops_timers_clears_samples_and_restores_controls(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        abort = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "_abort_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, abort)
+        for required in (
+            "self.stream_timer.stop()",
+            "self.stream_session.stop()",
+            "self.latest_samples.clear()",
+            'self.stream_button.setText("Start Analog Monitor")',
+            "self.identify_button.setEnabled(True)",
+        ):
+            self.assertIn(required, source)
+
+    def test_window_close_stops_both_background_timers(self):
+        self.assertIn("self.connection_timer.stop()", self.source)
+        self.assertIn("self.stream_timer.stop()", self.source)
+
     def test_connection_timer_is_periodic_and_starts_after_initial_scan(self):
         self.assertIn("self.connection_timer.setInterval(1500)", self.source)
         self.assertIn(
