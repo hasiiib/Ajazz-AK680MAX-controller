@@ -23,9 +23,9 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - Standard-library unit tests and GitHub Actions workflow.
 
 ## Automated verification
-- GitHub Actions run for commit `e0f498c9b46205515cdf9e0277316ccb6fcf5f4c`: **success**.
-- The workflow's `unittest` job completed successfully, including the new regression tests for input-interface open failure and uncertain stream-enable failure cleanup.
-- Workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44759576825
+- GitHub Actions run for commit `74ea205541d894b6451332dd69d26fad248b1a6c`: **success**.
+- The workflow's `unittest` job completed successfully, including regression coverage for partial Identify sends, partial stream-enable sends, input-interface open failure, uncertain stream-enable failure cleanup, and best-effort stop.
+- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44760074233
 
 ## Not yet physically verified
 - The analog stream has not yet been tested on the physical keyboard.
