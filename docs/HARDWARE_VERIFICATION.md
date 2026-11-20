@@ -46,13 +46,13 @@ For the first physical test, do not run a bulk snapshot, keymap read, magnetic r
 
 ### Optional one-shot capture helper
 
-The repository includes `tools/capture_active_profile.py` as an isolated, explicitly invoked diagnostic. Importing it or displaying its help sends no device command. It requires the explicit `--confirm-one-read-only-0x84` flag, performs a fresh Identify check for board 2255, refuses anything other than one interface-2 candidate, sends one `0x84` GET, reads one Feature response, and closes the handle. It never retries, saves a file, or prints a serial number or device path. A partial send or transport error stops the operation.
+The repository includes `app/capture_active_profile.py` as an isolated, explicitly invoked diagnostic. Importing it or displaying its help sends no device command. It requires the explicit `--confirm-one-read-only-0x84` flag, performs a fresh Identify check for board 2255, refuses anything other than one interface-2 candidate, sends one `0x84` GET, reads one Feature response, and closes the handle. It never retries, saves a file, or prints a serial number or device path. A partial send or transport error stops the operation.
 
 After updating the installed application files, the user can start the one-shot test from a terminal with:
 
 ```bash
 ~/.local/opt/ak680-controller/.venv/bin/python \\
-  ~/.local/opt/ak680-controller/tools/capture_active_profile.py \\
+  ~/.local/opt/ak680-controller/app/capture_active_profile.py \\
   --confirm-one-read-only-0x84
 ```
 
