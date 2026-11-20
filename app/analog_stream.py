@@ -1,11 +1,12 @@
-"""Opt-in temporary analog-stream experiment for target board 2255.
+"""Opt-in temporary analog-stream session for target board 2255.
 
-The board identity and HID interface pairing were physically verified, but
-the 0x1B command transport, report framing, stop behavior, and travel scale
-have not been verified on this physical keyboard. Raw values remain counts
-with unknown physical units and calibrated range. Other gen2 firmware notes
-describe the stream flag as volatile; that behavior is not confirmed here.
-This module contains no persistent configuration writes.
+One bounded physical probe has confirmed the host-side 0x1B Feature-report
+send path and yielded valid Report ID 5 samples on this board. The stop request
+was sent and both HID handles closed, but stop effectiveness, sustained
+streaming, press/hold/release behavior, disconnect recovery, and the travel
+scale are not yet verified. Raw values remain counts with unknown physical
+units and calibrated range. This module contains no persistent configuration
+writes.
 """
 from __future__ import annotations
 
