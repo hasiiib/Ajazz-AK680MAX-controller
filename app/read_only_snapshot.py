@@ -214,6 +214,19 @@ def build_read_only_snapshot(
     if any(not isinstance(reply, (bytes, bytearray)) for reply in magnetic_replies.values()):
         raise SnapshotValidationError("Every magnetic reply must be bytes or bytearray.")
 
+    if any(
+        not isinstance(key, tuple) or len(key) != 2
+        or any(not isinstance(part, int) or isinstance(part, bool) for part in key)
+        for key in keymap_replies
+    ):
+        raise SnapshotValidationError("Keymap reply keys must be (sublayer, page) integer pairs.")
+    if any(
+        not isinstance(key, tuple) or len(key) != 2
+        or any(not isinstance(part, int) or isinstance(part, bool) for part in key)
+        for key in magnetic_replies
+    ):
+        raise SnapshotValidationError("Magnetic reply keys must be (sub-operation, page) integer pairs.")
+
     expected_keymap = {(layer, page) for layer in sublayers for page in range(KEYMAP_PAGE_COUNT)}
     if set(keymap_replies) != expected_keymap:
         missing = len(expected_keymap - set(keymap_replies))
