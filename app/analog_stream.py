@@ -10,7 +10,6 @@ import os
 
 from protocol import (
     ANALOG_REPORT_LENGTH,
-    IdentifyError,
     AnalogSample,
     identify_keyboard_details,
     inspect_keyboard_interfaces,
