@@ -92,8 +92,27 @@ Interpretation / caveats:
 
 ## Verified hardware features
 - USB enumeration and presence of three HID interfaces are verified from the user's scan output.
-- Raw report descriptor bytes have not yet been retrieved.
+- Raw report descriptor bytes have now been retrieved for all three interfaces using `sudo usbhid-dump -m 3151:502d -e descriptor`.
+- Interface 0 descriptor: standard keyboard application collection; 5 LED output bits plus 3 padding bits; 8 modifier input bits plus 6-byte key array input.
+- Interface 1 descriptor: input reports include Report ID 1 keyboard bitmap (120 key-usage bits), ID 2 system-control usage, ID 3 consumer/media usage, ID 5 vendor-defined 31-byte input payload, and ID 6 mouse input.
+- Interface 2 descriptor: vendor-defined Usage Page `0xFFFF`, Usage `0x02`, 64-byte Feature report (8-bit report size × 64 count), no Report ID.
+- Interface 2's Feature report is a promising protocol-investigation candidate, but its command semantics and whether it controls configuration are unknown. The descriptor does not prove RGB or advanced features.
 - No keyboard configuration features (RGB control, remapping, macros, actuation adjustment, Rapid Trigger, DKS, or profiles) have been verified.
 
 ## Session handoff
-Next action: obtain descriptor-only output from `sudo usbhid-dump -m 3151:502d -e descriptor`; decode each interface's usages, report IDs, and input/output/feature report sizes. Continue with read-only inspection only. Do not send output reports or modify keyboard settings until the protocol is documented.
+Next action: identify the exact hardware/firmware revision and search for official AJAZZ software/protocol documentation or credible community protocol evidence for VID:PID `3151:502d`. Then plan passive/read-only observation if feasible. The 64-byte Feature report on Interface 2 is a candidate only; do not send any Feature/Output report or guessed payload. Update this handoff with evidence and source links.
+
+
+## HID report descriptor analysis (2026-11-20)
+User ran `sudo usbhid-dump -m 3151:502d -e descriptor` and supplied descriptor bytes for interfaces 2, 1, and 0.
+
+Verified descriptor facts:
+- Interface 0 (59 bytes): Generic Desktop / Keyboard application collection. It defines 5 LED output bits with 3 padding bits, 8 modifier input bits, and a 6-byte key array input.
+- Interface 1 (171 bytes): multiple input collections/reports. Report ID 1 is a keyboard bitmap covering 120 usages; Report ID 2 is System Control; Report ID 3 is Consumer Control/media; Report ID 5 is a 31-byte vendor-defined input report; Report ID 6 is a mouse report with buttons and X/Y/wheel-style fields.
+- Interface 2 (20 bytes): Vendor-defined Usage Page `0xFFFF`, Usage `0x02`, with a 64-byte Feature report (8-bit items × 64) and no Report ID.
+
+Interpretation / safety:
+- The Interface 2 Feature report is a strong candidate for further protocol research, but its semantics are unknown. Descriptor presence alone does not establish RGB control, remapping, actuation, Rapid Trigger, DKS, macros, or profiles.
+- Interface 1's vendor-defined Report ID 5 is input-only according to this descriptor; do not assume it is a configuration channel.
+- No Feature or Output reports have been sent. No keyboard settings have been changed.
+- Do not probe with guessed payloads. Seek official software/documentation or credible protocol evidence first.
