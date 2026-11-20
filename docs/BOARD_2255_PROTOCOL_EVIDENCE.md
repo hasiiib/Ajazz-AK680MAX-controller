@@ -78,7 +78,8 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 - `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure packet builders/parsers only.
 - `read_only_snapshot.py` validates supplied response payloads and assembles complete snapshots; it does not communicate with the keyboard.
 - `hardware_verification.py` assesses manually supplied byte captures or copied hex text offline; it never opens HID, sends a command, retries, or persists a capture.
-- `capture_active_profile.py` is an optional CLI requiring an explicit confirmation flag. It opens one unique interface-2 handle, performs the read-only `0x8F` Identify on that handle, and only for ID 2255 sends one `0x84` GET on the same handle; it is not run by the GUI, installer, or background refresh.
+- `capture_active_profile.py` is an optional CLI requiring an explicit confirmation flag. It opens one unique interface-2 handle, performs the read-only `0x8F` Identify on that handle, and only for ID 2255 sends one `0x84` GET on the same handle; it is not run by the GUI, installer, or background refresh. One physical capture has been accepted.
+- `capture_keymap_page.py` is a separate, opt-in one-shot `0x8A` page-0 probe. It is not run by the GUI, installer, or background refresh, and requires its own explicit confirmation flag. Its initial wire byte 4 is zero, so it cannot resolve the host-layer/sub-layer ambiguity.
 - `snapshot_panel.py` and `snapshot_view.py` render only a validated in-memory snapshot and do not perform HID I/O.
 - The Analog Monitor is opt-in and intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility and behavior are unverified on board 2255. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
 
