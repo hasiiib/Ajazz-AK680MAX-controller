@@ -51,7 +51,9 @@ This roadmap reflects the current repository and physical-device evidence. A che
 
 ## Phase 6 — Product quality and release
 - [ ] Refine GUI into clear device, lighting, key, and advanced-feature sections as capabilities become verified.
-- [ ] Improve accessibility, keyboard navigation, connection-state handling, and diagnostic export.
+- [x] Add privacy-filtered diagnostic export with serial-number redaction and explicit unverified-hardware warnings.
+- [x] Compile every app Python module in CI without importing hardware/UI dependencies.
+- [ ] Improve accessibility, keyboard navigation, and connection-state handling.
 - [x] Add installer/udev regression checks for Bash syntax, staged rollback structure, no executable sudo/broad chmod, and narrowly scoped VID/PID/interface permissions.
 - [ ] Expand automated tests for protocol, UI logic, and hardware failure recovery.
 - [ ] Validate on the physical keyboard and document exact supported firmware.
@@ -66,4 +68,4 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest full unit-test workflow for commit `e19b648753ca41c3d144fc67231381c00952db0c` passed all 55 tests. The magnetic and keymap parsers are software-only: they build GET requests and decode captured replies but do not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and separately authorized read-only 0xE5 / 0x8A response checks; none has been performed yet.
+The latest full unit-test workflow for commit `a10c459c51319fe53740da82f91b034be0773e3d` passed all 59 tests. The magnetic and keymap parsers are software-only: they build GET requests and decode captured replies but do not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and separately authorized read-only 0xE5 / 0x8A response checks; none has been performed yet.
