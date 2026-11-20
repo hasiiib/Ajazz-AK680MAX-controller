@@ -1,4 +1,4 @@
-""""Conservative, read-only HID identification for the AJAZZ AK680 MAX.
+"""Conservative, read-only HID identification for the AJAZZ AK680 MAX.
 
 Only the documented 0x8F Identify GET is sent. No configuration opcodes exist
 in this module.
@@ -110,7 +110,7 @@ def inspect_keyboard_interfaces(hid_module=None) -> list[dict[str, object]]:
         path = _path_text(item.get("path"))
         details = _sysfs_details(path)
         interface = item.get("interface_number")
-        if not isinstance(interface, int):
+        if not isinstance(interface, int) or interface < 0:
             interface = details["sysfs_interface"]
         if interface == SETTINGS_INTERFACE:
             role = "Feature control candidate (descriptor-confirmed interface 2)"
