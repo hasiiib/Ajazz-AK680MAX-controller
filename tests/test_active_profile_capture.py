@@ -6,7 +6,7 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "app"))
 
-from capture_active_profile import CaptureError, capture_once
+from capture_active_profile import CaptureError, capture_once, main
 
 
 class FakeDevice:
@@ -103,6 +103,23 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.assertEqual(len(self.device.sent), 1)
         self.assertEqual(self.device.read_calls, [])
         self.assertTrue(self.device.closed)
+
+    def test_cli_requires_explicit_confirmation_before_any_device_access(self):
+        with self.assertRaises(SystemExit) as raised:
+            main([])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(self.hid.enumerate_calls, 0)
+        self.assertEqual(self.device.sent, [])
+
+    def test_identify_failure_stops_before_enumeration(self):
+        with self.assertRaisesRegex(CaptureError, "Fresh read-only Identify failed"):
+            capture_once(
+                self.hid,
+                identify=lambda: (_ for _ in ()).throw(OSError("no keyboard")),
+                sleep=self.sleeps.append,
+            )
+        self.assertEqual(self.hid.enumerate_calls, 0)
+        self.assertEqual(self.device.sent, [])
 
     def test_imported_helper_does_not_perform_device_io(self):
         self.assertEqual(self.hid.enumerate_calls, 0)
