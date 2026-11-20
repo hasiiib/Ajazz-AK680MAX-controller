@@ -272,6 +272,34 @@ class IdentifyProtocolTests(unittest.TestCase):
         with self.assertRaisesRegex(IdentifyError, "incomplete Identify request"):
             identify_exchange(PartialSendDevice(), sleep=lambda _: None)
 
+    def test_identify_exchange_stops_on_malformed_feature_framing(self):
+        class MalformedDevice:
+            def __init__(self):
+                self.reads = 0
+
+            def send_feature_report(self, report):
+                return len(report)
+
+            def get_feature_report(self, report_id, length):
+                self.reads += 1
+                return bytes(63)
+
+        device = MalformedDevice()
+        with self.assertRaisesRegex(IdentifyError, "malformed Feature report"):
+            identify_exchange(device, sleep=lambda _: None)
+        self.assertEqual(device.reads, 1)
+
+    def test_identify_exchange_reports_feature_read_errors(self):
+        class BrokenReadDevice:
+            def send_feature_report(self, report):
+                return len(report)
+
+            def get_feature_report(self, report_id, length):
+                raise OSError("device disconnected")
+
+        with self.assertRaisesRegex(IdentifyError, "HID Feature read failed"):
+            identify_exchange(BrokenReadDevice(), sleep=lambda _: None)
+
     def test_identify_exchange_does_not_resend_on_timeout(self):
         class SilentDevice:
             def __init__(self):
