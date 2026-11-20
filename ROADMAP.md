@@ -78,3 +78,10 @@ Only implement features supported by verified firmware/protocol behavior.
 - [ ] Confirm device ID and family before implementing any further GET operations.
 
 Safety boundary: Identify is the only command currently implemented. No configuration writes or settings controls have been added. A public reference maps 3151:502D to candidate device ID 2255 / gen2, but the live board response remains unverified.
+
+
+## HID discovery filter correction (2026-11-20)
+- [x] Use the already descriptor-verified USB interface 2 as the selector, without rejecting Linux hidapi's possibly incomplete Usage Page / Usage metadata.
+- [x] Keep exact VID/PID, interface-number and unique-path checks; refuse ambiguous matches.
+- [ ] Retest Identify on the physical keyboard and capture the live Device ID or detailed enumeration error.
+- [ ] Only investigate udev permissions if interface selection succeeds but opening the node is denied.
