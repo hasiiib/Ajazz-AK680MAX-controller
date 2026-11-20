@@ -311,7 +311,9 @@ class Main(QMainWindow):
             self.analog_status.setText("Analog monitor: stop attempted; check device connection")
             self.log.append(f"\n\nANALOG MONITOR STOP WARNING: {exc}")
         finally:
+            self.latest_samples.clear()
             self.stream_button.setText("Start Analog Monitor")
+            self.stream_button.setEnabled(True)
             self.identify_button.setEnabled(True)
 
     def closeEvent(self, event):
