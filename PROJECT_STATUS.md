@@ -23,9 +23,9 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - Standard-library unit tests and GitHub Actions workflow.
 
 ## Automated verification
-- GitHub Actions run for commit `e19b648753ca41c3d144fc67231381c00952db0c`: **success**.
-- The workflow's `unittest` job passed **55 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings pages, keymap pages, active-profile metadata, installer syntax/rollback structure, and udev rule scope.
-- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44762476803
+- GitHub Actions run for commit `a10c459c51319fe53740da82f91b034be0773e3d`: **success**.
+- The workflow's `unittest` job passed **59 tests**, covering Identify, analog stream lifecycle/cleanup, magnetic/keymap/profile parsers, diagnostic privacy, installer/udev safety, and syntax compilation of every app module.
+- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456
 
 ## Not yet physically verified
 - The analog stream has not yet been tested on the physical keyboard.
@@ -38,6 +38,12 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - The stream start/stop flag is temporary by protocol reference, but still requires actual hardware validation before advertising the monitor as working.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo; preserve the narrowly scoped udev access model.
+
+## Privacy-safe diagnostic export (2026-11-20)
+
+Added `app/diagnostics.py` and a GUI Export Diagnostics action. The report includes USB/HID discovery output and explicit safety/verification status. Common `ID_SERIAL_SHORT`, `iSerialNumber`, `Serial Number`, and serial-labelled values are redacted before writing a local text file. The export path performs no HID open, no Identify, and no protocol command. Regression tests cover redaction, retained VID/PID/interface evidence, timezone handling, and the explicit unverified analog-stream warning.
+
+Added a syntax-compilation regression test for every Python module in `app/`, so GUI source syntax is checked in CI without requiring PySide6 or touching hardware. The 59-test workflow passed on commit `a10c459c51319fe53740da82f91b034be0773e3d`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456.
 
 ## Next development focus
 1. Continue code review and improve GUI structure, state presentation, and error recovery without claiming untested hardware behavior.
