@@ -78,7 +78,7 @@ class AnalogStreamSession:
         # Re-identify immediately before the temporary state-changing command.
         try:
             identity = identify_keyboard_details()
-        except IdentifyError as exc:
+        except Exception as exc:
             raise AnalogStreamError(f"Read-only identity check failed: {exc}") from exc
         if identity.device_id != EXPECTED_BOARD_ID:
             raise AnalogStreamError(
@@ -86,7 +86,10 @@ class AnalogStreamSession:
                 f"keyboard reported {identity.device_id}."
             )
 
-        inventory = inspect_keyboard_interfaces(hid)
+        try:
+            inventory = inspect_keyboard_interfaces(hid)
+        except Exception as exc:
+            raise AnalogStreamError(f"Could not inspect HID interfaces: {exc}") from exc
         pair = paired_keyboard_interfaces(inventory)
         if pair is None:
             raise AnalogStreamError(
@@ -97,8 +100,11 @@ class AnalogStreamSession:
         if not control_info.get("path") or not input_info.get("path"):
             raise AnalogStreamError("The paired HID interface path is missing.")
 
-        control = hid.device()
-        input_device = hid.device()
+        try:
+            control = hid.device()
+            input_device = hid.device()
+        except Exception as exc:
+            raise AnalogStreamError(f"Could not create HID handles: {exc}") from exc
         self._control = control
         self._input = input_device
         enable_attempted = False
