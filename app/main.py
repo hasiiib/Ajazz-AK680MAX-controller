@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from analog_stream import AnalogStreamError, AnalogStreamSession
 from diagnostics import build_diagnostic_report
+from device_state import evaluate_connection
 
 from protocol import (
     IdentifyError,
@@ -59,7 +60,7 @@ def _hid_inventory_text():
     return "HIDAPI COLLECTIONS\n" + "\n\n".join(lines)
 
 
-def collect():
+def collect(inventory=None, inventory_error=None):
     parts = []
     commands = [
         (["lsusb"], "USB DEVICES"),
@@ -83,7 +84,7 @@ def collect():
                 parts.append(label + " STDERR\n" + result.stderr)
         except Exception as exc:
             parts.append(label + " error: " + str(exc))
-    parts.append(_hid_inventory_text())
+    parts.append(_hid_inventory_text(inventory, inventory_error))
     return "\n\n".join(parts)
 
 
@@ -130,6 +131,10 @@ class Main(QMainWindow):
         panel_layout.addWidget(self.log)
         layout.addWidget(panel)
 
+        self.connection_status = QLabel("USB connection: not scanned")
+        self.connection_status.setObjectName("sub")
+        layout.addWidget(self.connection_status)
+
         self.analog_status = QLabel("Analog monitor: stopped")
         self.analog_status.setObjectName("sub")
         layout.addWidget(self.analog_status)
@@ -169,7 +174,16 @@ class Main(QMainWindow):
         self.scan()
 
     def scan(self):
-        self.log.setPlainText(collect())
+        try:
+            inventory = inspect_keyboard_interfaces()
+            inventory_error = None
+            state = evaluate_connection(inventory)
+            self.connection_status.setText(f"USB connection: {state.message}")
+        except IdentifyError as exc:
+            inventory = None
+            inventory_error = str(exc)
+            self.connection_status.setText(f"USB connection scan failed: {exc}")
+        self.log.setPlainText(collect(inventory, inventory_error))
 
     def export_diagnostics(self):
         """Save a privacy-filtered support report; this performs no HID I/O."""
