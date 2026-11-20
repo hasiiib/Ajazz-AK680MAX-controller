@@ -460,3 +460,30 @@ class AnalogStreamSessionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnalogCaptureCliTests(unittest.TestCase):
+    def test_cli_requires_explicit_confirmation_without_hardware_io(self):
+        import subprocess
+        script = Path(__file__).resolve().parents[1] / "capture_analog_stream.py"
+        result = subprocess.run(
+            [sys.executable, str(script)],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("No hardware command sent", result.stderr)
+        self.assertIn("--confirm-one-temporary-0x1b-stream-test", result.stderr)
+
+    def test_cli_bounds_report_count(self):
+        import subprocess
+        script = Path(__file__).resolve().parents[1] / "capture_analog_stream.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "--help"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("maximum: 32", result.stdout)
