@@ -26,6 +26,7 @@ EXPECTED_BOARD_ID = 2255
 CONTROL_INTERFACE = 2
 INPUT_INTERFACE = 1
 STREAM_OPCODE = 0x1B
+MAX_REPORTS_PER_POLL = 128
 
 
 class AnalogStreamError(RuntimeError):
@@ -134,8 +135,10 @@ class AnalogStreamSession:
             raise AnalogStreamError(f"Could not start analog stream: {exc}") from exc
 
     def poll(self, max_reports: int = 128) -> list[AnalogSample]:
-        if type(max_reports) is not int or max_reports < 1:
-            raise AnalogStreamError("max_reports must be a positive integer.")
+        if type(max_reports) is not int or not 1 <= max_reports <= MAX_REPORTS_PER_POLL:
+            raise AnalogStreamError(
+                f"max_reports must be an integer from 1 to {MAX_REPORTS_PER_POLL}."
+            )
         if not self._active or self._input is None:
             return []
         samples = []
@@ -148,7 +151,17 @@ class AnalogStreamSession:
                 if sample is not None:
                     samples.append(sample)
         except Exception as exc:
-            raise AnalogStreamError(f"Analog input read failed: {exc}") from exc
+            # Do not leave a volatile stream running if a caller forgets to
+            # perform GUI-level abort handling after an input transport error.
+            cleanup_error = None
+            try:
+                self.stop()
+            except AnalogStreamError as stop_exc:
+                cleanup_error = stop_exc
+            message = f"Analog input read failed: {exc}"
+            if cleanup_error is not None:
+                message += f"; stream stop also failed: {cleanup_error}"
+            raise AnalogStreamError(message) from exc
         return samples
 
     def _close_handles(self) -> None:
