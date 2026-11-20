@@ -41,11 +41,21 @@ def capture_once(
     ambiguous response is returned to the offline assessor or raised; the
     command is never resent.
     """
-    identity = identify()
+    try:
+        identity = identify()
+    except Exception as exc:
+        raise CaptureError(
+            f"Fresh read-only Identify failed ({exc.__class__.__name__}); no 0x84 request sent."
+        ) from exc
     if getattr(identity, "device_id", None) != 2255:
         raise CaptureError("Fresh Identify did not report board ID 2255; no 0x84 request sent.")
 
-    inventory = inspect_keyboard_interfaces(hid_module)
+    try:
+        inventory = inspect_keyboard_interfaces(hid_module)
+    except Exception as exc:
+        raise CaptureError(
+            f"Could not inspect HID interfaces ({exc.__class__.__name__}); no 0x84 request sent."
+        ) from exc
     candidates = [
         item for item in inventory
         if item.get("interface_number") == SETTINGS_INTERFACE and item.get("path")
@@ -55,8 +65,9 @@ def capture_once(
             "Expected exactly one HID interface-2 candidate; refusing ambiguous selection."
         )
 
-    device = hid_module.device()
+    device = None
     try:
+        device = hid_module.device()
         device.open_path(os.fsencode(candidates[0]["path"]))
         request = bytes([0]) + active_profile_get_packet()
         sent = device.send_feature_report(request)
@@ -76,10 +87,11 @@ def capture_once(
             f"One-shot 0x84 capture failed ({exc.__class__.__name__}); no retry attempted."
         ) from exc
     finally:
-        try:
-            device.close()
-        except Exception:
-            pass
+        if device is not None:
+            try:
+                device.close()
+            except Exception:
+                pass
 
 
 def main(argv=None) -> int:
