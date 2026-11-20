@@ -18,7 +18,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - USB interface pairing checks.
 - Automatic connection-state refresh through metadata-only HID enumeration; no periodic device commands.
 - Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a best-effort stream-clear is attempted.
-- Analog session setup now closes partially allocated HID handles on second-handle creation or input-open failure, and rejects invalid poll batch limits before reading.
+- Analog session setup now closes partially allocated HID handles on second-handle creation or input-open failure, rejects invalid poll batch limits, and performs read-only Identify on the exact opened control handle before any experimental stream command; a reconnect cannot silently substitute a different control handle between identity check and use.
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
@@ -44,14 +44,14 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
-- Analog streaming remains user-initiated; it is intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility/effect is unverified on board 2255.
+- Analog streaming remains user-initiated and experimental; before any attempt, the exact opened control handle is re-identified as board 2255. This host-side identity guard does not verify the 0x1B command, transport, stop behavior, or travel scale, all of which remain unverified on this physical board.
 - The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; standalone one-shot `0x84`, `0x8A`, and `0xE5` capture helpers are separate and require explicit flags. The `0x84` and `0x8A` helpers each have one accepted physical capture; the `0xE5` helper is prepared but not yet run. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The suite contains **173 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
+The suite contains **174 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests. The latest full run passed on commit `a51d28d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44785585439).
 
 
 The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile and `0x8A` keymap page-0 response framing each have one accepted physical capture; `0xE5` magnetic response framing remains unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
