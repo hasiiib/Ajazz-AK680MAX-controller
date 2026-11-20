@@ -61,10 +61,11 @@ class AnalogStreamSessionTests(unittest.TestCase):
         identity = SimpleNamespace(device_id=2255)
         session = AnalogStreamSession(hid_module=fake_hid)
 
-        with patch("analog_stream.identify_keyboard_details", return_value=identity), patch(
+        with patch("analog_stream.identify_exchange_details", return_value=identity) as identify_mock, patch(
             "analog_stream.inspect_keyboard_interfaces", return_value=inventory
         ):
             session.start()
+            identify_mock.assert_called_once_with(control_device)
             self.assertTrue(session.active)
             self.assertEqual(control_device.opened, b"1-1:1.2")
             self.assertEqual(input_device.opened, b"1-1:1.1")
@@ -100,7 +101,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             with self.assertRaises(AnalogStreamError):
@@ -135,7 +136,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             session.start()
@@ -145,30 +146,84 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertTrue(control.closed)
         self.assertTrue(input_device.closed)
 
-    def test_wrong_board_id_refuses_before_opening_any_interface(self):
+    def test_wrong_board_id_refuses_before_opening_input_or_enabling_stream(self):
         class FakeDevice:
             def __init__(self):
                 self.open_calls = 0
+                self.sent = []
 
             def open_path(self, path):
                 self.open_calls += 1
 
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                return len(report)
+
             def close(self):
                 pass
 
-        device = FakeDevice()
-        fake_hid = SimpleNamespace(device=lambda: device)
+        control = FakeDevice()
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
         session = AnalogStreamSession(hid_module=fake_hid)
 
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=9999),
-        ):
-            with self.assertRaises(AnalogStreamError):
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaisesRegex(AnalogStreamError, "expected 2255"):
                 session.start()
 
-        self.assertEqual(device.open_calls, 0)
+        self.assertEqual(control.open_calls, 1)
+        self.assertEqual(input_device.open_calls, 0)
+        self.assertEqual(control.sent, [])
 
+
+    def test_identify_failure_prevents_stream_enable_and_closes_handles(self):
+        class FakeDevice:
+            def __init__(self):
+                self.open_calls = 0
+                self.sent = []
+                self.closed = False
+
+            def open_path(self, path):
+                self.open_calls += 1
+
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                return len(report)
+
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice()
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+
+        with patch(
+            "analog_stream.identify_exchange_details",
+            side_effect=RuntimeError("malformed Identify response"),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaisesRegex(AnalogStreamError, "identity check"):
+                session.start()
+
+        self.assertEqual(control.open_calls, 1)
+        self.assertEqual(input_device.open_calls, 0)
+        self.assertEqual(control.sent, [])
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+        self.assertFalse(session.active)
 
     def test_enable_send_without_length_confirmation_is_rejected(self):
         class FakeDevice:
@@ -193,7 +248,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             with self.assertRaisesRegex(AnalogStreamError, "incomplete analog stream"):
@@ -230,7 +285,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             with self.assertRaisesRegex(AnalogStreamError, "incomplete analog stream"):
@@ -268,7 +323,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             with self.assertRaises(AnalogStreamError):
@@ -305,7 +360,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         ]
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             with self.assertRaises(AnalogStreamError):
@@ -338,7 +393,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
         fake_hid = SimpleNamespace(device=make_device)
         session = AnalogStreamSession(hid_module=fake_hid)
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch(
             "analog_stream.inspect_keyboard_interfaces",
@@ -389,7 +444,7 @@ class AnalogStreamSessionTests(unittest.TestCase):
             {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
         ]
         with patch(
-            "analog_stream.identify_keyboard_details",
+            "analog_stream.identify_exchange_details",
             return_value=SimpleNamespace(device_id=2255),
         ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
             session.start()
