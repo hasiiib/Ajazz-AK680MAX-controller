@@ -23,7 +23,7 @@
 - [x] Pure active-profile GET builder and parser.
 - [x] Strict aggregation of complete 128-slot keymap layers and magnetic-settings columns from supplied replies.
 - [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
-- [ ] Validate 0xE5, 0x8A, and 0x84 response framing and values on physical board 2255 before connecting these reads to HID or the GUI.
+- [ ] Validate 0xE5, 0x8A, and 0x84 response framing and values on physical board 2255 before connecting these reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
