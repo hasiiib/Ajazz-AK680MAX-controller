@@ -206,3 +206,15 @@ Do not send 0x80 for the wired gen2 firmware version. Keep all other configurati
 - [ ] Only after this, plan an explicitly user-visible and safely stoppable analog stream test.
 
 The implementation does not send GET 0x80, stream opcode 0x1B, or any configuration write.
+
+
+## Analog input protocol groundwork (2026-11-20)
+
+- [x] Add pure parser for 32-byte Report ID 5 / opcode 0x1B analog frames.
+- [x] Validate report ID, opcode, frame length, and key slot range.
+- [x] Decode raw travel as little-endian u16 and add unit tests.
+- [ ] Add a nonblocking, user-controlled stream lifecycle with guaranteed best-effort stop and disconnect cleanup.
+- [ ] Only after lifecycle review, perform a separately authorized physical stream test.
+- [ ] Determine travel units / calibration from verified firmware metadata and measured samples.
+
+Parser implementation does not send or enable the stream. No keyboard state change has been made.
