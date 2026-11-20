@@ -51,7 +51,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The suite contains **140 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, and strict immutable display-projection validation. The latest full run passed on commit `34e2104`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44779087143).
+The suite contains **141 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, and strict immutable display-projection validation. The latest full run passed on commit `9acd63e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44779494655).
 
 
 The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. Physical response framing on board 2255 remains unverified; see [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
