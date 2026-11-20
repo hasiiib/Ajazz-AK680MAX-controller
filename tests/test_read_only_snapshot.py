@@ -8,6 +8,9 @@ from active_profile import active_profile_get_packet
 from keymap import KeymapPage, parse_keymap_page
 from magnetic_settings import MagneticSettingsPage, parse_magnetic_settings_page
 from read_only_snapshot import (
+    KeymapLayerSnapshot,
+    MagneticColumnSnapshot,
+    ReadOnlyConfigurationSnapshot,
     SnapshotValidationError,
     assemble_keymap_layer,
     assemble_magnetic_column,
@@ -140,6 +143,29 @@ class SnapshotAssemblyTests(unittest.TestCase):
         )
         with self.assertRaises(SnapshotValidationError):
             assemble_magnetic_column(forged_magnetic)
+
+    def test_snapshot_value_objects_reject_mutable_or_forged_data(self):
+        with self.assertRaises(SnapshotValidationError):
+            KeymapLayerSnapshot(0, 0, [bytes(4)] * 128)
+        with self.assertRaises(SnapshotValidationError):
+            KeymapLayerSnapshot(0, 0, (bytes(3),) * 128)
+        with self.assertRaises(SnapshotValidationError):
+            MagneticColumnSnapshot(0, [0] * 128, 2)
+        with self.assertRaises(SnapshotValidationError):
+            MagneticColumnSnapshot(0, (True,) * 128, 2)
+        with self.assertRaises(SnapshotValidationError):
+            MagneticColumnSnapshot(10, ((0, 1, 2, 256),) * 128, 4)
+
+        layer = KeymapLayerSnapshot(1, 0, (bytes(4),) * 128)
+        column = MagneticColumnSnapshot(0, (0,) * 128, 2)
+        with self.assertRaises(SnapshotValidationError):
+            ReadOnlyConfigurationSnapshot(1, [layer], (column,))
+        with self.assertRaises(SnapshotValidationError):
+            ReadOnlyConfigurationSnapshot(0, (layer,), (column,))
+        with self.assertRaises(SnapshotValidationError):
+            ReadOnlyConfigurationSnapshot(1, (layer, layer), (column,))
+        with self.assertRaises(SnapshotValidationError):
+            ReadOnlyConfigurationSnapshot(1, (layer,), (column, column))
 
     def test_snapshot_requires_exact_keymap_and_magnetic_reply_sets(self):
         keymaps = {(0, page): bytes(64) for page in range(8)}
