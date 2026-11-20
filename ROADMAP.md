@@ -158,3 +158,13 @@ The permission milestone is complete, but protocol communication is not yet conf
 - [ ] Retest HIDAPI open and then run the read-only 0x8F Identify transaction.
 
 No HID reports have been sent and no keyboard settings have been changed during this diagnosis.
+
+
+## USB permission and HIDAPI open verified (2026-11-20)
+
+- [x] Install VID:PID-scoped USB-device uaccess rule and reconnect keyboard.
+- [x] Verify current USB node ACL includes user:ayon:rw- (current node at test time: /dev/bus/usb/001/014).
+- [x] Verify hidapi successfully opens interface 2 at path 1-1:1.2 as the ordinary user.
+- [ ] Run the GUI read-only Identify operation and record the live board ID / exact error.
+
+No keyboard reports or settings changes were part of the open test. Continue with only the documented read-only 0x8F Identify request.
