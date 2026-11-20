@@ -12,6 +12,8 @@ class DiagnosticPrivacyTests(unittest.TestCase):
     def test_redacts_common_serial_fields_and_preserves_other_diagnostics(self):
         source = (
             "ID_SERIAL_SHORT=ABCDEF123456\n"
+            "ID_SERIAL=USB-UNIQUE-123456\n"
+            "serialNumber=CAMEL-UNIQUE-654321\n"
             "iSerialNumber: 7\n"
             "Serial Number: UNIQUE-987654\n"
             "USB ID 3151:502d\n"
@@ -19,9 +21,13 @@ class DiagnosticPrivacyTests(unittest.TestCase):
         )
         safe = redact_serial_numbers(source)
         self.assertNotIn("ABCDEF123456", safe)
+        self.assertNotIn("USB-UNIQUE-123456", safe)
+        self.assertNotIn("CAMEL-UNIQUE-654321", safe)
         self.assertNotIn("UNIQUE-987654", safe)
         self.assertNotIn("iSerialNumber: 7", safe)
         self.assertIn("ID_SERIAL_SHORT=[REDACTED]", safe)
+        self.assertIn("ID_SERIAL=[REDACTED]", safe)
+        self.assertIn("serialNumber=[REDACTED]", safe)
         self.assertIn("USB ID 3151:502d", safe)
         self.assertIn("Interface 2: Feature control", safe)
 
