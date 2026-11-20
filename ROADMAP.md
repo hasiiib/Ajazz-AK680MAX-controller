@@ -45,6 +45,7 @@
 
 ## Evidence and safety
 - [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
+- [x] Add a regression guard preventing incompatible 3151:502C and 0C45:80B2 protocol identifiers from entering application or udev code.
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
 - Physical Identify result 2255, one read-only 0x84 active-profile GET (Profile 1 / index 0), and one read-only 0x8A keymap page-0 GET (16 opaque entries) are verified; 0xE5 and analog streaming are not yet physically verified.
@@ -54,7 +55,7 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **175 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
+The suite contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and `0xE5` read-only response validation remain hardware gates; `0x84` and `0x8A` each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
