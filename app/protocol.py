@@ -63,11 +63,12 @@ def parse_analog_report(report: bytes | bytearray) -> AnalogSample | None:
 
 
 def parse_gen2_firmware_revision(reply: bytes | bytearray) -> str | None:
-    """Decode gen2 revision digits from Identify response bytes 7 and 8.
+    """Decode gen2 revision digits from one normalized 64-byte Identify reply.
 
     The protocol documents (reply[8] << 8) | reply[7], with each
     hexadecimal nibble representing one decimal version digit.
     """
+
     if not isinstance(reply, (bytes, bytearray)):
         return None
     data = bytes(reply)
@@ -89,7 +90,7 @@ def identify_packet() -> bytes:
 
 
 def parse_device_id(reply: bytes | bytearray) -> int | None:
-    """Decode [0x8F, device_id:u32 little-endian, ...]; reject refusal echo."""
+    """Decode the board ID from one normalized 64-byte Identify reply."""
     if not isinstance(reply, (bytes, bytearray)):
         return None
     data = bytes(reply)
