@@ -12,8 +12,6 @@ from read_only_snapshot import (
     assemble_keymap_layer,
     assemble_magnetic_column,
     build_read_only_snapshot,
-    KeymapLayerSnapshot,
-    MagneticColumnSnapshot,
 )
 
 
