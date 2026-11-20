@@ -81,4 +81,4 @@ https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 No unique keyboard serial number is stored in this repository.
 
 
-Hardware response verification is still gated on physical board-2255 captures. The offline capture assessor is available in `app/hardware_verification.py`; see [the verification plan](docs/HARDWARE_VERIFICATION.md) and [the board-specific evidence audit](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
+The first physical active-profile (`0x84`) capture is accepted. A separate one-shot keymap page (`0x8A`) helper is prepared but requires its own explicit user confirmation; the keymap and magnetic response semantics remain gated on physical board-2255 captures. The offline capture assessor is available in `app/hardware_verification.py`; see [the verification plan](docs/HARDWARE_VERIFICATION.md) and [the board-specific evidence audit](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
