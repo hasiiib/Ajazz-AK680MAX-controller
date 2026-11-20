@@ -230,7 +230,9 @@ def identify_exchange_details(device, sleep=time.sleep) -> IdentifyResult:
         if device_id is not None:
             return IdentifyResult(
                 device_id=device_id,
-                firmware_revision=parse_gen2_firmware_revision(reply),
+                firmware_revision=(
+                    parse_gen2_firmware_revision(reply) if device_id == 2255 else None
+                ),
                 raw_reply=bytes(reply),
             )
         last_reply_note = (
