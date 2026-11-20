@@ -73,6 +73,12 @@ class KeymapCaptureTests(unittest.TestCase):
         self.delays = []
 
     def identify(self, device, sleep):
+        sleep(0.010)
+        sent = device.send_feature_report(bytes([0]) + identify_packet())
+        if sent != 65:
+            raise RuntimeError("synthetic identify send failure")
+        sleep(0.010)
+        device.get_feature_report(0, 65)
         return SimpleNamespace(device_id=self.device.device_id)
 
     def test_sends_identify_then_exactly_one_keymap_page_get(self):
@@ -84,7 +90,7 @@ class KeymapCaptureTests(unittest.TestCase):
         self.assertEqual(self.device.read_calls, [(0, 65), (0, 65)])
         self.assertEqual(raw, keymap_reply())
         self.assertEqual(sent, 65)
-        self.assertEqual(self.delays, [0.010, 0.010])
+        self.assertEqual(self.delays, [0.010, 0.010, 0.010, 0.010])
         self.assertEqual(self.hid.ids, (0x3151, 0x502D))
         self.assertEqual(self.device.opened_path, b"fake-interface-2")
         self.assertTrue(self.device.closed)
@@ -94,7 +100,7 @@ class KeymapCaptureTests(unittest.TestCase):
         with self.assertRaisesRegex(CaptureError, "board ID 2255"):
             capture_once(self.hid, identify=self.identify, sleep=lambda _: None)
         self.assertEqual(len(self.device.sent), 1)
-        self.assertEqual(self.device.read_calls, [])
+        self.assertEqual(self.device.read_calls, [(0, 65)])
         self.assertTrue(self.device.closed)
 
     def test_feature_read_failure_is_reported_after_confirmed_send(self):
