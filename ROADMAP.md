@@ -119,3 +119,20 @@ Safety and verification:
 - HallJoy's nominal 4 mm range is provisional, not a physical measurement.
 - No new keyboard command has been sent and no setting has been changed.
 - HallJoy is Windows-only and AGPL-3.0; its implementation is a technical reference, not a dependency to install or copy into this Linux project.
+
+
+## HID topology and Identify transport milestone (2026-11-20)
+
+- [x] Add Linux hidapi + sysfs inventory for the keyboard's HID interfaces.
+- [x] Identify interface 2 as the descriptor-confirmed Feature-control candidate.
+- [x] Identify interface 1 as the descriptor-confirmed Report ID 5 analog-input candidate.
+- [x] Add strict same-USB-parent pairing diagnostics; no input stream is opened.
+- [x] Align the read-only 0x8F transaction with HallJoy's reviewed timing: one SET_FEATURE send, 10 ms exchange spacing, and GET_FEATURE polling for up to 100 ms without retransmitting the request.
+- [x] Add unit tests for interface pairing, one-send/multiple-poll behavior, and timeout behavior.
+- [x] Add GitHub Actions workflow for Python protocol tests.
+- [ ] Confirm CI unit-test workflow passes.
+- [ ] User scans HIDAPI collections and confirms the control/input pair on the actual Ubuntu system.
+- [ ] User runs the read-only Identify request and reports live board ID or exact failure.
+- [ ] Add narrow udev access only if the verified interface opens with a permission error.
+
+Safety boundary remains unchanged: 0x1B analog stream enable/disable is not implemented or sent. No keyboard settings have been changed. The live board ID is still unverified.
