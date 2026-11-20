@@ -171,7 +171,15 @@ class Main(QMainWindow):
         self.stream_timer = QTimer(self)
         self.stream_timer.setInterval(5)
         self.stream_timer.timeout.connect(self.poll_analog_stream)
+
+        # Re-enumerate metadata only. This timer never opens a HID handle or
+        # sends Identify/configuration/stream commands.
+        self.connection_timer = QTimer(self)
+        self.connection_timer.setInterval(1500)
+        self.connection_timer.timeout.connect(self.refresh_connection_status)
+
         self.scan()
+        self.connection_timer.start()
 
     def scan(self):
         try:
@@ -184,6 +192,15 @@ class Main(QMainWindow):
             inventory_error = str(exc)
             self.connection_status.setText(f"USB connection scan failed: {exc}")
         self.log.setPlainText(collect(inventory, inventory_error))
+
+    def refresh_connection_status(self):
+        """Refresh lightweight HID presence/state without touching the device."""
+        try:
+            inventory = inspect_keyboard_interfaces()
+            state = evaluate_connection(inventory)
+            self.connection_status.setText(f"USB connection: {state.message}")
+        except IdentifyError as exc:
+            self.connection_status.setText(f"USB connection scan failed: {exc}")
 
     def export_diagnostics(self):
         """Save a privacy-filtered support report; this performs no HID I/O."""
