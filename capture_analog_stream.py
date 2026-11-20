@@ -9,7 +9,11 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "app"))
+probe_dir = Path(__file__).resolve().parent
+# In the source checkout the application modules live in ./app; the installer
+# deliberately flattens those modules beside this standalone probe.
+app_dir = probe_dir / "app"
+sys.path.insert(0, str(app_dir if (app_dir / "analog_stream.py").is_file() else probe_dir))
 
 from analog_stream import AnalogStreamError, AnalogStreamSession  # noqa: E402
 
