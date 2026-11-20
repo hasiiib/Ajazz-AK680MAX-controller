@@ -48,7 +48,7 @@ def _safe_identify_failure(exc: Exception) -> str:
     elif "feature read failed" in message:
         category = "HID Feature read failed while waiting for the Identify response"
     elif any(token in message for token in ("not a valid 0x8f", "refused the request", "did not return a valid 0x8f")):
-        category = "no valid 0x8F Identify response arrived; the reply may have timed out or had unexpected framing"
+        category = "no valid 0x8F Identify response arrived within the timeout; reply framing may also be unexpected"
     elif any(token in message for token in ("could not select usb interface 2", "matching settings interfaces", "no matching vid/pid")):
         category = "could not uniquely select HID settings interface 2"
     elif "hidapi python package is missing" in message:
