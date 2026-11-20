@@ -74,7 +74,7 @@ Only implement features supported by verified firmware/protocol behavior.
 - [x] Add unit tests for packet framing, checksum, response parsing, and malformed/refusal responses.
 - [ ] Run the automated tests in the target Ubuntu environment.
 - [ ] Run Identify against the physical keyboard and record the live board-reported device ID.
-- [ ] If hidapi access is denied, inspect udev ancestry and add a narrowly scoped permission rule for only the verified settings interface.
+- [x] Inspect udev ancestry and add a narrowly scoped permission rule for only the verified settings interface; user ACL on /dev/hidraw4 verified after reconnect.
 - [ ] Confirm device ID and family before implementing any further GET operations.
 
 Safety boundary: Identify is the only command currently implemented. No configuration writes or settings controls have been added. A public reference maps 3151:502D to candidate device ID 2255 / gen2, but the live board response remains unverified.
@@ -136,3 +136,13 @@ Safety and verification:
 - [ ] Add narrow udev access only if the verified interface opens with a permission error.
 
 Safety boundary remains unchanged: 0x1B analog stream enable/disable is not implemented or sent. No keyboard settings have been changed. The live board ID is still unverified.
+
+
+## User-space HID access milestone (2026-11-20)
+- [x] Add the interface-2-only udev `uaccess` rule for VID:PID 3151:502D.
+- [x] Verify after reconnect that the active Ubuntu user has `rw-` ACL on `/dev/hidraw4`; no other interface permissions were broadened.
+- [x] Improve Identify open-error diagnostics and add a regression test for surfaced OS errors / handle cleanup.
+- [ ] Run the physical read-only Identify transaction now that access is granted.
+- [ ] Capture and verify the live board ID before adding further GET commands.
+
+The permission milestone is complete, but protocol communication is not yet confirmed. Keep all commands except the documented read-only 0x8F Identify disabled.
