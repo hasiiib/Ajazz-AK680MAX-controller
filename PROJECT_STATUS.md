@@ -448,3 +448,23 @@ Implementation commits:
 - Pairing / stop-failure tests: `2bb28bdbafea2008050bd9d5d2a4337a097c8356`
 
 Hardware boundary: this code has not yet been run against the physical keyboard's analog stream. The live board ID and interface pairing are verified, but analog reports, travel scale, full travel range, and the board's response to stream start/stop remain unverified. The stream flag is documented as volatile and is not intended to alter saved configuration. Do not claim analog monitoring works until the physical Start/Stop test is completed. Automated test status is not currently exposed by the available GitHub status lookup.
+
+
+## Final review notes for opt-in analog monitor (2026-11-20)
+
+- Corrected the Qt timer import to use `PySide6.QtCore.QTimer`.
+- Hardened stream startup so HID enumeration / handle-construction failures are surfaced as application-level errors rather than escaping the Qt callback.
+- Stop errors are converted to a clear warning while both HID handles are still closed.
+- The Identify button is disabled while streaming to avoid a second process action competing for the same Feature interface.
+- Firmware revision decoding is now exposed only for the verified gen2 board ID 2255; other IDs retain the raw Identify result but do not get a gen2 version interpretation.
+- Added tests for rejecting an unpaired interface topology and for closing both handles even when the stop command fails.
+
+Latest focused commits:
+- Qt timer import: `d053de16e863c6f64707c36ae51e228e0e355574`
+- Error handling: `d64350234ac321d81eb93b6ce02e7fa9afe3dfce`
+- Stop cleanup: `5548842fa380b2eefaede4c720700312f9095629`
+- Interface / stop cleanup tests: `2bb28bdbafea2008050bd9d5d2a4337a097c8356`
+- Gen2 metadata gate: `c143189f0fbb3a4fab33d5f871f26e231795bc0e`
+- Family-gate test: `d15fd379075e6001e757c3f5df9690051d833b66`
+
+No CI result is available through the current GitHub status lookup. Physical analog stream behavior remains unverified.
