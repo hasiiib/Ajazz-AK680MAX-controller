@@ -194,3 +194,14 @@ Supported page layouts are:
 The write-only sub-operation 8, all `0x65` magnetic SET operations, and firmware-specific columns 251/252/254 are deliberately not exposed. The parser performs no HID I/O and the GUI does not call it. This is parser/test groundwork only, not proof that board 2255 returns these pages. The public protocol reference marks the detailed `0xE5` handler evidence as firmware-derived from other gen2 boards, so an actual board-2255 GET-only capture is still required before connecting this module to the device. No GET or SET command was sent to the physical keyboard during this development step.
 
 Reference: [sharkfin ROYUAN protocol reference — Magnetic switches](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#magnetic-switches).
+
+
+## Read-only keymap GET parser implementation (2026-11-20)
+
+The repository also now contains `app/keymap.py` with regression tests in `tests/test_keymap.py`. It independently builds the documented gen2 `0x8A` request shape `[profile, 0xFF, page, sublayer]` and parses one raw 64-byte response into sixteen four-byte entries. The parser validates profile 0–3, page 0–7, sublayer 0–3, exact response length, and optional zero report-ID prefix. It intentionally preserves each four-byte entry as opaque bytes.
+
+A profile contains four 512-byte keymap sublayers; each sublayer is 128 four-byte slots, represented by eight 64-byte pages. This is sufficient to frame and retain the board's response without guessing field semantics. A factory keymap still must be compared with a verified physical layout before the app can safely present remapping controls.
+
+As with the magnetic parser, the module performs no HID I/O and is not connected to the GUI. The `0x8A` layout is generic gen2 firmware evidence, not a live response from the user's board 2255. No keymap GET or SET was sent to the physical keyboard.
+
+Reference: [sharkfin ROYUAN protocol reference — Keymap sub-layers](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#keymap-sub-layers).
