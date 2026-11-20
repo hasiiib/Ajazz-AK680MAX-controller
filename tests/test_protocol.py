@@ -10,6 +10,8 @@ from protocol import (
     IdentifyError,
     identify_packet,
     parse_device_id,
+    parse_gen2_firmware_revision,
+    identify_exchange_details,
     _feature_payload,
     identify_exchange,
     identify_keyboard,
@@ -31,6 +33,28 @@ class IdentifyProtocolTests(unittest.TestCase):
         reply[0] = 0x8F
         reply[1:5] = (2255).to_bytes(4, "little")
         self.assertEqual(parse_device_id(reply), 2255)
+
+    def test_parse_gen2_revision_from_identify_metadata(self):
+        reply = bytearray(64)
+        reply[0] = 0x8F
+        reply[7] = 0x02
+        reply[8] = 0x01
+        self.assertEqual(parse_gen2_firmware_revision(reply), "102")
+
+    def test_gen2_revision_rejects_non_decimal_nibbles_and_zero(self):
+        reply = bytearray(64)
+        reply[0] = 0x8F
+        self.assertIsNone(parse_gen2_firmware_revision(reply))
+        reply[7] = 0x0A
+        self.assertIsNone(parse_gen2_firmware_revision(reply))
+
+    def test_gen2_revision_rejects_short_or_wrong_opcode(self):
+        self.assertIsNone(parse_gen2_firmware_revision(bytes(8)))
+        reply = bytearray(64)
+        reply[0] = 0x80
+        reply[7] = 0x02
+        reply[8] = 0x01
+        self.assertIsNone(parse_gen2_firmware_revision(reply))
 
     def test_reject_wrong_opcode_and_zero_id(self):
         self.assertIsNone(parse_device_id(bytes(64)))
@@ -141,6 +165,25 @@ class IdentifyProtocolTests(unittest.TestCase):
         self.assertEqual(device.sent[0][1:], identify_packet())
         self.assertEqual(device.reads, 2)
         self.assertEqual(delays, [0.010, 0.010, 0.010])
+
+    def test_identify_exchange_details_preserves_reply_and_revision(self):
+        class FakeDevice:
+            def send_feature_report(self, report):
+                return len(report)
+
+            def get_feature_report(self, report_id, length):
+                reply = bytearray(64)
+                reply[0] = 0x8F
+                reply[1:5] = (2255).to_bytes(4, "little")
+                reply[7] = 0x02
+                reply[8] = 0x01
+                return bytes([0]) + bytes(reply)
+
+        result = identify_exchange_details(FakeDevice(), sleep=lambda _: None)
+        self.assertEqual(result.device_id, 2255)
+        self.assertEqual(result.firmware_revision, "102")
+        self.assertEqual(len(result.raw_reply), 64)
+        self.assertEqual(result.raw_reply[7:9], bytes([0x02, 0x01]))
 
     def test_identify_exchange_does_not_resend_on_timeout(self):
         class SilentDevice:
