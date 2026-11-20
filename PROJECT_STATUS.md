@@ -51,7 +51,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The suite contains **176 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests, plus a source-level guard excluding incompatible 3151:502C and 0C45:80B2 protocols. The latest full run passed on commit `48aac9e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44787733712).
+The suite contains **177 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and one-shot keymap and magnetic capture safety tests, plus a source-level guard excluding incompatible 3151:502C and 0C45:80B2 protocols. The latest full run passed on commit `48aac9e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44787733712).
 
 
 The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile, `0x8A` keymap page-0, and `0xE5` magnetic sub-operation-0/page-0 response framing each have one accepted physical capture. Other magnetic pages/sub-operations and value meanings remain unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
