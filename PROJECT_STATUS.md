@@ -37,7 +37,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Stock firmware provenance is not established by the Identify ID alone; this project has not flashed firmware and no board-2255 stock image/hash has been matched. Full sources and exclusions are in [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 
 ## Not yet verified on the physical keyboard
-- Sustained analog streaming, press/hold/release behavior, stop effectiveness (the stop request was sent but post-stop cessation was not independently measured), and physical confirmation of disconnect recovery. Keep the GUI warning visible until these are tested on board 2255.
+- Sustained analog monitoring is **not verified on physical board 2255** as a complete feature. Press/hold/release behavior, stop effectiveness (the stop request was sent but post-stop cessation was not independently measured), and physical confirmation of disconnect recovery remain open. Keep the GUI warning visible until these are tested on board 2255.
 - Raw travel units and calibrated travel range.
 - Other magnetic sub-operations/pages and broader keymap page coverage remain unverified; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. One user-initiated `0x84` GET, one `0x8A` GET (profile 0/page 0), and one `0xE5` GET (sub-operation 0/page 0) have been physically accepted, but no live read path is connected to the GUI. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
