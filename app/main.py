@@ -281,15 +281,8 @@ class Main(QMainWindow):
                 f"Analog monitor: running | active slots: {len(active)}{suffix}"
             )
         except AnalogStreamError as exc:
-            self.stream_timer.stop()
-            try:
-                self.stream_session.stop()
-            except Exception:
-                pass
-            self.stream_button.setText("Start Analog Monitor")
-            self.identify_button.setEnabled(True)
+            self._abort_analog_stream(f"Analog input error: {exc}")
             self.analog_status.setText("Analog monitor: stopped after input error")
-            self.log.append(f"\n\nANALOG MONITOR ERROR: {exc}")
 
     def stop_analog_stream(self):
         self.stream_timer.stop()
