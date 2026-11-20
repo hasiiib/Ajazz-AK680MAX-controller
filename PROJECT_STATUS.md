@@ -23,9 +23,9 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 - Standard-library unit tests and GitHub Actions workflow.
 
 ## Automated verification
-- GitHub Actions run for commit `74ea205541d894b6451332dd69d26fad248b1a6c`: **success**.
-- The workflow's `unittest` job completed successfully, including regression coverage for partial Identify sends, partial stream-enable sends, input-interface open failure, uncertain stream-enable failure cleanup, and best-effort stop.
-- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44760074233
+- GitHub Actions run for commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9`: **success**.
+- The workflow's `unittest` job passed **47 tests**, covering Identify, analog stream lifecycle/cleanup, strict magnetic settings page parsing, and keymap page framing.
+- Latest workflow: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389
 
 ## Not yet physically verified
 - The analog stream has not yet been tested on the physical keyboard.
@@ -79,3 +79,5 @@ Added `app/keymap.py` and `tests/test_keymap.py`. The module builds the document
 This code is pure and disconnected from HID/GUI. The protocol shape is family-level firmware evidence; no `0x8A` request or response has been observed on physical board 2255. Sharkfin's exact-model support page says the layout should be checked against the board-reported keymap before remapping. Therefore no remapping UI, keymap write, profile switch, or physical layout assumption is introduced.
 
 The magnetic settings and keymap modules are both request builders/parsers only. No GET or SET command was sent to the physical keyboard during these changes.
+
+The combined 47-test suite passed on commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44761654389.
