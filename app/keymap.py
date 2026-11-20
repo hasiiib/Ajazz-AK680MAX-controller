@@ -62,6 +62,8 @@ def parse_keymap_page(
     """Decode a raw 64-byte 0x8A page without guessing entry field semantics."""
     # Reuse request validation so parser and request bounds cannot diverge.
     keymap_get_packet(profile, page, sublayer)
+    if not isinstance(reply, (bytes, bytearray)):
+        raise KeymapProtocolError("Keymap reply must be bytes or bytearray.")
     data = bytes(reply)
     if len(data) == REPORT_LENGTH + 1 and data[0] == 0:
         data = data[1:]
