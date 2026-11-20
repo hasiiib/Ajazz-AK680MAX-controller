@@ -21,7 +21,8 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
 - Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
-- Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.\n- Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
+- Strict snapshot assembly that requires complete, consistent 128-slot keymap layers and magnetic-setting columns while preserving opaque keymap entries and raw protocol units.
+- Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
 
 ## Not yet verified on the physical keyboard
@@ -40,4 +41,4 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest completed CI run passed **101 tests** (3 Qt tests were skipped because PySide6 was not installed in that run). CI has now been updated to install application dependencies and execute the Qt viewer tests offscreen; that dependency-enabled run is pending.
+The latest completed CI run passed **102 tests**, including all three offscreen Qt viewer tests and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44772624039.
