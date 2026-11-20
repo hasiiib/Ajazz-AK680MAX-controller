@@ -99,7 +99,7 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("disconnect recovery", self.source)
         self.assertIn("values are raw counts", self.source.lower())
         self.assertIn("physical unit and calibrated range", self.source)
-        self.assertIn("setting-write opcode is used", self.source)
+        self.assertIn("No persistent setting-write opcode is used", self.source)
         self.assertIn("layout.addWidget(self.analog_warning)", self.source)
 
     def test_window_close_stops_both_background_timers(self):
