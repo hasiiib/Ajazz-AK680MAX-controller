@@ -20,15 +20,34 @@ class ConnectionState:
     analog_pair_candidate: bool
 
 
+def _is_usable_hid_path(path: object) -> bool:
+    """Accept only non-empty HIDAPI path values, never truthy placeholders."""
+    return isinstance(path, (str, bytes)) and bool(path)
+
+
 def evaluate_connection(inventory: list[dict[str, object]]) -> ConnectionState:
     """Classify the known control/input interface candidates conservatively."""
+    if not isinstance(inventory, (list, tuple)) or any(
+        not isinstance(item, dict) for item in inventory
+    ):
+        return ConnectionState(
+            "invalid-inventory",
+            "HID inventory has an unexpected structure — refusing device selection.",
+            False,
+            False,
+        )
+
     controls = [
         item for item in inventory
-        if item.get("interface_number") == SETTINGS_INTERFACE and item.get("path")
+        if type(item.get("interface_number")) is int
+        and item.get("interface_number") == SETTINGS_INTERFACE
+        and _is_usable_hid_path(item.get("path"))
     ]
     inputs = [
         item for item in inventory
-        if item.get("interface_number") == ANALOG_INPUT_INTERFACE and item.get("path")
+        if type(item.get("interface_number")) is int
+        and item.get("interface_number") == ANALOG_INPUT_INTERFACE
+        and _is_usable_hid_path(item.get("path"))
     ]
 
     if not controls and not inputs:
@@ -50,7 +69,8 @@ def evaluate_connection(inventory: list[dict[str, object]]) -> ConnectionState:
     if len(controls) == 1:
         if len(inputs) == 1:
             parent = controls[0].get("usb_parent")
-            if parent and parent == inputs[0].get("usb_parent"):
+            input_parent = inputs[0].get("usb_parent")
+            if isinstance(parent, str) and parent and parent == input_parent:
                 return ConnectionState(
                     "paired-candidate",
                     "Control + analog interfaces paired. Read-only Identify is available; "
