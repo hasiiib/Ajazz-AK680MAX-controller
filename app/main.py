@@ -146,8 +146,8 @@ class Main(QMainWindow):
         layout.addLayout(row)
 
         info = QLabel(
-            "Identify sends one 0x8F read request and polls for its reply. "
-            "No keyboard settings are changed."
+            "Identify sends one read-only 0x8F request. Analog Monitor temporarily "
+            "enables raw travel reports and sends a stop command when stopped or closed."
         )
         info.setObjectName("sub")
         layout.addWidget(info)
@@ -174,10 +174,10 @@ class Main(QMainWindow):
             self.stream_timer.start()
             self.stream_button.setText("Stop Analog Monitor")
             self.analog_status.setText("Analog monitor: running; press and release keys to view raw travel.")
-            self.log.append("\\n\\nANALOG MONITOR: started (temporary; no settings are saved)")
+            self.log.append("\n\nANALOG MONITOR: started (temporary; no settings are saved)")
         except AnalogStreamError as exc:
             self.analog_status.setText("Analog monitor: could not start")
-            self.log.append(f"\\n\\nANALOG MONITOR ERROR: {exc}")
+            self.log.append(f"\n\nANALOG MONITOR ERROR: {exc}")
         finally:
             self.stream_button.setEnabled(True)
 
@@ -200,17 +200,17 @@ class Main(QMainWindow):
                 pass
             self.stream_button.setText("Start Analog Monitor")
             self.analog_status.setText("Analog monitor: stopped after input error")
-            self.log.append(f"\\n\\nANALOG MONITOR ERROR: {exc}")
+            self.log.append(f"\n\nANALOG MONITOR ERROR: {exc}")
 
     def stop_analog_stream(self):
         self.stream_timer.stop()
         try:
             self.stream_session.stop()
             self.analog_status.setText("Analog monitor: stopped")
-            self.log.append("\\n\\nANALOG MONITOR: stopped")
+            self.log.append("\n\nANALOG MONITOR: stopped")
         except AnalogStreamError as exc:
             self.analog_status.setText("Analog monitor: stop attempted; check device connection")
-            self.log.append(f"\\n\\nANALOG MONITOR STOP WARNING: {exc}")
+            self.log.append(f"\n\nANALOG MONITOR STOP WARNING: {exc}")
         finally:
             self.stream_button.setText("Start Analog Monitor")
 
