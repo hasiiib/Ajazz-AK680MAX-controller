@@ -11,6 +11,7 @@ from protocol import (
     identify_packet,
     parse_device_id,
     parse_gen2_firmware_revision,
+    parse_analog_report,
     identify_exchange_details,
     _feature_payload,
     identify_exchange,
@@ -33,6 +34,29 @@ class IdentifyProtocolTests(unittest.TestCase):
         reply[0] = 0x8F
         reply[1:5] = (2255).to_bytes(4, "little")
         self.assertEqual(parse_device_id(reply), 2255)
+
+    def test_parse_analog_report_little_endian_and_slot(self):
+        report = bytearray(32)
+        report[0] = 0x05
+        report[1] = 0x1B
+        report[2:4] = (1234).to_bytes(2, "little")
+        report[4] = 67
+        sample = parse_analog_report(report)
+        self.assertEqual(sample.slot, 67)
+        self.assertEqual(sample.raw_travel, 1234)
+
+    def test_analog_report_rejects_wrong_length_id_opcode_and_slot(self):
+        self.assertIsNone(parse_analog_report(bytes(31)))
+        report = bytearray(32)
+        report[0] = 0x04
+        report[1] = 0x1B
+        self.assertIsNone(parse_analog_report(report))
+        report[0] = 0x05
+        report[1] = 0x10
+        self.assertIsNone(parse_analog_report(report))
+        report[1] = 0x1B
+        report[4] = 128
+        self.assertIsNone(parse_analog_report(report))
 
     def test_parse_gen2_revision_from_identify_metadata(self):
         reply = bytearray(64)
