@@ -17,7 +17,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Read-only board identification and firmware metadata parsing.
 - USB interface pairing checks.
 - Automatic connection-state refresh through metadata-only HID enumeration; no periodic device commands.
-- Opt-in temporary analog monitor with board-ID gate, interface-pair validation, bounded input polling, and cleanup paths.
+- Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a temporary stop is attempted best-effort.
 - Privacy-filtered diagnostic export with serial-number redaction.
 - User-local staged installer with rollback protection.
 - Automated unit tests and GitHub Actions CI.
