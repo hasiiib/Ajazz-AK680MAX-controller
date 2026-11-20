@@ -127,6 +127,17 @@ class IdentifyProtocolTests(unittest.TestCase):
         payload = identify_packet()
         self.assertEqual(_feature_payload(payload), payload)
 
+    def test_normalize_hidapi_list_and_tuple_return_values(self):
+        payload = bytes([0]) + identify_packet()
+        self.assertEqual(_feature_payload(list(payload)), identify_packet())
+        self.assertEqual(_feature_payload(tuple(payload)), identify_packet())
+
+    def test_reject_invalid_hidapi_sequence_values(self):
+        for raw in ([0, 256], [0, -1], [0, True], ["0"]):
+            with self.subTest(raw=raw):
+                with self.assertRaisesRegex(IdentifyError, "invalid byte values"):
+                    _feature_payload(raw)
+
     def test_reject_short_and_oversized_feature_reports(self):
         for raw in (b"short", bytes([0x8F]) + bytes(64), bytes([0]) + bytes(65)):
             with self.subTest(length=len(raw)):
