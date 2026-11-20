@@ -198,6 +198,32 @@ class SnapshotAssemblyTests(unittest.TestCase):
                         profile_reply(), keymaps, magnetics, **options,
                     )
 
+    def test_snapshot_rejects_boolean_and_malformed_reply_mapping_keys(self):
+        keymaps = {(0, page): bytes(64) for page in range(8)}
+        magnetics = {(0, page): bytes(64) for page in range(4)}
+
+        boolean_keymaps = dict(keymaps)
+        boolean_keymaps[(False, 0)] = boolean_keymaps.pop((0, 0))
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                profile_reply(), boolean_keymaps, magnetics,
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
+        boolean_magnetics = dict(magnetics)
+        boolean_magnetics[(0, False)] = boolean_magnetics.pop((0, 0))
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                profile_reply(), keymaps, boolean_magnetics,
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                profile_reply(), {(0, 0, 0): bytes(64)}, magnetics,
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
     def test_snapshot_rejects_non_byte_replies_instead_of_coercing_them(self):
         keymaps = {(0, page): bytes(64) for page in range(8)}
         magnetics = {(0, page): bytes(64) for page in range(4)}
