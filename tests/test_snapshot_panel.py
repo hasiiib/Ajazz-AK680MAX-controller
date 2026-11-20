@@ -8,10 +8,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 try:
     from PySide6.QtWidgets import QApplication
+except ModuleNotFoundError as exc:
+    if exc.name != "PySide6":
+        raise
+    QApplication = None
+
+if QApplication is not None:
     from read_only_snapshot import build_read_only_snapshot
     from snapshot_panel import ReadOnlySnapshotPanel
-except ImportError:
-    QApplication = None
 
 
 @unittest.skipIf(QApplication is None, "PySide6 is not installed in this test environment")
