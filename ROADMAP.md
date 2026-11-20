@@ -39,7 +39,7 @@
 - [ ] Physical acceptance testing and versioned release.
 
 ## Evidence and safety
-- [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture.
+- [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
 - Physical Identify result 2255 is verified; analog streaming and configuration reads are not yet physically verified.
