@@ -94,6 +94,7 @@ class ReadOnlySnapshotPanel(QWidget):
         )
 
     def _populate(self, rows) -> None:
+        rows = tuple(rows)
         self.table.setRowCount(len(rows))
         for row_index, (slot, raw_value) in enumerate(rows):
             slot_item = QTableWidgetItem(str(slot))
