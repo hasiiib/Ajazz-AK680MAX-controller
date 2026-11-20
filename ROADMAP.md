@@ -50,7 +50,7 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **140 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, and strict immutable display-projection validation. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates. The latest full run passed on commit `34e2104`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44779087143).
+The suite contains **141 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, and strict immutable display-projection validation. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates. The latest full run passed on commit `9acd63e`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44779494655).
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
