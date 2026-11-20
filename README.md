@@ -31,7 +31,7 @@ The physical keyboard has completed the read-only Identify handshake and reporte
 
 An opt-in Analog Monitor is implemented. It re-identifies the board before starting, validates the control/input interface pair, temporarily requests raw travel reports, and attempts cleanup when stopped or when the application exits. **Physical analog streaming has not yet been verified**, and raw travel values have no confirmed physical unit or calibrated range.
 
-Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`) and keymap pages (`0x8A`). These modules are not connected to the GUI, perform no HID I/O, and have not been exercised against the physical board. They do not write or alter keyboard settings.
+Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). These modules are not connected to the GUI, perform no HID I/O, and have not been exercised against the physical board. They do not write or alter keyboard settings.
 
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
 
