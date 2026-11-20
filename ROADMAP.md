@@ -63,4 +63,4 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest workflow runs for the new magnetic-page parser and tests are pending. The parser is software-only: it builds GET requests and decodes captured replies but does not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and a separately authorized, read-only 0xE5 response check; neither has been performed yet.
+The latest full unit-test workflow for commit `6b7729b8dde4313df2181575bdacc9f4d8d198e9` passed all 47 tests. The magnetic and keymap parsers are software-only: they build GET requests and decode captured replies but do not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and separately authorized read-only 0xE5 / 0x8A response checks; none has been performed yet.
