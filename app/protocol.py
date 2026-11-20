@@ -48,6 +48,8 @@ class IdentifyResult:
 
 def parse_analog_report(report: bytes | bytearray) -> AnalogSample | None:
     """Parse a 32-byte report-ID-5 analog sample; never performs I/O."""
+    if not isinstance(report, (bytes, bytearray)):
+        return None
     data = bytes(report)
     if len(data) != ANALOG_REPORT_LENGTH:
         return None
@@ -66,6 +68,8 @@ def parse_gen2_firmware_revision(reply: bytes | bytearray) -> str | None:
     The protocol documents (reply[8] << 8) | reply[7], with each
     hexadecimal nibble representing one decimal version digit.
     """
+    if not isinstance(reply, (bytes, bytearray)):
+        return None
     data = bytes(reply)
     if len(data) < REPORT_LENGTH or data[0] != IDENTIFY_OPCODE:
         return None
@@ -86,6 +90,8 @@ def identify_packet() -> bytes:
 
 def parse_device_id(reply: bytes | bytearray) -> int | None:
     """Decode [0x8F, device_id:u32 little-endian, ...]; reject refusal echo."""
+    if not isinstance(reply, (bytes, bytearray)):
+        return None
     data = bytes(reply)
     request = identify_packet()
     refused = bytearray(request)
@@ -100,6 +106,8 @@ def parse_device_id(reply: bytes | bytearray) -> int | None:
 
 def _feature_payload(raw: bytes | bytearray) -> bytes:
     """Normalize hidapi's report-ID-prefixed and no-prefix return forms."""
+    if not isinstance(raw, (bytes, bytearray)):
+        raise IdentifyError("HID Feature report must be bytes or bytearray.")
     data = bytes(raw)
     if len(data) >= REPORT_LENGTH + 1 and data[0] == 0:
         return data[1:REPORT_LENGTH + 1]
