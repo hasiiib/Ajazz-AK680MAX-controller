@@ -85,3 +85,37 @@ Safety boundary: Identify is the only command currently implemented. No configur
 - [x] Keep exact VID/PID, interface-number and unique-path checks; refuse ambiguous matches.
 - [ ] Retest Identify on the physical keyboard and capture the live Device ID or detailed enumeration error.
 - [ ] Only investigate udev permissions if interface selection succeeds but opening the node is denied.
+
+
+## HallJoy / RongYuan reference update (2026-11-20)
+
+Research task completed using [Universal Analog Plugin issue #23](https://github.com/AnalogSense/universal-analog-plugin/issues/23) and [PashOK7/HallJoy](https://github.com/PashOK7/HallJoy).
+
+- [x] Find an implementation that explicitly lists AJAZZ AK680 MAX HE as supported.
+- [x] Confirm HallJoy's exact AK680 MAX board table: board 2255 / VID:PID 3151:502D; other listed revisions 2336, 2343 and 2371 use PID 502F.
+- [x] Compare HallJoy's RongYuan HID transport and stream report shape against the user's descriptors.
+- [x] Record the read-only identity and metadata GET sequence, plus the separate stream enable/disable operation.
+- [x] Record HallJoy's AGPL-3.0 license and decision not to copy its source code.
+- [x] Add detailed research note: docs/research/HALLJOY_AK680MAX_PROTOCOL_REFERENCE_2026-11-20.md.
+
+Updated protocol picture:
+- Interface 1.2 / Feature Usage Page 0xFFFF Usage 0x02 is the candidate control channel.
+- Interface 1.1 / report ID 5 input is the candidate live analog stream channel.
+- HallJoy's 32-byte stream frame is [0x05, 0x1B, raw_lo, raw_hi, slot, ...].
+- 0x8F identifies the live board. 0x80 / 0xE6 / 0x84 / 0x8A are GET/read paths in HallJoy's implementation.
+- 0x1B,1 enables live stream; 0x1B,0 disables it. Do not send either until exact board identity is verified and explicit stream cleanup is implemented.
+
+Next implementation sequence:
+1. [ ] Pair the two HID collections in Linux by the same physical USB device path.
+2. [ ] Review/adjust 0x8F transaction timing to match the documented ~10 ms control exchange spacing.
+3. [ ] User retests the read-only Identify operation; capture live board ID or exact hidapi/open error.
+4. [ ] Verify board ID + VID/PID against exact model table before any board-specific reads.
+5. [ ] Add GET-only firmware/precision/assignment reads with unit tests.
+6. [ ] Only then design a separate analog stream start/stop feature using 0x1B with guaranteed disable on shutdown, errors and disconnect.
+
+Safety and verification:
+- The live board ID is still unknown; 2255 remains a candidate.
+- The stream packet format is reference-derived, not yet captured from this physical keyboard.
+- HallJoy's nominal 4 mm range is provisional, not a physical measurement.
+- No new keyboard command has been sent and no setting has been changed.
+- HallJoy is Windows-only and AGPL-3.0; its implementation is a technical reference, not a dependency to install or copy into this Linux project.
