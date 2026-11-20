@@ -82,6 +82,69 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertTrue(control_device.closed)
         self.assertTrue(input_device.closed)
 
+    def test_unpaired_interfaces_refuse_before_opening(self):
+        created = []
+        class FakeDevice:
+            def __init__(self):
+                self.open_calls = 0
+                created.append(self)
+            def open_path(self, path):
+                self.open_calls += 1
+            def close(self):
+                pass
+
+        fake_hid = SimpleNamespace(device=FakeDevice)
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-2:1.1", "usb_parent": "1-2"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaises(AnalogStreamError):
+                session.start()
+        self.assertEqual(created, [])
+
+    def test_stop_failure_still_closes_handles(self):
+        class FakeDevice:
+            def __init__(self, fail_stop=False):
+                self.fail_stop = fail_stop
+                self.sent = 0
+                self.closed = False
+            def open_path(self, path):
+                pass
+            def send_feature_report(self, report):
+                self.sent += 1
+                if self.fail_stop and self.sent == 2:
+                    raise OSError("disconnected")
+                return len(report)
+            def read(self, length, timeout):
+                return []
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice(fail_stop=True)
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            session.start()
+            with self.assertRaises(AnalogStreamError):
+                session.stop()
+        self.assertFalse(session.active)
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+
     def test_wrong_board_id_refuses_before_opening_any_interface(self):
         class FakeDevice:
             def __init__(self):
