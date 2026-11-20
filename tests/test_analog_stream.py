@@ -170,6 +170,40 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertEqual(device.open_calls, 0)
 
 
+    def test_enable_send_without_length_confirmation_is_rejected(self):
+        class FakeDevice:
+            def __init__(self):
+                self.sent = []
+                self.closed = False
+            def open_path(self, path):
+                pass
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                return None
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice()
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaisesRegex(AnalogStreamError, "incomplete analog stream"):
+                session.start()
+
+        self.assertFalse(session.active)
+        self.assertEqual(len(control.sent), 2)
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+
     def test_partial_enable_send_triggers_best_effort_stop_and_cleanup(self):
         class FakeDevice:
             def __init__(self, partial_first=False):
