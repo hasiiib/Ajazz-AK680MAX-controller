@@ -43,7 +43,7 @@ Build a polished Linux desktop controller for the wired AJAZZ AK680 MAX HE (boar
 
 Added `app/diagnostics.py` and a GUI Export Diagnostics action. The report includes USB/HID discovery output and explicit safety/verification status. Common `ID_SERIAL_SHORT`, `iSerialNumber`, `Serial Number`, and serial-labelled values are redacted before writing a local text file. The export path performs no HID open, no Identify, and no protocol command. Regression tests cover redaction, retained VID/PID/interface evidence, timezone handling, and the explicit unverified analog-stream warning.
 
-Added a syntax-compilation regression test for every Python module in `app/`, so GUI source syntax is checked in CI without requiring PySide6 or touching hardware. The 59-test workflow passed on commit `a10c459c51319fe53740da82f91b034be0773e3d`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763058456.
+Added a syntax-compilation regression test for every Python module in `app/`, so GUI source syntax is checked in CI without requiring PySide6 or touching hardware. The 66-test workflow passed on commit `f9d98cdc9534ab876ecf3c6b3f78e1d140d962f5`: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44763956318.
 
 ## Next development focus
 1. Continue code review and improve GUI structure, state presentation, and error recovery without claiming untested hardware behavior.
