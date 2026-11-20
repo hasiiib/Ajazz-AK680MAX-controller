@@ -205,3 +205,12 @@ A profile contains four 512-byte keymap sublayers; each sublayer is 128 four-byt
 As with the magnetic parser, the module performs no HID I/O and is not connected to the GUI. The `0x8A` layout is generic gen2 firmware evidence, not a live response from the user's board 2255. No keymap GET or SET was sent to the physical keyboard.
 
 Reference: [sharkfin ROYUAN protocol reference — Keymap sub-layers](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#keymap-sub-layers).
+
+
+## Read-only active-profile GET parser implementation (2026-11-20)
+
+Added `app/profile.py` with tests in `tests/test_profile.py`. The module constructs the gen2 `0x84` Feature GET packet and parses the zero-based active profile from response byte 1, accepting only the four indices 0–3. The response must have opcode `0x84` and exactly 64 payload bytes (optionally preceded by hidapi's zero report-ID byte).
+
+This parser is pure and not connected to HID or the GUI. It does not switch profiles. Although the exact AK680 MAX 2255 software-support record lists four onboard profiles, the `0x84` transaction has not been tested on the physical unit. No profile GET or SET was sent during this development step.
+
+Reference: [sharkfin ROYUAN protocol reference — Profiles](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md#profiles).
