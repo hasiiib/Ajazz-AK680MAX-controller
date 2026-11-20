@@ -146,3 +146,15 @@ Safety boundary remains unchanged: 0x1B analog stream enable/disable is not impl
 - [ ] Capture and verify the live board ID before adding further GET commands.
 
 The permission milestone is complete, but protocol communication is not yet confirmed. Keep all commands except the documented read-only 0x8F Identify disabled.
+
+
+## Linux libusb access correction (2026-11-20)
+
+- [x] Diagnose the bundled Python hidapi backend: it links to libusb rather than opening hidraw directly.
+- [x] Confirm /dev/hidraw4 native read/write open succeeds with the existing interface-2 ACL.
+- [x] Confirm the matching /dev/bus/usb/001/013 node denies the user write open.
+- [x] Extend the udev rule with a VID:PID-scoped uaccess tag for USB device nodes 3151:502d, retaining the interface-2-only hidraw rule.
+- [ ] Install the updated rule, reconnect the keyboard, and verify the USB device node receives an ACL for the active user.
+- [ ] Retest HIDAPI open and then run the read-only 0x8F Identify transaction.
+
+No HID reports have been sent and no keyboard settings have been changed during this diagnosis.
