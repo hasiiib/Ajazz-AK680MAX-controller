@@ -87,5 +87,20 @@ class Board2255DocumentationTests(unittest.TestCase):
         ):
             with self.subTest(token=token):
                 self.assertIn(token, plan)
+    def test_magnetic_stage_three_capture_is_recorded_without_overclaiming(self):
+        plan = (ROOT / "docs" / "HARDWARE_VERIFICATION.md").read_text(encoding="utf-8")
+        evidence = (ROOT / "docs" / "BOARD_2255_PROTOCOL_EVIDENCE.md").read_text(encoding="utf-8")
+        for token in (
+            "Stage 3 physical magnetic capture record",
+            "65/65",
+            "32 little-endian 16-bit values",
+            "every value is decimal 200",
+            "raw protocol units",
+            "Other sub-operations/pages and value meanings remain unverified",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token.lower(), (plan + evidence).lower())
+        self.assertIn("not connected to HID", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
+
 if __name__ == "__main__":
     unittest.main()
