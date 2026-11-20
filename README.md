@@ -29,15 +29,15 @@ Run the installer again to update.
 
 The physical keyboard has completed the read-only Identify handshake and reported board ID `2255`, matching the public AK680 MAX gen2 record. The Linux application can enumerate the keyboard, verify the paired HID interfaces, and display the identity/firmware metadata available in the Identify response.
 
-An opt-in Analog Monitor is implemented. It re-identifies the board before starting, validates the control/input interface pair, temporarily requests raw travel reports, and attempts cleanup when stopped or when the application exits. **Physical analog streaming has not yet been verified**, and raw travel values have no confirmed physical unit or calibrated range.
+An opt-in Analog Monitor is present but remains **experimental and not verified on physical board 2255**. The board identity and HID interface pairing were verified, but the 0x1B command, host transport, Report ID 5 behavior, stop behavior, disconnect recovery, and travel scale have not been validated on this keyboard. Samples are raw counts, not millimetres; their physical unit and calibrated range are unknown. The monitor uses a temporary stream flag and does not edit saved settings. The GUI displays this warning next to the control.
 
-Read-only protocol groundwork now includes pure request builders and strict response parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). These modules are not connected to live HID reads and have not been exercised against the physical board. A separate **Configuration (read-only)** GUI tab can browse an already validated snapshot, showing keymap entries as raw hex and magnetic values in protocol-native form without guessing their meanings. The viewer starts empty: live configuration acquisition is deliberately not connected until board-2255 response framing is physically verified. The viewer itself performs no HID I/O and cannot write or alter keyboard settings.
+Read-only protocol groundwork includes pure request builders/parsers for gen2 magnetic settings pages (`0xE5`), keymap pages (`0x8A`), and active-profile metadata (`0x84`). They are not connected to live HID reads. A separate **Configuration (read-only)** tab displays only a validated in-memory snapshot; it starts empty and performs no HID I/O. Public protocol research is family-level or firmware-image-derived from other board IDs, not a board-2255 capture; the `0x8A` byte-4 interpretation is inconsistent between upstream documentation and code. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md). Live configuration acquisition remains disabled.
 
 The GUI now includes **Export Diagnostics**. It saves a local text report of USB/HID discovery, redacts common USB serial-number fields, and clearly marks analog streaming as not yet physically verified. Exporting diagnostics does not send a device command.
 
 USB connection status refreshes automatically every 1.5 seconds using HID enumeration only. Background refresh does not open device handles or send Identify/configuration commands. If the analog monitor is active and its paired input/control interfaces disappear, the app stops polling, attempts the temporary stream-stop command, closes both handles, clears stale samples, and restores the controls. The same cleanup runs after an input error.
 
-RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. They require further board-specific protocol research and physical verification.
+RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. Persistent configuration writes remain disabled pending exact stock board-2255 protocol verification and explicit user authorization. The research note also excludes incompatible 3151:502C and 0C45:80B2 protocols.
 
 ## Installation and data safety
 
@@ -69,7 +69,7 @@ From a local clone:
 python3 -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **125 tests**, including strict response-to-snapshot integration, snapshot validation, and read-only Qt viewer coverage. CI installs the application dependencies and runs the Qt tests in offscreen mode. Latest completed run: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44776410764.
+GitHub Actions runs this suite on pushes and pull requests. The suite currently contains **130 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, and read-only Qt viewer coverage. CI installs the application dependencies and runs the Qt tests in offscreen mode. See the [GitHub Actions history](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions).
 
 https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 
@@ -81,4 +81,4 @@ https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions
 No unique keyboard serial number is stored in this repository.
 
 
-Hardware response verification is still gated on physical board-2255 captures. The offline capture assessor is available in `app/hardware_verification.py`; see [the verification plan](docs/HARDWARE_VERIFICATION.md).
+Hardware response verification is still gated on physical board-2255 captures. The offline capture assessor is available in `app/hardware_verification.py`; see [the verification plan](docs/HARDWARE_VERIFICATION.md) and [the board-specific evidence audit](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).

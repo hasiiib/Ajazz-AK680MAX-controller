@@ -1,0 +1,46 @@
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+EVIDENCE = ROOT / "docs" / "BOARD_2255_PROTOCOL_EVIDENCE.md"
+
+
+class Board2255DocumentationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.evidence = EVIDENCE.read_text(encoding="utf-8")
+        cls.evidence_lower = cls.evidence.lower()
+
+    def test_exact_target_and_incompatible_protocols_are_pinned(self):
+        for token in (
+            "RY1B-2255", "3151:502D", "board ID 2255",
+            "3151:502C", "0C45:80B2",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, self.evidence)
+
+    def test_family_evidence_is_not_misrepresented_as_target_hardware(self):
+        for token in ("2268", "2116", "3708", "not captured on board 2255"):
+            with self.subTest(token=token):
+                self.assertIn(token.lower(), self.evidence_lower)
+        self.assertIn("upstream source ambiguity", self.evidence_lower)
+        self.assertIn("not verified on board 2255", self.evidence_lower)
+
+    def test_stock_firmware_host_software_and_custom_firmware_are_distinguished(self):
+        for token in ("stock firmware", "host configurator", "custom firmware", "firmware image"):
+            with self.subTest(token=token):
+                self.assertIn(token, self.evidence_lower)
+        self.assertIn("has not flashed firmware", self.evidence_lower)
+
+    def test_public_docs_link_evidence_and_keep_analog_unverified(self):
+        for path in ("README.md", "PROJECT_STATUS.md", "ROADMAP.md", "HARDWARE_VERIFICATION.md"):
+            doc_path = ROOT / path if path != "HARDWARE_VERIFICATION.md" else ROOT / "docs" / path
+            content = doc_path.read_text(encoding="utf-8")
+            with self.subTest(path=path):
+                self.assertIn("BOARD_2255_PROTOCOL_EVIDENCE.md", content)
+        self.assertIn("not verified on physical board 2255", (ROOT / "README.md").read_text(encoding="utf-8").lower())
+        self.assertIn("not verified on physical board 2255", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
+
+
+if __name__ == "__main__":
+    unittest.main()

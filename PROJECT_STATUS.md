@@ -18,6 +18,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - USB interface pairing checks.
 - Automatic connection-state refresh through metadata-only HID enumeration; no periodic device commands.
 - Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a temporary stop is attempted best-effort.
+- A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
 - User-local staged installer with rollback protection.
 - Pure read-only request builders and parsers for active profile, keymap pages, and magnetic-settings pages.
@@ -25,8 +26,16 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Immutable display-only snapshot projection and a **Configuration (read-only)** GUI tab for browsing a validated snapshot. The viewer starts empty and accepts only validated in-memory snapshot objects; it does not read from or write to the keyboard.
 - Automated unit tests and GitHub Actions CI.
 
+## Protocol research findings (not target-board validation)
+- The independent Sharkfin registry maps board ID 2255 / USB 3151:502D to the AK680 MAX gen2 family and controller string `ry5088_sg9005_rt004_dm_hall_8k`; this is third-party host-software metadata, not stock-firmware proof.
+- The same AK680 MAX name covers four device IDs; 2336/2343/2371 use PID 3151:502F and different controller strings. PID 3151:502D is also shared by unrelated device IDs, so Identify ID 2255 remains essential.
+- Public `0x84`/`0x8A` hardware notes are family-level, not target-2255 captures. Upstream documentation and code disagree on the meaning of byte 4 in the `0x8A` request.
+- Public `0xE5` magnetic-settings findings are firmware-image-derived from other gen2 IDs (2268, 2116, 3708), not a board-2255 hardware test.
+- Public `0x1B` travel-stream findings are from other firmware images and other hardware; target transport, stop behavior, and report semantics remain unverified.
+- Stock firmware provenance is not established by the Identify ID alone; this project has not flashed firmware and no board-2255 stock image/hash has been matched. Full sources and exclusions are in [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
+
 ## Not yet verified on the physical keyboard
-- Live analog stream start, travel reports, hold/release behavior, and physical confirmation of disconnect recovery.
+- Live analog stream start, transport, stop behavior, travel reports, hold/release behavior, and physical confirmation of disconnect recovery. Keep the GUI warning visible until tested on board 2255.
 - Raw travel units and calibrated travel range.
 - Live magnetic settings, keymap, and active-profile reads; snapshot assembly currently consumes supplied response payloads and performs no HID I/O. The staged, read-only hardware verification gate is documented in [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
@@ -41,7 +50,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Never run the GUI with sudo.
 
 ## Latest automated verification
-The latest completed CI run passed **125 tests**, including response-to-snapshot integration, all offscreen Qt viewer tests, and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44776410764.
+The suite contains **130 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, and strict immutable display-projection validation. CI runs on pushes and pull requests; see the [Actions history](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions).
 
 
-The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. Physical response framing on board 2255 remains unverified; see [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md).
+The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. Physical response framing on board 2255 remains unverified; see [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).

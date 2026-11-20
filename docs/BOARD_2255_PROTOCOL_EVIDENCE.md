@@ -1,0 +1,98 @@
+# Board 2255 protocol evidence and safety boundary
+
+Last reviewed: 2026-11-20
+
+## Target identity
+
+This project targets the wired AJAZZ AK680 MAX HE identified on the user's Ubuntu system as:
+
+- User/board designation: **RY1B-2255 / board ID 2255**
+- USB VID:PID: **3151:502D**
+- HID interfaces observed locally: control candidate interface 2 and analog-input candidate interface 1
+- Physical read-only Identify result: **2255**
+
+The local hardware observations above are project history from the user's physical keyboard. They are not results of this GitHub CI run.
+
+## Evidence classes
+
+Keep these categories separate:
+
+1. **Target-board hardware evidence** — a capture or test performed on this exact 3151:502D / board-2255 keyboard.
+2. **Family-level hardware evidence** — a plugged-in board of the same protocol family, but a different device ID.
+3. **Firmware-image evidence** — reverse engineering of a named firmware image. This describes that image, not automatically every board in its family.
+4. **Host-software evidence** — a vendor driver or third-party configurator's code/registry. It can suggest intended support but is not proof that a particular stock firmware build behaves identically.
+
+The public Sharkfin protocol document explicitly marks evidence as `[HW]` (a plugged-in board), `[FW]` (a named firmware image), or `[JS]` (vendor host code only). It also warns that command families share opcode numbers and must be resolved from a device record, not guessed from USB PID alone.
+
+## What the public board registry says
+
+The Sharkfin AK680 MAX board page lists four revisions under the same marketing name, and explicitly says they are different controllers:
+
+| Board ID | USB VID:PID | Registry family | Registry controller |
+|---:|---|---|---|
+| 2255 | 3151:502D | gen2 | `ry5088_sg9005_rt004_dm_hall_8k` |
+| 2336 | 3151:502F | gen2 | `ry5088_sg9005_8k_8k_002` |
+| 2343 | 3151:502F | gen2 | `ry5088_sg9005_8k_1k_002` |
+| 2371 | 3151:502F | gen2 | `ry5088_sg9005_ns68_002_8k_1k_nolight` |
+
+For board 2255 the third-party registry marks settings support as writable and the key layout as requiring automatic confirmation. That is a compatibility claim from an independent host application, not an instruction to write settings and not a target-board protocol capture.
+
+The same USB PID 3151:502D is also listed for other board IDs/models, including AJAZZ ALUX68 PLUS 2303, AJAZZMOUSE ALUX60 2621/2622, and AttackShark X65HE 2268. Therefore **3151:502D by itself is not enough to identify the board or justify a protocol command**. The locally observed Identify result 2255 is the distinguishing evidence.
+
+The 2336/2343/2371 AK680 MAX revisions use PID 3151:502F and have different controller strings. Do not silently treat them as identical to this 2255 unit.
+
+## Protocol evidence matrix
+
+| Area | Public evidence | Target-2255 status | Project decision |
+|---|---|---|---|
+| Identify `0x8F` | Shared GET; public protocol gives a 32-bit little-endian device ID | **Physically verified**: user's keyboard returned 2255 | Keep the existing user-initiated read-only Identify path |
+| Active profile GET `0x84` | Public protocol labels gen2 profile GET as hardware evidence; reply byte 1 is a zero-based index | Not captured on board 2255 | Keep request builder/parser pure; do not add HID acquisition yet |
+| Keymap GET `0x8A` | Public protocol labels gen2 page reads as hardware evidence on other hardware; eight raw 64-byte pages are described | Not captured on board 2255 | Keep request builder/parser pure; preserve opaque bytes |
+| Keymap request byte 4 | The public protocol table labels it `os` (host layer), while the same upstream source's Rust `gen2.rs` helper calls it a sub-layer and ties that interpretation to the 2268 firmware handler | **Upstream source ambiguity; no 2255 confirmation** | Do not resolve this by assumption or connect live keymap reads |
+| Magnetic GET `0xE5` | The upstream protocol section is marked firmware-derived and cites gen2 images for device IDs 2268, 2116, and 3708. It describes raw pages without opcode echo; the number/width of pages varies by sub-operation | **No board-2255 hardware capture** | Keep parser/request builder synthetic and disconnected from HID |
+| Analog stream `0x1B` | Upstream notes derive handlers from images 2268, 2116, and 3708; the cited physical travel-stream observations are from other hardware (including GamaKay TK75HE-V2, device 3833) | **Not verified on board 2255** | Keep the monitor explicitly experimental; raw travel counts have no target-confirmed unit or calibrated range |
+
+The upstream protocol source distinguishes family-level GET evidence from firmware-image-derived storage/handler details. Its magnetic-switch section says the column format follows family but whether columns exist depends on firmware. That is not enough to prove the exact stock firmware on this board supports the same pages.
+
+### Analog transport caveat
+
+The current Linux implementation sends its temporary `0x1B` control packet using hidapi `send_feature_report` on interface 2 and reads Report ID 5 on interface 1. The third-party protocol notes describe the travel sender in terms of a USB input endpoint and report ID 5 on a vendor input collection. No board-2255 capture has established that the current host transport and report framing match this unit. This is an explicit physical-validation blocker, not a claim of compatibility.
+
+## Stock firmware versus host software or custom firmware
+
+- The public protocol notes are reverse-engineering documentation. Their named firmware-image findings are from other device IDs (2268, 2116, 3708, etc.), not a published board-2255 stock image.
+- Sharkfin is a GPL-3.0-or-later **host configurator**. Its README says it never flashes firmware, and its board page says it is not affiliated with or endorsed by keyboard vendors. Its support registry and protocol source are therefore not custom firmware for this keyboard.
+- AJAZZ-branded software pages list AK680 MAX driver/online-driver options and distinguish wired variants, but the pages reviewed do not provide a board-2255 firmware image, cryptographic hash, or a mapping from a specific stock image to device ID 2255. A host driver download is not a firmware binary.
+- This project has not flashed firmware or installed custom firmware. The Identify result 2255 proves the board's reported ID, not the provenance or hash of every byte in its firmware. Do not label the physical unit's firmware “stock” or “custom” without a matching image/hash or vendor confirmation.
+- No firmware update, bootloader, reset, calibration, or flash path is part of this project.
+
+## Explicit exclusions
+
+- Do not borrow the incompatible **3151:502C** lightless-board protocol.
+- Do not borrow the unrelated **0C45:80B2** RGB protocol.
+- Do not infer board identity from the AK680 MAX marketing name or PID alone.
+- Do not send magnetic setting writes (`0x65`), keymap writes (`0x0A`), RGB/per-key colour, macro, calibration, reset, or firmware commands. Persistent writes remain prohibited until exact stock board-2255 behavior is verified and the user explicitly authorizes them.
+
+## Current software boundary
+
+- `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure packet builders/parsers only.
+- `read_only_snapshot.py` validates supplied response payloads and assembles complete snapshots; it does not communicate with the keyboard.
+- `hardware_verification.py` assesses one manually supplied response offline; it never opens HID, sends a command, retries, or persists a capture.
+- `snapshot_panel.py` and `snapshot_view.py` render only a validated in-memory snapshot and do not perform HID I/O.
+- The Analog Monitor is opt-in and temporary, but its target-board protocol path is unverified. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
+
+## Sources reviewed
+
+All Sharkfin source links below are pinned to repository commit `8c999ba7d44254f5206fb0ff25ed7cea6ebbb496` so the research record is reproducible.
+
+- [Sharkfin AK680 MAX board page](https://getsharkfin.com/boards/ajazzmouse-ak680-max) — exact device ID/PID/controller registry and model revisions.
+- [Sharkfin board matrix](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/docs/BOARDS.md) — board IDs, PIDs, protocol family, and layout coverage.
+- [Sharkfin ROYUAN protocol notes](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/docs/PROTOCOL.md) — evidence markers and family-level protocol research.
+- [Sharkfin gen2 keymap implementation](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/app/src-tauri/src/protocol/gen2.rs) — source of the sub-layer interpretation for byte 4, tied to device 2268 firmware.
+- [Sharkfin magnetic/analog implementation](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/app/src-tauri/src/protocol/hall.rs) — host-side request builders and analog stream notes.
+- [Sharkfin README](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/README.md) — open-source host configurator; states that it never flashes firmware.
+- [AJAZZ UK software page](https://ajazz.co.uk/pages/ajazz-software) and [AJAZZ driver listing](https://ajazz.net/pages/ajazz-drivers) — host software listings, not a board-2255 stock firmware manifest.
+
+## Next evidence gate
+
+Before enabling any live configuration reads, obtain target-specific read-only captures for `0x84`, `0x8A`, and `0xE5` on this exact 3151:502D / ID-2255 unit, verify report transport, lengths, echo/no-echo behavior, page coverage, and byte-4 semantics, and retain privacy-filtered fixtures. Before treating Analog Monitor as verified, separately validate its `0x1B` send transport, Report ID 5 samples, disconnect/stop behavior, and raw travel scale on this same board. No persistent setting writes are part of either gate.

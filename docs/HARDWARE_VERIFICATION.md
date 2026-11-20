@@ -10,6 +10,7 @@ This plan is a gate for validating the read-only configuration protocol on the p
 - No physical response for 0x84, 0x8A, or 0xE5 has been captured or validated on this board.
 - The reviewed RongYuan protocol reference describes 0x84 as an opcode-echoing GET, while 0x8A keymap and 0xE5 magnetic page GETs return raw 64-byte pages without an opcode echo. This is family-level reference evidence, not a physical capture from board 2255.
 - The analog stream is separate and also remains unverified on physical hardware.
+- The board-specific evidence audit is in [BOARD_2255_PROTOCOL_EVIDENCE.md](BOARD_2255_PROTOCOL_EVIDENCE.md). It records the upstream `0x8A` byte-4 ambiguity and distinguishes `0xE5` firmware-image evidence and `0x1B` observations on other devices from target-board hardware evidence. The gen2 family label alone does not clear this gate.
 
 ## Preconditions
 

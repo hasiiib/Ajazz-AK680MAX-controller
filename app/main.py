@@ -102,6 +102,8 @@ class Main(QMainWindow):
             "QMainWindow,QWidget{background:#101218;color:#e8eaf0;}"
             "QLabel#hero{font-size:28px;font-weight:700;}"
             "QLabel#sub{color:#9aa3b2;}"
+            "QLabel#warning{color:#ffd08a;background:#2b2118;border:1px solid #694c2a;"
+            "border-radius:8px;padding:10px;}"
             "QFrame#panel{background:#191d26;border:1px solid #2a303c;"
             "border-radius:14px;}"
             "QPushButton{background:#6c5ce7;color:white;border:0;"
@@ -171,12 +173,17 @@ class Main(QMainWindow):
         row.addStretch()
         layout.addLayout(row)
 
-        info = QLabel(
-            "Identify sends one read-only 0x8F request. Analog Monitor temporarily "
-            "enables raw travel reports and sends a stop command when stopped or closed."
+        self.analog_warning = QLabel(
+            "Identify sends one read-only 0x8F request. ANALOG MONITOR IS EXPERIMENTAL — "
+            "NOT VERIFIED ON PHYSICAL BOARD 2255. The 0x1B command, host transport, "
+            "stop behavior, and Report ID 5 samples have not been validated on this "
+            "keyboard. Values are raw counts; their physical unit and calibrated range "
+            "are unknown. This temporary monitor does not edit saved settings; stopping "
+            "or closing the app attempts to clear its stream flag."
         )
-        info.setObjectName("sub")
-        layout.addWidget(info)
+        self.analog_warning.setObjectName("warning")
+        self.analog_warning.setWordWrap(True)
+        layout.addWidget(self.analog_warning)
 
         self.setCentralWidget(root)
         self.stream_session = AnalogStreamSession()
