@@ -143,3 +143,40 @@ References:
 - [AK680 MAX variant/protocol analysis](https://github.com/shorekeeper/ajazzdesktopify)
 - [HallJoy RongYuan stream protocol](https://github.com/PashOK7/HallJoy/blob/main/src/HallJoyProject/HallJoy/rongyuan_stream_protocol.h)
 - [HallJoy board profile database](https://github.com/PashOK7/HallJoy/blob/main/docs/research/rongyuan-stream/profiles.json)
+
+## Independent board-2255 capability cross-check: sharkfin (2026-11-20)
+
+A second independent open-source project, [sharkfin](https://getsharkfin.com/boards/ajazzmouse-ak680-max), now provides a particularly useful model-specific cross-check. Its AK680 MAX page explicitly lists the four revisions and identifies this unit's exact row as:
+
+- board/device ID 2255
+- USB VID:PID `3151:502D`
+- controller `ry5088_sg9005_rt004_dm_hall_8k`
+- protocol family gen2
+- four onboard profiles
+- magnetic-switch controls: per-key actuation, release point, Rapid Trigger and dead-zone settings, plus advanced kinds
+- 18 backlight effects
+
+This corroborates that the 2255 product family is intended to expose magnetic-switch configuration, profile management and lighting. It is product-specific software-support evidence, not a physical test of our particular firmware revision. The page also says layout-to-slot mapping must be checked against the board's reported keymap before remapping; our application must not assume that the physical drawing order equals firmware slot order.
+
+The sharkfin protocol reference gives useful gen2-family read details:
+
+- `0xE5` is the GET side of multi-column magnetic settings. Its documented request payload is `[subop, 1, page]` with Bit7 checksum; the reply is a raw page rather than an echoed opcode.
+- The gen2 magnetic columns are described as 128 slots each. u16 columns use four 32-value pages; byte columns use two 64-value pages.
+- Sub-operations include actuation (0), release (1), Rapid Trigger press/release steps (2/3), DKS first point (4), bottom dead zone (6), key mode (7), and additional advanced data.
+- The optional `0xE6` precision query is described as a feature-list response, but the sharkfin text says the response was not implemented in the examined firmware images and may simply echo the request. Do not rely on it without exact response validation.
+- Firmware-dependent precision scaling is material: the protocol reference describes different raw travel scales across firmware generations. The AK680 MAX profile's nominal 4000 µm range is not a calibration measurement and must not be used as a conversion factor.
+
+Evidence grading matters here. The sharkfin board page is exact-model software-support evidence. Its generic `0xE5` magnetic packet layouts and detailed handler notes are marked firmware-derived from other named gen2 boards, not a direct capture or firmware disassembly of board 2255. Therefore we may use them to design parsers and test vectors, but must not claim that every sub-operation, scale, response length, or setting is confirmed on this physical 2255 unit.
+
+Safe implementation boundary:
+1. Keep all first-stage configuration discovery GET-only and behind a fresh Identify check for board ID 2255.
+2. Validate every page length, slot count, page index, checksum, and response shape before exposing parsed values.
+3. Treat unsupported/stale replies as failure, not as a valid zero-filled configuration.
+4. Do not send any `0x65` magnetic SET, keymap write, LED SET, profile SET, reset, or flash operation.
+5. Do not display millimetres until the firmware-specific scale is established and independently checked against live travel data.
+6. Keep the 2255's physical layout-to-slot mapping untrusted until a read-only keymap comparison or explicit owner confirmation validates it.
+
+References:
+- [sharkfin AK680 MAX exact model/revision support page](https://getsharkfin.com/boards/ajazzmouse-ak680-max)
+- [sharkfin ROYUAN protocol reference](https://github.com/dniminenn/sharkfin/blob/master/docs/PROTOCOL.md), especially Families, Keymap, Profiles, Settings, and Magnetic switches
+- [sharkfin source repository and license](https://github.com/dniminenn/sharkfin)
