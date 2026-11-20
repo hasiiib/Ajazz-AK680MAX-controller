@@ -119,6 +119,16 @@ class ActiveProfileCaptureTests(unittest.TestCase):
         self.assertNotIn("/dev/hidraw7", detail)
         self.assertNotIn("UNIQUE123", detail)
 
+    def test_nested_identify_error_preserves_safe_cause_and_redacts_identity(self):
+        cause = OSError("hidapi read error at /dev/hidraw9 serial_number=UNIQUE-ABC")
+        wrapped = RuntimeError("IdentifyError: transport failed")
+        wrapped.__cause__ = cause
+        detail = _safe_identify_failure(wrapped)
+        self.assertIn("transport failed", detail)
+        self.assertIn("hidapi read error", detail)
+        self.assertNotIn("/dev/hidraw9", detail)
+        self.assertNotIn("UNIQUE-ABC", detail)
+
     def test_identify_timeout_has_distinct_safe_diagnostic(self):
         detail = _safe_identify_failure(
             RuntimeError("The keyboard did not return a valid 0x8F Identify reply.")
