@@ -44,4 +44,4 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest completed CI run passed **103 tests**, including all Qt panel tests and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44773434353. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates.
+The latest completed CI run passed **109 tests**, including all Qt panel tests and strict immutable display-projection validation: https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44774384061. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and read-only configuration response validation remain hardware gates.
