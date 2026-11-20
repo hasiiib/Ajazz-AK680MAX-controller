@@ -79,7 +79,7 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 - `read_only_snapshot.py` validates supplied response payloads and assembles complete snapshots; it does not communicate with the keyboard.
 - `hardware_verification.py` assesses manually supplied byte captures or copied hex text offline; it never opens HID, sends a command, retries, or persists a capture.
 - `snapshot_panel.py` and `snapshot_view.py` render only a validated in-memory snapshot and do not perform HID I/O.
-- The Analog Monitor is opt-in and temporary, but its target-board protocol path is unverified. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
+- The Analog Monitor is opt-in and intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility and behavior are unverified on board 2255. Its GUI must keep this limitation visible and must not convert raw counts into millimetres.
 
 ## Sources reviewed
 

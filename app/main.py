@@ -178,8 +178,9 @@ class Main(QMainWindow):
             "NOT VERIFIED ON PHYSICAL BOARD 2255. The 0x1B command, host transport, "
             "stop behavior, and Report ID 5 samples have not been validated on this "
             "keyboard. Values are raw counts; their physical unit and calibrated range "
-            "are unknown. This temporary monitor does not edit saved settings; stopping "
-            "or closing the app attempts to clear its stream flag."
+            "are unknown. The app sends no known persistent setting-write opcode, but "
+            "the effect of 0x1B on board 2255 is unverified. Stopping or closing the "
+            "app attempts to clear its stream flag."
         )
         self.analog_warning.setObjectName("warning")
         self.analog_warning.setWordWrap(True)
@@ -279,7 +280,7 @@ class Main(QMainWindow):
             self.stream_button.setText("Stop Analog Monitor")
             self.identify_button.setEnabled(False)
             self.analog_status.setText("Analog monitor: running; press and release keys to view raw travel.")
-            self.log.append("\n\nANALOG MONITOR: started (temporary; no settings are saved)")
+            self.log.append("\n\nANALOG MONITOR: started (experimental; target-board 0x1B effect unverified)")
         except AnalogStreamError as exc:
             self.analog_status.setText("Analog monitor: could not start")
             self.log.append(f"\n\nANALOG MONITOR ERROR: {exc}")

@@ -30,7 +30,7 @@ MAX_REPORTS_PER_POLL = 128
 
 
 class AnalogStreamError(RuntimeError):
-    """The temporary analog stream could not be started or read safely."""
+    """The analog stream-control operation could not be started or read safely."""
 
 
 def stream_control_packet(enabled: bool) -> bytes:
@@ -43,7 +43,7 @@ def stream_control_packet(enabled: bool) -> bytes:
 
 
 class AnalogStreamSession:
-    """Own both paired HID handles and the volatile stream flag."""
+    """Own paired HID handles; 0x1B volatility is unverified on board 2255."""
 
     def __init__(self, hid_module=None):
         self._hid = hid_module
@@ -80,7 +80,7 @@ class AnalogStreamSession:
             return
         hid = self._hid_module()
 
-        # Re-identify immediately before the temporary state-changing command.
+        # Re-identify before the 0x1B command; its target-board effect is unverified.
         try:
             identity = identify_keyboard_details()
         except Exception as exc:
@@ -151,7 +151,7 @@ class AnalogStreamSession:
                 if sample is not None:
                     samples.append(sample)
         except Exception as exc:
-            # Do not leave a volatile stream running if a caller forgets to
+            # Do not leave the stream running if a caller forgets to
             # perform GUI-level abort handling after an input transport error.
             cleanup_error = None
             try:

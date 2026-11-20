@@ -91,6 +91,7 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("self.analog_warning = QLabel(", self.source)
         self.assertIn("NOT VERIFIED ON PHYSICAL BOARD 2255", self.source)
         self.assertIn("0x1B command, host transport", self.source)
+        self.assertIn("effect of 0x1B on board 2255 is unverified", self.source)
         self.assertIn("values are raw counts", self.source.lower())
         self.assertIn("physical unit and calibrated range", self.source)
         self.assertIn("layout.addWidget(self.analog_warning)", self.source)

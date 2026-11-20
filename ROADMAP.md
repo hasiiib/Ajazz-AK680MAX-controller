@@ -13,7 +13,7 @@
 - [x] Automatic metadata-only USB/HID connection refresh.
 - [x] Ensure background refresh sends no device commands.
 - [x] Automatically abort analog monitoring when the paired interfaces disappear or input/enumeration fails.
-- [x] Stop polling, clear stale samples, restore GUI controls, and attempt temporary stream stop during abort.
+- [x] Stop polling, clear stale samples, restore GUI controls, and attempt best-effort stream-clear during abort; target-board volatility remains unverified.
 - [x] Close partially allocated analog HID handles on setup failures and validate poll batch bounds.
 - [x] Add a prominent GUI warning that analog streaming is not verified on physical board 2255 and raw travel units/range are unknown.
 - [ ] Verify analog start/stop, transport, press/hold/release, and disconnect recovery on the physical keyboard.

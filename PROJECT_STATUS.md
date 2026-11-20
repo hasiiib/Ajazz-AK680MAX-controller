@@ -17,7 +17,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Read-only board identification and firmware metadata parsing.
 - USB interface pairing checks.
 - Automatic connection-state refresh through metadata-only HID enumeration; no periodic device commands.
-- Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a temporary stop is attempted best-effort.
+- Automatic analog-monitor abort when its paired HID interfaces disappear or enumeration/input fails; polling stops, handles close, stale samples clear, and a best-effort stream-clear is attempted.
 - Analog session setup now closes partially allocated HID handles on second-handle creation or input-open failure, and rejects invalid poll batch limits before reading.
 - A prominent GUI warning now states that the analog command/report path is not verified on physical board 2255 and raw travel units/range are unknown.
 - Privacy-filtered diagnostic export with expanded USB serial-field redaction.
@@ -44,7 +44,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Safety boundaries
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
-- Analog streaming remains user-initiated and temporary.
+- Analog streaming remains user-initiated; it is intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility/effect is unverified on board 2255.
 - The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
