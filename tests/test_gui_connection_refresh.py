@@ -23,7 +23,7 @@ class GuiConnectionRefreshTests(unittest.TestCase):
 
     def test_inventory_report_uses_real_newlines_not_literal_escape_text(self):
         start = self.source.index("def _hid_inventory_text")
-        end = self.source.index("\\n\\n\\ndef collect", start)
+        end = self.source.index("\n\n\ndef collect", start)
         formatter = self.source[start:end]
         self.assertNotIn("\\\\n", formatter)
 
