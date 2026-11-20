@@ -31,7 +31,8 @@ This roadmap reflects the current repository and physical-device evidence. A che
 ## Phase 4 — Core controls (research before implementation)
 - [x] Separate the 3151:502D / board-2255 RongYuan protocol from incompatible AK680 MAX 3151:502C lightless and 0C45:80B2 RGB protocols; document explicit non-applicability.
 - [x] Cross-check board 2255 capabilities against an independent AK680 MAX software record (magnetic settings, profiles, lighting); retain firmware-level vs exact-board evidence grades.
-- [ ] Validate board-2255 GET operations and response formats; public gen2 references now describe keymap, profile, lighting, and magnetic GETs, but magnetic packet details are firmware-derived from other gen2 boards and remain unverified on 2255.
+- [x] Implement a pure, strict 0xE5 magnetic GET packet builder and response-page parsers for gen2 sub-operations 0–7, 9, and read-only 10; enforce page bounds, exact 64-byte payloads, little-endian u16 values, and four-byte DKS records.
+- [ ] Physically verify 0xE5 response timing, page shape, and values on board 2255 before enabling any configuration reads in the GUI.
 - [ ] Identify supported RGB capabilities and safe read/write protocol.
 - [ ] Identify keymap/remapping capabilities and profile format.
 - [ ] Design transactional writes, read-back verification, and recovery before exposing controls.
@@ -60,4 +61,4 @@ This roadmap reflects the current repository and physical-device evidence. A che
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The latest GitHub Actions run for commit `e0f498c9b46205515cdf9e0277316ccb6fcf5f4c` passed. The next meaningful hardware gate is the first physical Start/Stop Analog Monitor test; until then, the feature remains opt-in and unverified on the device.
+The latest workflow runs for the new magnetic-page parser and tests are pending. The parser is software-only: it builds GET requests and decodes captured replies but does not open HID or send commands. The next hardware gates remain physical Start/Stop Analog Monitor validation and a separately authorized, read-only 0xE5 response check; neither has been performed yet.
