@@ -60,11 +60,13 @@ BACKUP_DIR="${OPT_DIR}/.${APP_NAME}-backup-$$"
 
 say "Downloading the public repository..."
 git clone --depth 1 "$REPO" "$WORK_DIR/repo"
-[[ -f "$WORK_DIR/repo/app/main.py" && -f "$WORK_DIR/repo/requirements.txt" ]] || fail "Repository is missing required application files."
+[[ -f "$WORK_DIR/repo/app/main.py" && -f "$WORK_DIR/repo/requirements.txt" && -f "$WORK_DIR/repo/capture_analog_stream.py" ]] || fail "Repository is missing required application or analog probe files."
 
 mkdir -m 700 -- "$STAGE_DIR"
 cp -a "$WORK_DIR/repo/app/." "$STAGE_DIR/"
 cp -- "$WORK_DIR/repo/requirements.txt" "$STAGE_DIR/requirements.txt"
+# Stage the standalone opt-in probe alongside the installed app modules.
+cp -- "$WORK_DIR/repo/capture_analog_stream.py" "$STAGE_DIR/capture_analog_stream.py"
 
 say "Preparing the isolated Python environment..."
 python3 -m venv "$STAGE_DIR/.venv"
