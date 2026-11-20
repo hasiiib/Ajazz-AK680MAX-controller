@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 
 from protocol import (
     IdentifyError,
-    identify_keyboard,
+    identify_keyboard_details,
     inspect_keyboard_interfaces,
     paired_keyboard_interfaces,
 )
@@ -153,9 +153,19 @@ class Main(QMainWindow):
         self.identify_button.setText("Identifying…")
         self.log.append("\n\nIDENTIFICATION (read-only)")
         try:
-            device_id = identify_keyboard()
+            result = identify_keyboard_details()
+            device_id = result.device_id
             expected = 2255
             self.log.append(f"Board-reported device ID: {device_id}")
+            if result.firmware_revision is not None:
+                self.log.append(
+                    f"Firmware revision (gen2 Identify metadata): {result.firmware_revision}"
+                )
+            else:
+                self.log.append(
+                    "Firmware revision: not reported / not safely decodable "
+                    "from Identify metadata."
+                )
             if device_id == expected:
                 self.log.append(
                     "Matches the public AK680 MAX board record (gen2)."
