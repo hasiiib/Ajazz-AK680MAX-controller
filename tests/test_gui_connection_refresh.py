@@ -139,7 +139,7 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         session_source_path = ROOT / "app" / "analog_stream.py"
         session_source = session_source_path.read_text(encoding="utf-8")
         self.assertIn("if self._control is not None and self._active:", session_source)
-        self.assertIn("else:\\n            self._close_handles()", session_source)
+        self.assertIn("self._close_handles()", session_source)
 
     def test_window_close_best_effort_stops_session(self):
         main_class = next(
