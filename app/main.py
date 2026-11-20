@@ -1,13 +1,16 @@
 import sys
 import subprocess
+from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QTextEdit, QFrame,
+    QLabel, QPushButton, QTextEdit, QFrame, QFileDialog,
 )
 
 from analog_stream import AnalogStreamError, AnalogStreamSession
+from diagnostics import build_diagnostic_report
 
 from protocol import (
     IdentifyError,
@@ -143,6 +146,10 @@ class Main(QMainWindow):
         self.stream_button = QPushButton("Start Analog Monitor")
         self.stream_button.clicked.connect(self.toggle_analog_stream)
         row.addWidget(self.stream_button)
+
+        export_button = QPushButton("Export Diagnostics")
+        export_button.clicked.connect(self.export_diagnostics)
+        row.addWidget(export_button)
         row.addStretch()
         layout.addLayout(row)
 
@@ -163,6 +170,28 @@ class Main(QMainWindow):
 
     def scan(self):
         self.log.setPlainText(collect())
+
+    def export_diagnostics(self):
+        """Save a privacy-filtered support report; this performs no HID I/O."""
+        stamp = datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")
+        default_name = f"ak680-controller-diagnostics-{stamp}.txt"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Diagnostic Report",
+            str(Path.home() / default_name),
+            "Text files (*.txt)",
+        )
+        if not filename:
+            return
+        try:
+            report = build_diagnostic_report(collect())
+            Path(filename).write_text(report, encoding="utf-8")
+        except OSError as exc:
+            self.statusBar().showMessage(f"Diagnostic export failed: {exc}", 10000)
+            self.log.append(f"\\n\\nDIAGNOSTIC EXPORT ERROR: {exc}")
+            return
+        self.statusBar().showMessage(f"Diagnostic report saved: {filename}", 10000)
+        self.log.append(f"\\n\\nDIAGNOSTICS EXPORTED: {filename}")
 
     def toggle_analog_stream(self):
         if self.stream_session.active:
