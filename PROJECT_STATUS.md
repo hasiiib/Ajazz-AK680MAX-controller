@@ -23,7 +23,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Automated unit tests and GitHub Actions CI.
 
 ## Not yet verified on the physical keyboard
-- Live analog stream start, travel reports, hold/release behavior, and disconnect recovery.
+- Live analog stream start, travel reports, hold/release behavior, and physical confirmation of disconnect recovery.
 - Raw travel units and calibrated travel range.
 - Live magnetic settings, keymap, and active-profile reads.
 - RGB, remapping, per-key actuation, Rapid Trigger, DKS, macros, and calibration.
