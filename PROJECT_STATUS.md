@@ -404,3 +404,21 @@ Implementation commits:
 - Tests: `d790be357b44665158bf7a3c94cf5769c962cc7e`
 
 Validation caveat: GitHub combined status and the available workflow-run lookup currently return no status entries / no runs for the test commit. Do not treat CI as passed. The updated GUI has not yet been retested on the physical keyboard, so its firmware-revision display remains pending hardware verification. No additional HID opcode was sent; no keyboard setting was changed.
+
+
+## Analog input frame parser added (2026-11-20)
+
+Added a pure, side-effect-free parser for the documented HallJoy AK680 MAX report-ID-5 input frame:
+- Requires exactly 32 bytes.
+- Validates report ID `0x05` and stream opcode `0x1B`.
+- Decodes raw travel as a little-endian u16 from bytes 2–3.
+- Validates physical key slot 0–127 from byte 4.
+- Returns a typed sample object; rejects malformed or unrelated frames.
+
+Added unit tests for byte order, slot extraction, wrong length, wrong report ID, wrong opcode, and out-of-range slot.
+
+Commits:
+- Parser: `ecccdd40e7e4f3d821542ab815fb6aefd84c6979`
+- Tests: `ca1461d87f87d8f91ad822ce39581f4d19c8db2c`
+
+This is parser-only: it does not open interface 1, enable streaming, send opcode `0x1B`, or change keyboard state. Raw travel units and maximum physical range remain uncalibrated for this device. CI status remains unverified (the GitHub status lookup returned no entries).
