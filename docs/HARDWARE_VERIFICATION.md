@@ -52,7 +52,7 @@ After updating the installed application files, the user can start the one-shot 
 
 ```bash
 ~/.local/opt/ak680-controller/.venv/bin/python \\
-  ~/.local/opt/ak680-controller/app/capture_active_profile.py \\
+  ~/.local/opt/ak680-controller/capture_active_profile.py \\
   --confirm-one-read-only-0x84
 ```
 
