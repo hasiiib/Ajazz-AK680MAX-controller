@@ -87,15 +87,20 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         ):
             self.assertIn(required, source)
 
-    def test_analog_warning_is_visible_and_explicitly_unverified(self):
+    def test_analog_warning_reports_bounded_evidence_and_remaining_limits(self):
         self.assertIn("self.analog_warning = QLabel(", self.source)
-        self.assertIn("NOT VERIFIED ON PHYSICAL BOARD 2255", self.source)
-        self.assertIn("0x1B command, host transport", self.source)
-        self.assertIn("effect of 0x1B on board 2255 is unverified", self.source)
+        self.assertIn(
+            "SUSTAINED ANALOG MONITORING IS NOT VERIFIED ON PHYSICAL BOARD 2255",
+            self.source,
+        )
+        self.assertIn("16 valid Report ID 5 samples", self.source)
+        self.assertIn("sent the stop request", self.source)
+        self.assertIn("stop effectiveness", self.source)
+        self.assertIn("disconnect recovery", self.source)
         self.assertIn("values are raw counts", self.source.lower())
         self.assertIn("physical unit and calibrated range", self.source)
+        self.assertIn("No persistent setting-write opcode", self.source)
         self.assertIn("layout.addWidget(self.analog_warning)", self.source)
-        self.assertIn("attempts to clear its stream flag", self.source)
 
     def test_window_close_stops_both_background_timers(self):
         self.assertIn("self.connection_timer.stop()", self.source)
