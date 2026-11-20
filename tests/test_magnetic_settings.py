@@ -67,7 +67,7 @@ class MagneticSettingsParserTests(unittest.TestCase):
         self.assertEqual(result.values[-1], (60, 61, 62, 63))
 
     def test_parser_rejects_short_and_oversized_pages(self):
-        for raw in (bytes(63), bytes(65), bytes([0]) + bytes(65)):
+        for raw in (bytes(63), bytes([1]) + bytes(64), bytes([0]) + bytes(65)):
             with self.subTest(length=len(raw)):
                 with self.assertRaises(MagneticSettingsProtocolError):
                     parse_magnetic_settings_page(0, 0, raw)
