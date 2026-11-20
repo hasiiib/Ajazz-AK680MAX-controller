@@ -170,5 +170,81 @@ class AnalogStreamSessionTests(unittest.TestCase):
         self.assertEqual(device.open_calls, 0)
 
 
+    def test_input_open_failure_closes_both_handles_without_enabling_stream(self):
+        class FakeDevice:
+            def __init__(self, fail_open=False):
+                self.fail_open = fail_open
+                self.closed = False
+                self.sent = []
+            def open_path(self, path):
+                if self.fail_open:
+                    raise OSError("input interface unavailable")
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                return len(report)
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice()
+        input_device = FakeDevice(fail_open=True)
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaises(AnalogStreamError):
+                session.start()
+
+        self.assertFalse(session.active)
+        self.assertEqual(control.sent, [])
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+
+    def test_enable_failure_attempts_best_effort_stop_and_closes_handles(self):
+        class FakeDevice:
+            def __init__(self, fail_enable=False):
+                self.fail_enable = fail_enable
+                self.sent = []
+                self.closed = False
+            def open_path(self, path):
+                pass
+            def send_feature_report(self, report):
+                self.sent.append(bytes(report))
+                if self.fail_enable and len(self.sent) == 1:
+                    raise OSError("write outcome uncertain")
+                return len(report)
+            def close(self):
+                self.closed = True
+
+        control = FakeDevice(fail_enable=True)
+        input_device = FakeDevice()
+        devices = iter([control, input_device])
+        fake_hid = SimpleNamespace(device=lambda: next(devices))
+        inventory = [
+            {"interface_number": 2, "path": "1-1:1.2", "usb_parent": "1-1"},
+            {"interface_number": 1, "path": "1-1:1.1", "usb_parent": "1-1"},
+        ]
+        session = AnalogStreamSession(hid_module=fake_hid)
+        with patch(
+            "analog_stream.identify_keyboard_details",
+            return_value=SimpleNamespace(device_id=2255),
+        ), patch("analog_stream.inspect_keyboard_interfaces", return_value=inventory):
+            with self.assertRaises(AnalogStreamError):
+                session.start()
+
+        self.assertFalse(session.active)
+        self.assertEqual(len(control.sent), 2)
+        self.assertEqual(control.sent[0][2], 1)
+        self.assertEqual(control.sent[1][2], 0)
+        self.assertTrue(control.closed)
+        self.assertTrue(input_device.closed)
+
+
 if __name__ == "__main__":
     unittest.main()
