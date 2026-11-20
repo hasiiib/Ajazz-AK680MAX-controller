@@ -70,6 +70,12 @@ class MagneticSettingsParserTests(unittest.TestCase):
         self.assertEqual(result.values[0], (0, 1, 2, 3))
         self.assertEqual(result.values[-1], (60, 61, 62, 63))
 
+    def test_parser_rejects_non_byte_payloads(self):
+        for raw in (64, "x" * 64, None):
+            with self.subTest(raw_type=type(raw).__name__):
+                with self.assertRaises(MagneticSettingsProtocolError):
+                    parse_magnetic_settings_page(5, 0, raw)
+
     def test_parser_rejects_short_and_oversized_pages(self):
         for raw in (bytes(63), bytes([1]) + bytes(64), bytes([0]) + bytes(65)):
             with self.subTest(length=len(raw)):
