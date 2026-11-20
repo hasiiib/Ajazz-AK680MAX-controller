@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import re
 import time
+from dataclasses import dataclass
 
 VENDOR_ID = 0x3151
 PRODUCT_ID = 0x502D
@@ -23,6 +24,31 @@ IDENTIFY_TIMEOUT_SECONDS = 0.100
 
 class IdentifyError(RuntimeError):
     """A safe identification attempt could not be completed."""
+
+
+@dataclass(frozen=True)
+class IdentifyResult:
+    """Validated identity and revision metadata from one Identify reply."""
+
+    device_id: int
+    firmware_revision: str | None
+    raw_reply: bytes
+
+
+def parse_gen2_firmware_revision(reply: bytes | bytearray) -> str | None:
+    """Decode gen2 revision digits from Identify response bytes 7 and 8.
+
+    The protocol documents (reply[8] << 8) | reply[7], with each
+    hexadecimal nibble representing one decimal version digit.
+    """
+    data = bytes(reply)
+    if len(data) < REPORT_LENGTH or data[0] != IDENTIFY_OPCODE:
+        return None
+    encoded = (data[8] << 8) | data[7]
+    digits = f"{encoded:04X}"
+    if encoded == 0 or any(char not in "0123456789" for char in digits):
+        return None
+    return str(int(digits))
 
 
 def identify_packet() -> bytes:
@@ -148,7 +174,7 @@ def paired_keyboard_interfaces(inventory: list[dict[str, object]]) -> tuple[dict
     return controls[0], inputs[0]
 
 
-def identify_exchange(device, sleep=time.sleep) -> int:
+def identify_exchange_details(device, sleep=time.sleep) -> IdentifyResult:
     """Send one Identify GET, then poll its Feature reply at 10 ms intervals.
 
     HallJoy's reviewed RongYuan transport sends a command once, waits 10 ms
@@ -177,7 +203,11 @@ def identify_exchange(device, sleep=time.sleep) -> int:
         reply = _feature_payload(raw)
         device_id = parse_device_id(reply)
         if device_id is not None:
-            return device_id
+            return IdentifyResult(
+                device_id=device_id,
+                firmware_revision=parse_gen2_firmware_revision(reply),
+                raw_reply=bytes(reply),
+            )
         last_reply_note = (
             "The Feature report was received, but its contents were not a valid "
             "0x8F reply (or the device refused the request)."
@@ -185,7 +215,12 @@ def identify_exchange(device, sleep=time.sleep) -> int:
     raise IdentifyError(last_reply_note)
 
 
-def identify_keyboard() -> int:
+def identify_exchange(device, sleep=time.sleep) -> int:
+    """Backward-compatible board-ID-only wrapper around the detailed exchange."""
+    return identify_exchange_details(device, sleep=sleep).device_id
+
+
+def identify_keyboard_details() -> IdentifyResult:
     """Identify the board through its verified vendor Feature collection.
 
     This performs one GET-only handshake. The device must be connected by USB,
@@ -244,7 +279,7 @@ def identify_keyboard() -> int:
                 "Do not run the GUI with sudo."
             ) from exc
         try:
-            return identify_exchange(device)
+            return identify_exchange_details(device)
         except IdentifyError as exc:
             raise IdentifyError(str(exc) + usage_note) from exc
     finally:
@@ -252,3 +287,8 @@ def identify_keyboard() -> int:
             device.close()
         except Exception:
             pass
+
+
+def identify_keyboard() -> int:
+    """Backward-compatible board-ID-only wrapper for the GUI and callers."""
+    return identify_keyboard_details().device_id
