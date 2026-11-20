@@ -1,7 +1,7 @@
 """One-shot, explicitly authorized analog-stream hardware probe (board 2255).
 
-Sends a temporary stream-start flag, reads a bounded number of Report ID 5
-samples, and attempts one stream-stop flag. No persistent settings are written.
+Sends one temporary stream-start flag, reads a bounded number of Report ID 5
+samples, and sends one stream-stop flag. No persistent settings are written.
 """
 from __future__ import annotations
 
