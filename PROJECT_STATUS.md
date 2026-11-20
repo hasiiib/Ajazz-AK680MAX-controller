@@ -88,3 +88,10 @@ The combined 51-test suite passed on commit `ee49492e52fc136f458c2cd79b49ae66fa1
 Added `app/active_profile.py` and `tests/test_profile.py`. The module builds the gen2 `0x84` GET request and validates the zero-based active profile index in response byte 1, accepting only profile indices 0–3. It validates the full 64-byte payload, opcode, and optional zero report-ID prefix. It does not switch profiles and performs no HID I/O.
 
 The sharkfin AK680 MAX board record lists four onboard profiles, but no `0x84` request or response has been captured from the user's physical board. The module remains disconnected from the GUI pending a board-2255 hardware read-only validation. No profile SET command has been added or sent.
+
+
+## Matrix GET request framing refinement (2026-11-20)
+
+A further source review of HallJoy's RongYuan snapshot transport identified a request-tail sentinel for matrix GET opcodes `0xE5` and `0x8A`: after the opcode/arguments/checksum, the unused bytes are initialized to `0xFF` so an incomplete firmware snapshot cannot be mistaken for a valid all-zero page. The pure Python request builders now match this framing, with regression assertions for the tail. The `0x84` active-profile request remains zero-filled.
+
+This is source-derived protocol detail, not a physical capture from board 2255. No request was transmitted; the parsers remain software-only and disconnected from HID.
