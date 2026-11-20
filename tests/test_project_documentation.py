@@ -20,7 +20,7 @@ class Board2255DocumentationTests(unittest.TestCase):
                 self.assertIn(token, self.evidence)
 
     def test_family_evidence_is_not_misrepresented_as_target_hardware(self):
-        for token in ("2268", "2116", "3708", "not captured on board 2255"):
+        for token in ("2268", "2116", "3708", "no board-2255 hardware capture"):
             with self.subTest(token=token):
                 self.assertIn(token.lower(), self.evidence_lower)
         self.assertIn("upstream source ambiguity", self.evidence_lower)
