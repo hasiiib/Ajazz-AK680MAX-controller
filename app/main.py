@@ -178,9 +178,9 @@ class Main(QMainWindow):
             "board 2255 successfully sent the temporary 0x1B start request, received "
             "16 valid Report ID 5 samples (slot 15 observed), sent the stop request, "
             "and closed both HID handles. SUSTAINED ANALOG MONITORING IS NOT VERIFIED ON PHYSICAL BOARD 2255 as a complete feature. The monitor remains EXPERIMENTAL: sustained "
-            "streaming, press/hold/release behavior, stop effectiveness, and disconnect "
-            "recovery are not yet verified. Values are raw counts; their physical unit "
-            "and calibrated range are unknown. No persistent setting-write opcode is "
+            "streaming, press/hold/release behavior; disconnect recovery and stop "
+            "effectiveness are not yet verified. Values are raw counts; their "
+            "physical unit and calibrated range are unknown. No persistent "
             "used; the effect/volatility of the temporary stream flag is not fully "
             "characterized."
         )
