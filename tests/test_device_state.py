@@ -53,6 +53,33 @@ class ConnectionStateTests(unittest.TestCase):
         self.assertFalse(state.can_identify)
         self.assertFalse(state.analog_pair_candidate)
 
+    def test_boolean_interface_number_and_truthy_non_path_are_rejected(self):
+        state = evaluate_connection([
+            item(True),
+            item(2, path=object()),
+            item(1, path=123),
+        ])
+        self.assertEqual(state.status, "disconnected")
+        self.assertFalse(state.can_identify)
+        self.assertFalse(state.analog_pair_candidate)
+
+    def test_invalid_inventory_container_or_entry_fails_closed(self):
+        for inventory in (None, {}, [None], ["not-a-device-record"]):
+            with self.subTest(inventory=inventory):
+                state = evaluate_connection(inventory)
+                self.assertEqual(state.status, "invalid-inventory")
+                self.assertFalse(state.can_identify)
+                self.assertFalse(state.analog_pair_candidate)
+
+    def test_non_string_usb_parent_never_pairs_interfaces(self):
+        state = evaluate_connection([
+            item(2, parent=123),
+            item(1, parent=123),
+        ])
+        self.assertEqual(state.status, "control-only")
+        self.assertTrue(state.can_identify)
+        self.assertFalse(state.analog_pair_candidate)
+
     def test_interface_without_hid_path_is_not_usable(self):
         state = evaluate_connection([item(2, path=None), item(1)])
         self.assertEqual(state.status, "input-only")
