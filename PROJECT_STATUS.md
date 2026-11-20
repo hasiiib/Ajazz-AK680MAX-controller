@@ -422,3 +422,29 @@ Commits:
 - Tests: `ca1461d87f87d8f91ad822ce39581f4d19c8db2c`
 
 This is parser-only: it does not open interface 1, enable streaming, send opcode `0x1B`, or change keyboard state. Raw travel units and maximum physical range remain uncalibrated for this device. CI status remains unverified (the GitHub status lookup returned no entries).
+
+
+## Opt-in analog monitor implementation (2026-11-20)
+
+Added the first end-to-end analog monitoring path, guarded by a fresh read-only identity check:
+- The app now has a **Start Analog Monitor / Stop Analog Monitor** control.
+- Before enabling the temporary stream, the session re-identifies the board and refuses anything other than device ID 2255.
+- It verifies a unique interface-2 / interface-1 pair sharing one physical USB parent.
+- It opens the Feature-control and Report-ID-5 input interfaces separately.
+- It sends the documented volatile gen2 `0x1B [1]` start command with Bit7 checksum, then polls the input collection nonblocking through a 5 ms Qt timer.
+- Input reports are parsed as 32-byte Report ID 5 / opcode 0x1B frames; latest raw travel is retained per slot.
+- Stop sends `0x1B [0]` best-effort, closes both HID handles, and app shutdown also invokes cleanup.
+- Startup failure after an attempted enable makes a best-effort stop before closing handles.
+- Identify is disabled while the analog session is active to avoid competing for the control interface.
+
+Added session tests covering start/stop packet checksums, identity gating, same-device pairing, report polling, and handle cleanup when stop fails.
+
+Implementation commits:
+- Analog session: `9f45323337e0390d0be997b03e23058eec39fdb9`
+- Qt monitor: `99fd6cc7a38cac2f23b518f88efbbfc734346cb3`
+- Timer import correction: `d053de16e863c6f64707c36ae51e228e0e355574`
+- Startup error handling: `d64350234ac321d81eb93b6ce02e7fa9afe3dfce`
+- Session cleanup: `5548842fa380b2eefaede4c720700312f9095629`
+- Pairing / stop-failure tests: `2bb28bdbafea2008050bd9d5d2a4337a097c8356`
+
+Hardware boundary: this code has not yet been run against the physical keyboard's analog stream. The live board ID and interface pairing are verified, but analog reports, travel scale, full travel range, and the board's response to stream start/stop remain unverified. The stream flag is documented as volatile and is not intended to alter saved configuration. Do not claim analog monitoring works until the physical Start/Stop test is completed. Automated test status is not currently exposed by the available GitHub status lookup.
