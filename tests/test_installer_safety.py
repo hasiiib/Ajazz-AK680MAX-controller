@@ -22,6 +22,11 @@ class InstallerSafetyTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_installer_stages_standalone_analog_probe(self):
+        script = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('"$WORK_DIR/repo/capture_analog_stream.py"', script)
+        self.assertIn('cp -- "$WORK_DIR/repo/capture_analog_stream.py" "$STAGE_DIR/capture_analog_stream.py"', script)
+
     def test_installer_uses_staging_and_rollback_before_activation(self):
         script = INSTALLER.read_text(encoding="utf-8")
         self.assertIn("STAGE_DIR=", script)
@@ -60,7 +65,8 @@ class InstallerSafetyTests(unittest.TestCase):
                 "target=\"$4\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
-                ": > \"$target/requirements.txt\"\n",
+                ": > \"$target/requirements.txt\"\n"
+                "printf \\\"probe\\\\n\\\" > \\\"$target/capture_analog_stream.py\\\"\n",
                 encoding="utf-8",
             )
             fake_python = fake_bin / "python3"
