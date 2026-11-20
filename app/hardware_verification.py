@@ -88,6 +88,8 @@ def assess_capture(
     Required metadata is explicit for matrix pages. The returned raw_hex is
     the exact supplied byte sequence, including any report-ID prefix.
     """
+    if not isinstance(stage, str):
+        raise TypeError("Capture stage must be a string.")
     data = _raw_bytes(raw)
     prefix, normalized_length = _frame_details(data)
     raw_hex = data.hex(" ").upper()
@@ -96,7 +98,10 @@ def assess_capture(
         if stage == "active-profile":
             if any(value is not None for value in (profile, subop)):
                 raise ValueError("Active-profile assessment takes no profile or subop.")
-            if sublayer != 0 or page != 0:
+            if (
+                type(sublayer) is not int or sublayer != 0
+                or type(page) is not int or page != 0
+            ):
                 raise ValueError("Active-profile assessment takes no page metadata.")
             value = parse_active_profile_reply(data)
             summary = f"Accepted 0x84 reply; active profile index {value}."
@@ -114,7 +119,7 @@ def assess_capture(
         elif stage == "magnetic":
             if not isinstance(subop, int) or isinstance(subop, bool):
                 raise ValueError("Magnetic assessment requires an integer subop.")
-            if profile is not None or sublayer != 0:
+            if profile is not None or type(sublayer) is not int or sublayer != 0:
                 raise ValueError("Magnetic assessment takes no profile or sublayer.")
             parsed = parse_magnetic_settings_page(subop, page, data)
             summary = (
