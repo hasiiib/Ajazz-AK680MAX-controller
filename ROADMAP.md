@@ -18,7 +18,8 @@
 - [x] Close partially allocated analog HID handles on setup failures and validate poll batch bounds.
 - [x] Re-identify the exact opened control handle before an experimental analog-stream attempt, preventing a separate identify/open cycle from authorizing a different device.
 - [x] Add a prominent GUI warning that analog streaming is not verified on physical board 2255 and raw travel units/range are unknown.
-- [ ] Verify analog start/stop, transport, press/hold/release, and disconnect recovery on the physical keyboard.
+- [x] Verify one bounded temporary analog-stream start/send path and parse valid Report ID 5 samples on physical board 2255; send the stop request and close handles.
+- [ ] Verify sustained analog streaming, press/hold/release behavior, stop effectiveness, and disconnect recovery on the physical keyboard.
 - [ ] Establish raw travel units and calibrated range.
 
 ## Read-only configuration foundation
@@ -49,14 +50,14 @@
 - [x] Add a regression guard preventing incompatible 3151:502C and 0C45:80B2 protocol identifiers from entering application or udev code.
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
-- Physical Identify result 2255, one read-only 0x84 active-profile GET, one 0x8A keymap page-0 GET, and one 0xE5 magnetic sub-operation-0/page-0 GET are accepted. Broader page coverage, 0x8A byte-4 semantics, magnetic value meanings, and analog streaming remain unverified.
+- Physical Identify result 2255, one read-only 0x84 active-profile GET, one 0x8A keymap page-0 GET, and one 0xE5 magnetic sub-operation-0/page-0 GET are accepted. One bounded analog-stream probe also yielded 16 valid Report ID 5 samples on slot 15; sustained behavior, stop effectiveness, disconnect recovery, and travel units remain unverified.
 - Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
 - Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **177 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Physical analog stream validation and broader `0xE5`/`0x8A` page coverage remain hardware gates; `0x84`, `0x8A` page 0, and `0xE5` sub-operation 0/page 0 each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
+The suite contains **177 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Sustained analog behavior/calibration and broader `0xE5`/`0x8A` page coverage remain hardware gates; one bounded analog probe yielded valid samples, while `0x84`, `0x8A` page 0, and `0xE5` sub-operation 0/page 0 each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
