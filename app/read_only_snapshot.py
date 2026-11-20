@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from active_profile import parse_active_profile_reply
+from active_profile import ProfileProtocolError, parse_active_profile_reply
 from keymap import (
     KEYMAP_PAGE_COUNT,
     KeymapPage,
@@ -153,12 +153,37 @@ def build_read_only_snapshot(
     Keymap mapping keys are (sublayer, page); all pages are for the active
     profile. Magnetic mapping keys are (sub-operation, page).
     """
-    active_profile = parse_active_profile_reply(active_profile_reply)
+    if not isinstance(active_profile_reply, (bytes, bytearray)):
+        raise SnapshotValidationError("Active-profile reply must be bytes or bytearray.")
+    try:
+        active_profile = parse_active_profile_reply(active_profile_reply)
+    except ProfileProtocolError as exc:
+        raise SnapshotValidationError(f"Invalid active-profile reply: {exc}") from exc
 
-    if not sublayers or len(set(sublayers)) != len(sublayers):
-        raise SnapshotValidationError("Sublayers must be a non-empty sequence without duplicates.")
-    if not magnetic_subops or len(set(magnetic_subops)) != len(magnetic_subops):
-        raise SnapshotValidationError("Magnetic sub-operations must be non-empty and unique.")
+    if not isinstance(sublayers, (tuple, list)) or not sublayers:
+        raise SnapshotValidationError("Sublayers must be a non-empty sequence.")
+    if any(not isinstance(layer, int) or isinstance(layer, bool) or not 0 <= layer < 4 for layer in sublayers):
+        raise SnapshotValidationError("Every sublayer must be an integer from 0 through 3.")
+    if len(set(sublayers)) != len(sublayers):
+        raise SnapshotValidationError("Sublayers must not contain duplicates.")
+    if not isinstance(magnetic_subops, (tuple, list)) or not magnetic_subops:
+        raise SnapshotValidationError("Magnetic sub-operations must be a non-empty sequence.")
+    if any(not isinstance(subop, int) or isinstance(subop, bool) for subop in magnetic_subops):
+        raise SnapshotValidationError("Every magnetic sub-operation must be an integer.")
+    if len(set(magnetic_subops)) != len(magnetic_subops):
+        raise SnapshotValidationError("Magnetic sub-operations must not contain duplicates.")
+    for subop in magnetic_subops:
+        try:
+            _page_count(subop)
+        except MagneticSettingsProtocolError as exc:
+            raise SnapshotValidationError(str(exc)) from exc
+
+    if not isinstance(keymap_replies, Mapping) or not isinstance(magnetic_replies, Mapping):
+        raise SnapshotValidationError("Keymap and magnetic replies must be mappings.")
+    if any(not isinstance(reply, (bytes, bytearray)) for reply in keymap_replies.values()):
+        raise SnapshotValidationError("Every keymap reply must be bytes or bytearray.")
+    if any(not isinstance(reply, (bytes, bytearray)) for reply in magnetic_replies.values()):
+        raise SnapshotValidationError("Every magnetic reply must be bytes or bytearray.")
 
     expected_keymap = {(layer, page) for layer in sublayers for page in range(KEYMAP_PAGE_COUNT)}
     if set(keymap_replies) != expected_keymap:
