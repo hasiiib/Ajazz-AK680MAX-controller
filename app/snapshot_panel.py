@@ -73,6 +73,7 @@ class ReadOnlySnapshotPanel(QWidget):
                 f"Profile {layer.profile_index} / sublayer {layer.sublayer_index}"
             )
         self.layer_selector.blockSignals(False)
+        self.layer_selector.setCurrentIndex(-1)
         self.layer_selector.setEnabled(bool(view.keymap_layers))
 
         self.magnetic_selector.blockSignals(True)
@@ -82,10 +83,10 @@ class ReadOnlySnapshotPanel(QWidget):
                 f"GET sub-op {column.get_subop} · {column.value_width_bytes}-byte values"
             )
         self.magnetic_selector.blockSignals(False)
+        self.magnetic_selector.setCurrentIndex(-1)
         self.magnetic_selector.setEnabled(bool(view.magnetic_columns))
 
         if view.keymap_layers:
-            self.layer_selector.setCurrentIndex(0)
             self._show_layer(0)
         elif view.magnetic_columns:
             self._show_magnetic(0)
