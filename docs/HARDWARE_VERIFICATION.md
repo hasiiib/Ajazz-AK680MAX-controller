@@ -42,7 +42,7 @@ The pure `active_profile_get_packet()` builder currently produces a 64-byte payl
 
 The existing hidapi transport convention prepends a zero report-ID byte to the payload for `send_feature_report`, producing a 65-byte host buffer. On the physical board-2255 capture, `send_feature_report` returned 65/65 bytes. `get_feature_report(0, 65)` returned 65 bytes beginning `00 84 00`; the parser normalized the leading report-ID byte and accepted active-profile index `0` (Profile 1). This verifies one successful exchange and framing on this board; it does not establish behavior across repeated reads, other profile states, disconnects, or firmware variants.
 
-For the first physical test, do not run a bulk snapshot, keymap read, magnetic read, or analog monitor. The only permitted operation in this stage is one explicitly user-started `0x84` GET after a fresh Identify result of 2255 and unique interface-2 selection. Record the complete response exactly as returned; do not trim the leading byte, pad a short response, or issue another request to recover from an ambiguous result. Stop after one attempt and review the capture offline with `assess_hex_capture("active-profile", "...")`.
+The Stage 1 physical test is complete for one user-initiated `0x84` GET. Do not repeat it merely to reproduce the result. No bulk snapshot, keymap read, magnetic read, or analog monitor was run as part of that test. The capture was reviewed offline with the existing parser; the raw response is recorded below.
 
 ### Optional one-shot capture helper
 
