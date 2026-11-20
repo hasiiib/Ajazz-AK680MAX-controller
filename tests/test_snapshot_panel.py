@@ -63,10 +63,29 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertEqual(panel.table.item(0, 1).text(), "512 (0x0200)")
         panel.close()
 
-    def test_panel_rejects_unvalidated_view_objects(self):
+    def test_rejected_replacement_clears_previous_snapshot(self):
         panel = ReadOnlySnapshotPanel()
+        panel.set_snapshot(self.make_snapshot())
+        self.assertEqual(panel.table.rowCount(), 128)
+
         with self.assertRaises(TypeError):
             panel.set_snapshot_view(object())
+
+        self.assertEqual(panel.table.rowCount(), 0)
+        self.assertIsNone(panel._view)
+        self.assertFalse(panel.layer_selector.isEnabled())
+        self.assertFalse(panel.magnetic_selector.isEnabled())
+        self.assertIn("No verified snapshot", panel.status.text())
+        panel.close()
+
+    def test_explicit_clear_removes_rows_and_selector_items(self):
+        panel = ReadOnlySnapshotPanel()
+        panel.set_snapshot(self.make_snapshot())
+        panel.clear_snapshot()
+        self.assertEqual(panel.table.rowCount(), 0)
+        self.assertEqual(panel.layer_selector.count(), 0)
+        self.assertEqual(panel.magnetic_selector.count(), 0)
+        self.assertIsNone(panel._view)
         panel.close()
 
 
