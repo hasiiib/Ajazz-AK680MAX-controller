@@ -30,7 +30,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 ## Protocol research findings (not target-board validation)
 - The independent Sharkfin registry maps board ID 2255 / USB 3151:502D to the AK680 MAX gen2 family and controller string `ry5088_sg9005_rt004_dm_hall_8k`; this is third-party host-software metadata, not stock-firmware proof.
 - The same AK680 MAX name covers four device IDs; 2336/2343/2371 use PID 3151:502F and different controller strings. PID 3151:502D is also shared by unrelated device IDs, so Identify ID 2255 remains essential.
-- Public `0x84`/`0x8A` hardware notes are family-level, not target-2255 captures. Upstream documentation and code disagree on the meaning of byte 4 in the `0x8A` request.
+- One physical `0x84` active-profile GET has been accepted on target board 2255 (profile index 0). Public `0x8A` hardware notes are family-level; upstream documentation and code disagree on the meaning of byte 4 in that request.
 - Public `0xE5` magnetic-settings findings are firmware-image-derived from other gen2 IDs (2268, 2116, 3708), not a board-2255 hardware test.
 - Public `0x1B` travel-stream findings are from other firmware images and other hardware; target transport, stop behavior, and report semantics remain unverified.
 - Stock firmware provenance is not established by the Identify ID alone; this project has not flashed firmware and no board-2255 stock image/hash has been matched. Full sources and exclusions are in [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
@@ -45,7 +45,7 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 - Background connection refresh only enumerates HID metadata; it does not open handles or send commands.
 - Identify remains user-initiated and read-only.
 - Analog streaming remains user-initiated; it is intended to be temporary based on related gen2 firmware evidence, but 0x1B volatility/effect is unverified on board 2255.
-- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; the standalone one-shot `0x84` capture helper is separate. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
+- The magnetic, keymap, active-profile, and snapshot acquisition modules remain pure framing/validation code and are not connected to HID; the standalone one-shot `0x84` capture helper is separate. Its first physical capture succeeded once. The GUI viewer only renders a validated snapshot explicitly supplied by an application caller.
 - Do not add persistent configuration writes, calibration, reset, or firmware operations until exact board-2255 behavior is verified and the user explicitly authorizes them.
 - Never publish the keyboard's unique serial number.
 - Never run the GUI with sudo.
@@ -54,4 +54,4 @@ Build a reliable Linux desktop controller for the wired AJAZZ AK680 MAX HE, phys
 The suite contains **161 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all offscreen Qt viewer tests, and strict immutable display-projection validation, and precise one-shot Feature response diagnostics. The latest full run passed on commit `25ae80d`; [view the run](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions/runs/44783461448).
 
 
-The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. Physical response framing on board 2255 remains unverified; see [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
+The offline hardware response capture assessor is implemented and covered by automated tests. It performs no HID I/O and does not persist captures. The `0x84` active-profile response framing has one accepted physical capture; `0x8A` keymap and `0xE5` magnetic response framing remain unverified. See [HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md) and [BOARD_2255_PROTOCOL_EVIDENCE.md](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
