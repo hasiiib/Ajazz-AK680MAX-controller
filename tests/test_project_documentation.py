@@ -52,6 +52,7 @@ class Board2255DocumentationTests(unittest.TestCase):
             "assess_hex_capture(\"active-profile\", \"...\")",
             "Do not continue to another opcode",
             "app/capture_active_profile.py",
+            "~/.local/opt/ak680-controller/capture_active_profile.py",
             "--confirm-one-read-only-0x84",
             "never retries, saves a file",
         ):
