@@ -17,7 +17,7 @@ class KeymapRequestTests(unittest.TestCase):
         self.assertEqual(len(packet), 64)
         self.assertEqual(packet[:5], bytes([0x8A, 2, 0xFF, 7, 3]))
         self.assertEqual(packet[7], (0xFF - sum(packet[:7])) & 0xFF)
-        self.assertEqual(packet[8:], bytes(56))
+        self.assertEqual(packet[8:], bytes([0xFF]) * 56)
 
     def test_request_rejects_out_of_range_and_bool_fields(self):
         invalid = (
