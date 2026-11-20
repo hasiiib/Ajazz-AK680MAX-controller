@@ -147,6 +147,46 @@ class SnapshotAssemblyTests(unittest.TestCase):
                 sublayers=(0,), magnetic_subops=(0,),
             )
 
+    def test_snapshot_rejects_invalid_requested_dimension_values(self):
+        keymaps = {(0, page): bytes(64) for page in range(8)}
+        magnetics = {(0, page): bytes(64) for page in range(4)}
+        invalid_options = (
+            {"sublayers": (True,), "magnetic_subops": (0,)},
+            {"sublayers": (4,), "magnetic_subops": (0,)},
+            {"sublayers": (0,), "magnetic_subops": (True,)},
+            {"sublayers": (0,), "magnetic_subops": (8,)},
+        )
+        for options in invalid_options:
+            with self.subTest(options=options):
+                with self.assertRaises(SnapshotValidationError):
+                    build_read_only_snapshot(
+                        profile_reply(), keymaps, magnetics, **options,
+                    )
+
+    def test_snapshot_rejects_non_byte_replies_instead_of_coercing_them(self):
+        keymaps = {(0, page): bytes(64) for page in range(8)}
+        magnetics = {(0, page): bytes(64) for page in range(4)}
+        keymaps[(0, 0)] = 64
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                profile_reply(), keymaps, magnetics,
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
+        keymaps[(0, 0)] = bytes(64)
+        magnetics[(0, 0)] = 64
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                profile_reply(), keymaps, magnetics,
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
+        with self.assertRaises(SnapshotValidationError):
+            build_read_only_snapshot(
+                64, keymaps, {(0, page): bytes(64) for page in range(4)},
+                sublayers=(0,), magnetic_subops=(0,),
+            )
+
     def test_snapshot_rejects_duplicate_requested_dimensions(self):
         with self.assertRaises(SnapshotValidationError):
             build_read_only_snapshot(
