@@ -70,3 +70,12 @@ Automated tests were added for request checksum/layout, supported page ranges, i
 Evidence boundary: the public gen2 reference labels the `0xE5` layout and detailed handlers as firmware-derived from other gen2 boards; the exact AK680 MAX 2255 page independently corroborates that the model is gen2 and supports magnetic settings, but no `0xE5` request or response has been observed on this physical keyboard. This module is deliberately disconnected from the GUI and cannot send a report. Do not enable device reads or show these values as live settings until a separately authorized hardware GET test validates response timing, page structure, and semantics.
 
 No configuration SET, calibration, reset, profile change, or flash operation was added or sent.
+
+
+## Read-only keymap page parser groundwork (2026-11-20)
+
+Added `app/keymap.py` and `tests/test_keymap.py`. The module builds the documented gen2 `0x8A` GET request for a selected profile (0–3), page (0–7), and sublayer (0–3), then parses a raw 64-byte page into sixteen opaque four-byte entries. It preserves all entry bytes and computes only the page's slot offset; it does not guess the meaning of keycodes, modifier flags, Fn layers, or the physical key-to-slot map.
+
+This code is pure and disconnected from HID/GUI. The protocol shape is family-level firmware evidence; no `0x8A` request or response has been observed on physical board 2255. Sharkfin's exact-model support page says the layout should be checked against the board-reported keymap before remapping. Therefore no remapping UI, keymap write, profile switch, or physical layout assumption is introduced.
+
+The magnetic settings and keymap modules are both request builders/parsers only. No GET or SET command was sent to the physical keyboard during these changes.
