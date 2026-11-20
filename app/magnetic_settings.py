@@ -79,6 +79,8 @@ def magnetic_settings_get_packet(subop: int, page: int) -> bytes:
 
 
 def _normalize_raw_page(reply: bytes | bytearray) -> bytes:
+    if not isinstance(reply, (bytes, bytearray)):
+        raise MagneticSettingsProtocolError("Magnetic reply must be bytes or bytearray.")
     data = bytes(reply)
     # hidapi may include the leading zero report ID in Feature reads.
     if len(data) == REPORT_LENGTH + 1 and data[0] == 0:
