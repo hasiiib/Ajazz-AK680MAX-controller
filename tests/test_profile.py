@@ -38,6 +38,17 @@ class ActiveProfileProtocolTests(unittest.TestCase):
                 with self.assertRaises(ProfileProtocolError):
                     parse_active_profile_reply(reply)
 
+    def test_parser_rejects_boolean_and_non_integer_profile_bytes(self):
+        # The wire field is a byte, so only unsupported numeric indexes can
+        # occur on-device; malformed Python payload types are rejected above.
+        for index in (4, 255):
+            reply = bytearray(64)
+            reply[0] = 0x84
+            reply[1] = index
+            with self.subTest(index=index):
+                with self.assertRaises(ProfileProtocolError):
+                    parse_active_profile_reply(reply)
+
     def test_parser_rejects_wrong_opcode_invalid_index_and_bad_lengths(self):
         wrong_opcode = bytearray(64)
         wrong_opcode[0] = 0x85
