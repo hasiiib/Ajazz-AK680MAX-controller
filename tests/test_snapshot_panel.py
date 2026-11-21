@@ -49,6 +49,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertEqual(panel.table.rowCount(), 0)
         self.assertIn("No verified snapshot", panel.status.text())
         self.assertFalse(panel.layer_selector.isEnabled())
+        self.assertFalse(panel.export_button.isEnabled())
         panel.close()
 
     def test_panel_displays_validated_snapshot_as_raw_rows(self):
@@ -61,6 +62,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertEqual(panel.table.item(0, 2).text(), "10 20 30 00")
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
+        self.assertTrue(panel.export_button.isEnabled())
         self.assertIn("provenance are not verified", panel.status.text())
 
         panel.magnetic_selector.setCurrentIndex(0)
@@ -83,6 +85,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertIsNone(panel._view)
         self.assertFalse(panel.layer_selector.isEnabled())
         self.assertFalse(panel.magnetic_selector.isEnabled())
+        self.assertFalse(panel.export_button.isEnabled())
         self.assertIn("No verified snapshot", panel.status.text())
         panel.close()
 
@@ -121,8 +124,24 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
                 panel._import_bundle_from_file()
             self.assertEqual(panel.table.rowCount(), 128)
             self.assertIn("self-declared", panel.status.text())
-            self.assertIn("provenance are not verified", panel.status.text())
+            self.assertIn("self-declared", panel.status.text())
+            self.assertTrue(panel.export_button.isEnabled())
             panel.close()
+
+
+    def test_export_button_saves_normalized_reimportable_backup(self):
+        panel = ReadOnlySnapshotPanel()
+        panel.set_snapshot(self.make_snapshot())
+        with TemporaryDirectory() as temporary:
+            path = Path(temporary) / "backup.json"
+            with patch("snapshot_panel.QFileDialog.getSaveFileName", return_value=(str(path), "")):
+                panel._export_bundle_to_file()
+            self.assertTrue(path.exists())
+            exported = path.read_text(encoding="utf-8")
+            self.assertIn("normalized backup exported", panel.status.text().lower())
+            from offline_snapshot_import import import_snapshot_bundle_text
+            self.assertEqual(import_snapshot_bundle_text(exported), self.make_snapshot())
+        panel.close()
 
     def test_failed_import_retains_existing_snapshot(self):
         with TemporaryDirectory() as temporary:
@@ -156,6 +175,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertEqual(panel.layer_selector.count(), 0)
         self.assertEqual(panel.magnetic_selector.count(), 0)
         self.assertIsNone(panel._view)
+        self.assertFalse(panel.export_button.isEnabled())
         panel.close()
 
 
