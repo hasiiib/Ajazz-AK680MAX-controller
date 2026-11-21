@@ -53,6 +53,12 @@
 - [ ] Design read-back verification and recovery before any persistent write feature.
 - [ ] Physical acceptance testing and versioned release.
 
+## Windows-driver parity
+- [x] Publish a board-2255 feature-parity inventory covering device connection, profile, keymap/Fn layers, magnetic controls, RGB, macros, backups, and release gates.
+- [ ] Complete the bounded read-only acceptance capture for all currently exposed configuration pages.
+- [ ] Add target-board read-only captures for Fn/OS layers, advanced magnetic columns, LED parameters, and macro storage.
+- [ ] Build verified editable UI controls and apply/read-back recovery workflow before enabling persistent writes.
+
 ## Evidence and safety
 - [x] Publish a pinned-source board-2255 evidence note; do not treat family-level or other-board firmware evidence as target-board capture. See [board-2255 protocol evidence](docs/BOARD_2255_PROTOCOL_EVIDENCE.md).
 - [x] Add a regression guard preventing incompatible 3151:502C and 0C45:80B2 protocol identifiers from entering application or udev code.
