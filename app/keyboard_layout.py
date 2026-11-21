@@ -1,4 +1,4 @@
-"""Board-2255 ANSI layout reference and conservative slot inference."""
+"""Board-2255 ANSI layout reference with no unverified physical slot claims."""
 from __future__ import annotations
 
 import json
@@ -103,7 +103,7 @@ def assess_factory_usage_coverage(
     )
 
 class KeyboardLayoutWidget(QWidget):
-    """Display the ANSI key geometry and inferred slot numbers, never edit keys."""
+    """Display ANSI reference geometry; physical slot mapping remains unverified."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
