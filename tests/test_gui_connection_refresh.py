@@ -216,6 +216,8 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         source = ast.get_source_segment(self.source, close)
         self.assertIn("self.stream_session.stop()", source)
         self.assertIn("except Exception:", source)
+        self.assertIn("self.stream_stop_thread.is_alive()", source)
+        self.assertIn("event.ignore()", source)
         self.assertIn("super().closeEvent(event)", source)
 
 
