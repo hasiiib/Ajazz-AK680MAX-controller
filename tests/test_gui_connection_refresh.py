@@ -224,16 +224,17 @@ class GuiConnectionRefreshTests(unittest.TestCase):
             node for node in self.tree.body
             if isinstance(node, ast.ClassDef) and node.name == "Main"
         )
-        stop = next(
+        completion = next(
             node for node in main_class.body
-            if isinstance(node, ast.FunctionDef) and node.name == "stop_analog_stream"
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "_on_analog_stop_finished"
         )
-        source = ast.get_source_segment(self.source, stop)
-        self.assertIn("finally:", source)
+        source = ast.get_source_segment(self.source, completion)
         self.assertIn("self.latest_samples.clear()", source)
         self.assertIn('self.stream_button.setText("Start Analog Monitor")', source)
         self.assertIn("self.stream_button.setEnabled(True)", source)
         self.assertIn("self.identify_button.setEnabled(True)", source)
+        self.assertIn("if error is None:", source)
 
 
     def test_manual_stop_runs_hid_stop_off_gui_thread(self):
