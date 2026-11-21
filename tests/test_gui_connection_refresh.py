@@ -272,5 +272,70 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("self.stream_button.setEnabled(True)", self.source)
 
 
+    def test_configuration_read_is_user_triggered_and_runs_off_gui_thread(self):
+        self.assertIn("from live_configuration import ConfigurationReadError, read_configuration_snapshot", self.source)
+        self.assertIn('QPushButton("Read Configuration (read-only)")', self.source)
+        self.assertIn("self.read_config_button.clicked.connect(self.read_configuration)", self.source)
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        initializer = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "__init__"
+        )
+        init_source = ast.get_source_segment(self.source, initializer)
+        self.assertNotIn("read_configuration_snapshot()", init_source)
+
+        start = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "read_configuration"
+        )
+        start_source = ast.get_source_segment(self.source, start)
+        self.assertIn("Thread(", start_source)
+        self.assertIn("target=self._read_configuration_worker", start_source)
+        self.assertIn("self.stream_session.active", start_source)
+
+    def test_configuration_read_worker_reports_results_through_qt_signals(self):
+        self.assertIn("class ConfigurationReadNotifier(QObject):", self.source)
+        self.assertIn("finished = Signal(object)", self.source)
+        self.assertIn("failed = Signal(str)", self.source)
+        self.assertIn(
+            "self.configuration_read_notifier.finished.connect(self._on_configuration_read_finished)",
+            self.source,
+        )
+        self.assertIn(
+            "self.configuration_read_notifier.failed.connect(self._on_configuration_read_failed)",
+            self.source,
+        )
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        worker = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "_read_configuration_worker"
+        )
+        worker_source = ast.get_source_segment(self.source, worker)
+        self.assertIn("read_configuration_snapshot()", worker_source)
+        self.assertIn("self.configuration_read_notifier.finished.emit(snapshot)", worker_source)
+        self.assertIn("self.configuration_read_notifier.failed.emit(str(exc))", worker_source)
+
+    def test_window_close_waits_for_live_configuration_read(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        close = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "closeEvent"
+        )
+        source = ast.get_source_segment(self.source, close)
+        self.assertIn("self.configuration_read_thread.is_alive()", source)
+        self.assertIn("if stop_running or read_running:", source)
+        self.assertIn("event.ignore()", source)
+
+
 if __name__ == "__main__":
     unittest.main()
