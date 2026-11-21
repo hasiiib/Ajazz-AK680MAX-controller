@@ -103,7 +103,15 @@ class Board2255DocumentationTests(unittest.TestCase):
         ):
             with self.subTest(token=token):
                 self.assertIn(token.lower(), (plan + evidence).lower())
-        self.assertIn("not connected to hid", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
+        status = (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower()
+        self.assertIn("user-triggered", status)
+        self.assertIn("0x84", status)
+        self.assertIn("0x8a", status)
+        self.assertIn("0xe5", status)
+        live_reader = (ROOT / "app" / "live_configuration.py").read_text(encoding="utf-8")
+        self.assertIn("identify(device, sleep=sleep)", live_reader)
+        self.assertIn("magnetic_settings_get_packet(subop=0, page=page)", live_reader)
+        self.assertNotIn("0x65", live_reader.lower())
 
 if __name__ == "__main__":
     unittest.main()
