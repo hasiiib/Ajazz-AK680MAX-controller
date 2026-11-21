@@ -74,8 +74,7 @@ class InstallerSafetyTests(unittest.TestCase):
                 "target=\"$4\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
-                "for module in live_configuration.py keymap_semantics.py snapshot_panel.py active_profile.py keymap.py magnetic_settings.py keymap_write.py magnetic_write.py lighting.py macros.py; do : > \"$target/app/$module\"; done\n"
-                ": > \"$target/requirements.txt\"\n"
+                "for module in active_profile.py analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do : > \"$target/app/$module\"; done\n"                ": > \"$target/requirements.txt\"\n"
                 "printf \\\"probe\\\\n\\\" > \\\"$target/capture_analog_stream.py\\\"\n",
                 encoding="utf-8",
             )
