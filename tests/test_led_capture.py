@@ -25,19 +25,22 @@ def led_reply():
 
 
 class FakeDevice:
-    def __init__(self, device_id=2255, read_error=False, send_result=None):
+    def __init__(self, device_id=2255, read_error=False, send_result=None, send_results=None):
         self.responses = [identify_reply(device_id), led_reply()]
         self.sent = []
         self.reads = 0
         self.closed = False
         self.read_error = read_error
         self.send_result = send_result
+        self.send_results = list(send_results) if send_results is not None else None
 
     def open_path(self, path):
         self.path = path
 
     def send_feature_report(self, report):
         self.sent.append(bytes(report))
+        if self.send_results:
+            return self.send_results.pop(0)
         return len(report) if self.send_result is None else self.send_result
 
     def get_feature_report(self, report_id, length):
@@ -106,7 +109,7 @@ class LedCaptureTests(unittest.TestCase):
         self.assertTrue(device.closed)
 
     def test_partial_send_is_not_retried_or_read(self):
-        device = FakeDevice(send_result=64)
+        device = FakeDevice(send_results=[65, 64])
         with self.assertRaisesRegex(CaptureError, "no retry attempted"):
             capture_once(FakeHid(device), sleep=lambda _: None)
         self.assertEqual(len(device.sent), 2)
