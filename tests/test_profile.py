@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 from active_profile import (
     ProfileProtocolError,
     active_profile_get_packet,
+    active_profile_set_packet,
     parse_active_profile_reply,
 )
 
@@ -18,6 +19,22 @@ class ActiveProfileProtocolTests(unittest.TestCase):
         self.assertEqual(packet[0], 0x84)
         self.assertEqual(packet[7], (0xFF - sum(packet[:7])) & 0xFF)
         self.assertEqual(packet[8:], bytes(56))
+
+
+    def test_set_packet_uses_gen2_opcode_and_bit7_checksum(self):
+        for profile in range(4):
+            packet = active_profile_set_packet(profile)
+            self.assertEqual(len(packet), 64)
+            self.assertEqual(packet[0], 0x04)
+            self.assertEqual(packet[1], profile)
+            self.assertEqual(packet[7], (0xFF - sum(packet[:7])) & 0xFF)
+            self.assertEqual(packet[8:], bytes(56))
+
+    def test_set_packet_rejects_invalid_profile_indices(self):
+        for profile in (-1, 4, True, 1.0, "1"):
+            with self.subTest(profile=profile):
+                with self.assertRaises(ProfileProtocolError):
+                    active_profile_set_packet(profile)
 
     def test_parser_returns_each_supported_zero_based_profile(self):
         for index in range(4):
