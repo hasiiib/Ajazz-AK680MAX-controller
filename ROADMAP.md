@@ -32,14 +32,16 @@
 - [x] Validate one physical 0x84 active-profile GET response on board 2255 (accepted profile index 0; one capture only).
 - [x] Validate one physical 0x8A keymap page-0 response on board 2255; preserve its 16 entries as opaque four-byte values.
 - [x] Validate one physical 0xE5 magnetic sub-operation-0/page-0 response on board 2255; preserve its 32 values as raw little-endian u16 values.
-- [ ] Validate additional magnetic sub-operations/pages and establish their meanings before connecting magnetic reads to HID or the GUI. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
+- [x] Implement a user-triggered read-only GUI acquisition for the active profile, all eight base keymap pages, and four actuation-travel pages; it runs on a worker thread and sends no writes.
+- [ ] Physically validate the complete 13-GET GUI read sequence on board 2255 before expanding it to advanced magnetic columns. See [hardware verification plan](docs/HARDWARE_VERIFICATION.md).
 - [ ] Decode the physical key layout before enabling remapping.
 
 ## User-facing controls
-- [x] Add a read-only snapshot browser tab that renders validated keymap and magnetic values without assigning meanings.
+- [x] Add a configuration snapshot browser tab with known gen2 keymap assignments decoded and unknown entries retained as raw values; magnetic values remain raw.
+- [x] Add a user-triggered, worker-thread read-only configuration action guarded by a fresh same-handle board-2255 Identify.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
 - [x] Import strict offline capture bundles into the read-only viewer; require complete pages for each included layer/column, reject unknown fields/serial metadata, and retain the previous view on import failure. Target metadata is self-declared, not provenance evidence.
-- [ ] Connect snapshot acquisition only after additional magnetic/keymap page coverage and metadata semantics are verified on board 2255.
+- [ ] Physically verify all eight keymap pages and four actuation pages through the new GUI acquisition path.
 - [ ] Build editable controls only for capabilities verified on board 2255.
 - [ ] Verify lighting capabilities and safe controls.
 - [ ] Verify actuation, Rapid Trigger, DKS, and macro capabilities.
@@ -52,9 +54,9 @@
 - [ ] Establish target stock firmware provenance with an exact vendor image/hash or vendor confirmation; do not infer it from the Identify ID.
 - [ ] Resolve the upstream `0x8A` byte-4 host-layer/sub-layer ambiguity using target-board read-only evidence.
 - Physical Identify result 2255, one read-only 0x84 active-profile GET, one 0x8A keymap page-0 GET, and one 0xE5 magnetic sub-operation-0/page-0 GET are accepted. One bounded analog-stream probe also yielded 16 valid Report ID 5 samples on slot 15; sustained behavior, stop effectiveness, disconnect recovery, and travel units remain unverified.
-- Snapshot aggregation is pure in-memory validation only; it does not issue HID requests or imply that the underlying response framing has been verified on this board.
+- The live reader sends only 0x84, 0x8A base-layer, and 0xE5 actuation-column GET requests after a fresh same-handle Identify. The full page sequence is covered by fake-HID tests but still needs a bounded physical acceptance test; no setting-write opcode is sent.
 - Similar AJAZZ model names do not guarantee protocol compatibility. Use only evidence applicable to USB 3151:502D / board 2255.
-- Do not send guessed commands or implement persistent writes without exact protocol verification and explicit user authorization.
+- Do not send guessed commands or implement persistent writes without exact protocol verification, backup/read-back recovery, and explicit user authorization.
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
