@@ -195,7 +195,7 @@ class Main(QMainWindow):
         self.analog_samples_received = 0
         self.last_analog_sample_at = None
         self.stream_timer = QTimer(self)
-        self.stream_timer.setInterval(5)
+        self.stream_timer.setInterval(33)
         self.stream_timer.timeout.connect(self.poll_analog_stream)
 
         # Re-enumerate metadata only. This timer never opens a HID handle or
@@ -296,7 +296,7 @@ class Main(QMainWindow):
 
     def poll_analog_stream(self):
         try:
-            samples = self.stream_session.poll()
+            samples = self.stream_session.poll(max_reports=16)
             if samples:
                 self.last_analog_sample_at = monotonic()
             self.analog_samples_received += len(samples)
