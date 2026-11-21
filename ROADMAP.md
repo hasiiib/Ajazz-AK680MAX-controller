@@ -41,6 +41,7 @@
 
 ## User-facing controls
 - [x] Add a configuration snapshot browser tab with known gen2 keymap assignments decoded and unknown entries retained as raw values; magnetic values remain raw.
+- [x] Add local normalized snapshot backup export and strict import/export round-trip tests.
 - [x] Add a user-triggered, worker-thread read-only configuration action guarded by a fresh same-handle board-2255 Identify.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
 - [x] Import strict offline capture bundles into the read-only viewer; require complete pages for each included layer/column, reject unknown fields/serial metadata, and retain the previous view on import failure. Target metadata is self-declared, not provenance evidence.
