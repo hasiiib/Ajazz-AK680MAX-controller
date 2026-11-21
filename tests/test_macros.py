@@ -88,7 +88,7 @@ class MacroProtocolTests(unittest.TestCase):
                 with self.assertRaises(MacroProtocolError):
                     encode_macro(definition)
         with self.assertRaises(MacroProtocolError):
-            encode_macro(MacroDefinition(1, (MacroKeyEvent(4, True, 20),) * 100))
+            encode_macro(MacroDefinition(1, (MacroKeyEvent(4, True, 20),) * 126))
 
     def test_write_pages_are_bounded_and_last_flag_is_on_final_page(self):
         blob = bytes(range(256))
