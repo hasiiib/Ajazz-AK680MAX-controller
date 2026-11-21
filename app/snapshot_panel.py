@@ -51,8 +51,8 @@ class ReadOnlySnapshotPanel(QWidget):
         selectors.addWidget(self.magnetic_selector)
         layout.addLayout(selectors)
 
-        self.table = QTableWidget(0, 2)
-        self.table.setHorizontalHeaderLabels(["Slot", "Raw value"])
+        self.table = QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(["Slot", "Assignment / value", "Raw bytes / value"])
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
@@ -154,21 +154,23 @@ class ReadOnlySnapshotPanel(QWidget):
     def _populate(self, rows) -> None:
         rows = tuple(rows)
         self.table.setRowCount(len(rows))
-        for row_index, (slot, raw_value) in enumerate(rows):
+        for row_index, (slot, description, raw_value) in enumerate(rows):
             slot_item = QTableWidgetItem(str(slot))
+            description_item = QTableWidgetItem(str(description))
             value_item = QTableWidgetItem(str(raw_value))
             self.table.setItem(row_index, 0, slot_item)
-            self.table.setItem(row_index, 1, value_item)
+            self.table.setItem(row_index, 1, description_item)
+            self.table.setItem(row_index, 2, value_item)
         self.table.resizeColumnsToContents()
 
     def _show_layer(self, index: int) -> None:
         if self._view is None or not 0 <= index < len(self._view.keymap_layers):
             return
         layer = self._view.keymap_layers[index]
-        self._populate((entry.slot, entry.raw_hex) for entry in layer.entries)
+        self._populate((entry.slot, entry.assignment, entry.raw_hex) for entry in layer.entries)
 
     def _show_magnetic(self, index: int) -> None:
         if self._view is None or not 0 <= index < len(self._view.magnetic_columns):
             return
         column = self._view.magnetic_columns[index]
-        self._populate((value.slot, value.raw_value) for value in column.values)
+        self._populate((value.slot, "Actuation travel (raw)" if column.get_subop == 0 else f"Magnetic sub-op {column.get_subop} (raw)", value.raw_value) for value in column.values)
