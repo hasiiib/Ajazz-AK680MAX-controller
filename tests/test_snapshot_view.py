@@ -39,6 +39,7 @@ class SnapshotViewTests(unittest.TestCase):
         self.assertEqual(len(layer.entries), 128)
         self.assertEqual(layer.entries[0].slot, 1)
         self.assertEqual(layer.entries[0].raw_hex, "AB 01 00 00")
+        self.assertEqual(layer.entries[0].assignment, "Unknown assignment (raw)")
         self.assertEqual(layer.entries[16].slot, 17)
         self.assertEqual(layer.entries[16].raw_hex, "AB 01 00 01")
 
@@ -63,9 +64,9 @@ class SnapshotViewTests(unittest.TestCase):
 
     def test_display_value_objects_reject_forged_or_mutable_shapes(self):
         with self.assertRaises(ValueError):
-            KeymapEntryView(1, "not hex")
+            KeymapEntryView(1, "A", "not hex")
         with self.assertRaises(ValueError):
-            KeymapEntryView(True, "AA BB CC DD")
+            KeymapEntryView(True, "A", "AA BB CC DD")
         with self.assertRaises(ValueError):
             KeymapLayerView(0, 0, [])
         with self.assertRaises(ValueError):
