@@ -26,6 +26,7 @@
 - [x] Pure magnetic-settings GET request builder and response parsers.
 - [x] Pure keymap GET page builder and opaque-entry parser.
 - [x] Pure active-profile GET builder and parser.
+- [x] Add strict, pure single-slot gen2 keymap and magnetic SET packet builders (offline only; no HID write transport).
 - [x] Strict aggregation of complete 128-slot keymap layers and magnetic-settings columns from supplied replies.
 - [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
 - [x] Audit public board-2255 registry/protocol evidence and document family-level versus firmware-image evidence, the upstream `0x8A` byte-4 ambiguity, stock/custom firmware limits, and incompatible-board exclusions.
