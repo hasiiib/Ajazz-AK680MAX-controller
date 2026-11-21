@@ -144,13 +144,13 @@ class ReadOnlySnapshotPanel(QWidget):
             raise TypeError("Expected a validated SnapshotView.")
         self._view = view
         self.profile_label.setText(
-            f"Active profile index: {view.active_profile_index}"
+            f"Active profile: Profile {view.active_profile_index + 1} (index {view.active_profile_index})"
         )
 
         self.layer_selector.blockSignals(True)
         for layer in view.keymap_layers:
             self.layer_selector.addItem(
-                f"Profile {layer.profile_index} / sublayer {layer.sublayer_index}"
+                f"Profile {layer.profile_index + 1} / layer {layer.sublayer_index}"
             )
         self.layer_selector.setCurrentIndex(-1)
         self.layer_selector.blockSignals(False)
@@ -159,7 +159,7 @@ class ReadOnlySnapshotPanel(QWidget):
         self.magnetic_selector.blockSignals(True)
         for column in view.magnetic_columns:
             self.magnetic_selector.addItem(
-                f"GET sub-op {column.get_subop} · {column.value_width_bytes}-byte values"
+                "Actuation travel (raw)" if column.get_subop == 0 else f"Magnetic GET sub-op {column.get_subop}"
             )
         self.magnetic_selector.setCurrentIndex(-1)
         self.magnetic_selector.blockSignals(False)
