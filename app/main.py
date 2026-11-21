@@ -16,6 +16,7 @@ from diagnostics import build_diagnostic_report
 from device_state import evaluate_connection
 
 from snapshot_panel import ReadOnlySnapshotPanel
+from live_configuration import ConfigurationReadError, read_configuration_snapshot
 
 from protocol import (
     IdentifyError,
@@ -101,6 +102,13 @@ class StreamStopNotifier(QObject):
     finished = Signal(object)
 
 
+class ConfigurationReadNotifier(QObject):
+    """Deliver read-only HID acquisition results to the Qt GUI thread."""
+
+    finished = Signal(object)
+    failed = Signal(str)
+
+
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -137,6 +145,7 @@ class Main(QMainWindow):
         layout.addWidget(subtitle)
 
         tabs = QTabWidget()
+        self.tabs = tabs
         inspector_tab = QWidget()
         inspector_layout = QVBoxLayout(inspector_tab)
         panel = QFrame()
@@ -158,6 +167,10 @@ class Main(QMainWindow):
         self.connection_status.setObjectName("sub")
         layout.addWidget(self.connection_status)
 
+        self.configuration_status = QLabel("Configuration: not read")
+        self.configuration_status.setObjectName("sub")
+        layout.addWidget(self.configuration_status)
+
         self.analog_status = QLabel("Analog monitor: stopped")
         self.analog_status.setObjectName("sub")
         layout.addWidget(self.analog_status)
@@ -170,6 +183,10 @@ class Main(QMainWindow):
         self.identify_button = QPushButton("Identify Keyboard (read-only)")
         self.identify_button.clicked.connect(self.identify)
         row.addWidget(self.identify_button)
+
+        self.read_config_button = QPushButton("Read Configuration (read-only)")
+        self.read_config_button.clicked.connect(self.read_configuration)
+        row.addWidget(self.read_config_button)
 
         self.stream_button = QPushButton("Start Analog Monitor")
         self.stream_button.clicked.connect(self.toggle_analog_stream)
@@ -201,6 +218,10 @@ class Main(QMainWindow):
         self.stream_stop_notifier = StreamStopNotifier(self)
         self.stream_stop_notifier.finished.connect(self._on_analog_stop_finished)
         self.stream_stop_thread = None
+        self.configuration_read_notifier = ConfigurationReadNotifier(self)
+        self.configuration_read_notifier.finished.connect(self._on_configuration_read_finished)
+        self.configuration_read_notifier.failed.connect(self._on_configuration_read_failed)
+        self.configuration_read_thread = None
         self.latest_samples = {}
         self.analog_samples_received = 0
         self.last_analog_sample_at = None
@@ -260,6 +281,59 @@ class Main(QMainWindow):
             self.identify_button.setEnabled(True)
             self.analog_status.setText("Analog monitor: stopped — connection lost")
             self.log.append(f"\n\nANALOG MONITOR: {reason}")
+
+    def read_configuration(self):
+        """Read the supported configuration subset on a worker thread."""
+        if self.stream_session.active or self.stream_stop_thread is not None:
+            self.configuration_status.setText(
+                "Configuration: stop the Analog Monitor before reading settings."
+            )
+            return
+        if self.configuration_read_thread is not None:
+            return
+        self.read_config_button.setEnabled(False)
+        self.identify_button.setEnabled(False)
+        self.stream_button.setEnabled(False)
+        self.configuration_status.setText(
+            "Configuration: reading active profile, base keymap and actuation values…"
+        )
+        self.configuration_read_thread = Thread(
+            target=self._read_configuration_worker,
+            name="ak680-configuration-read",
+            daemon=True,
+        )
+        self.configuration_read_thread.start()
+
+    def _read_configuration_worker(self):
+        try:
+            snapshot = read_configuration_snapshot()
+        except Exception as exc:
+            self.configuration_read_notifier.failed.emit(str(exc))
+        else:
+            self.configuration_read_notifier.finished.emit(snapshot)
+
+    def _on_configuration_read_finished(self, snapshot):
+        try:
+            self.snapshot_panel.set_snapshot(snapshot)
+            self.tabs.setCurrentWidget(self.snapshot_panel)
+            self.configuration_status.setText(
+                "Configuration: read successfully · base keymap and actuation column 0 · raw values"
+            )
+        except Exception as exc:
+            self.configuration_status.setText(f"Configuration: display failed — {exc}")
+        finally:
+            self._finish_configuration_read()
+
+    def _on_configuration_read_failed(self, message):
+        self.configuration_status.setText(f"Configuration: read failed — {message}")
+        self.log.append(f"\\n\\nCONFIGURATION READ ERROR: {message}")
+        self._finish_configuration_read()
+
+    def _finish_configuration_read(self):
+        self.configuration_read_thread = None
+        self.read_config_button.setEnabled(True)
+        self.identify_button.setEnabled(not self.stream_session.active)
+        self.stream_button.setEnabled(True)
 
     def export_diagnostics(self):
         """Save a privacy-filtered support report; this performs no HID I/O."""
@@ -366,9 +440,16 @@ class Main(QMainWindow):
         self.stream_stop_thread = None
 
     def closeEvent(self, event):
-        if self.stream_stop_thread is not None and self.stream_stop_thread.is_alive():
+        stop_running = (
+            self.stream_stop_thread is not None and self.stream_stop_thread.is_alive()
+        )
+        read_running = (
+            self.configuration_read_thread is not None
+            and self.configuration_read_thread.is_alive()
+        )
+        if stop_running or read_running:
             self.statusBar().showMessage(
-                "Please wait for the analog monitor stop operation to finish."
+                "Please wait for the keyboard operation to finish."
             )
             event.ignore()
             return
