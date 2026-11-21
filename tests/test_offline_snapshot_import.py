@@ -39,8 +39,8 @@ class OfflineSnapshotImportTests(unittest.TestCase):
         self.assertEqual(snapshot.keymap_layers[0].entries[0], bytes([0, 0x11, 0x22, 0x33]))
         self.assertEqual(snapshot.keymap_layers[0].entries[16], bytes([1, 0x11, 0x22, 0x33]))
         self.assertEqual(len(snapshot.magnetic_columns[0].values), 128)
-        self.assertEqual(snapshot.magnetic_columns[0].values[0], 0)
-        self.assertEqual(snapshot.magnetic_columns[0].values[32], 1)
+        self.assertEqual(snapshot.magnetic_columns[0].values[0], 512)
+        self.assertEqual(snapshot.magnetic_columns[0].values[32], 513)
 
     def test_missing_keymap_page_rejects_incomplete_bundle(self):
         bundle = make_bundle()
