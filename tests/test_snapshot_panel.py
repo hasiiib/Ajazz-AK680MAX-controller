@@ -19,6 +19,7 @@ except ModuleNotFoundError as exc:
 if QApplication is not None:
     from read_only_snapshot import build_read_only_snapshot
     from snapshot_panel import ReadOnlySnapshotPanel
+    from keyboard_layout import load_keyboard_layout
 
 
 @unittest.skipIf(QApplication is None, "PySide6 is not installed in this test environment")
@@ -63,14 +64,45 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
         self.assertTrue(panel.export_button.isEnabled())
+        self.assertIn("Slot mapping not inferred", panel.layout_status.text())
+        self.assertFalse(panel.keyboard_layout.isHidden())
         self.assertIn("provenance are not verified", panel.status.text())
 
         panel.magnetic_selector.setCurrentIndex(0)
         self.assertEqual(panel.table.item(0, 1).text(), "Actuation travel (raw)")
         self.assertEqual(panel.table.item(0, 2).text(), "512 (0x0200)")
+        self.assertTrue(panel.keyboard_layout.isHidden())
         panel.layer_selector.setCurrentIndex(0)
         self.assertEqual(panel.table.item(0, 1).text(), "Unknown assignment (raw)")
         self.assertEqual(panel.table.item(0, 2).text(), "10 20 30 00")
+        self.assertFalse(panel.keyboard_layout.isHidden())
+        panel.close()
+
+
+    def test_factory_keymap_shows_inferred_slot_numbers_in_layout(self):
+        entries = []
+        for key in load_keyboard_layout():
+            if key.hid == 1033:
+                entries.append(bytes([0x0A, 1, 0, 0]))
+            else:
+                entries.append(bytes([0, 0, key.hid, 0]))
+        entries.extend([bytes(4)] * (128 - len(entries)))
+        keymaps = {
+            (0, page): b"".join(entries[page * 16:(page + 1) * 16])
+            for page in range(8)
+        }
+        profile = bytearray(64)
+        profile[0] = 0x84
+        magnetic = {(0, page): bytes([page, 0x02]) * 32 for page in range(4)}
+        snapshot = build_read_only_snapshot(
+            bytes(profile), keymaps, magnetic,
+            sublayers=(0,), magnetic_subops=(0,),
+        )
+        panel = ReadOnlySnapshotPanel()
+        panel.set_snapshot(snapshot)
+        self.assertTrue(panel.keyboard_layout.inference.complete)
+        self.assertEqual(len(panel.keyboard_layout.inference.slot_by_hid), 68)
+        self.assertIn("68 physical slots inferred", panel.layout_status.text())
         panel.close()
 
     def test_rejected_replacement_clears_previous_snapshot(self):
