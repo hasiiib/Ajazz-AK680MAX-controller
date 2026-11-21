@@ -41,6 +41,7 @@
 
 ## User-facing controls
 - [x] Add a configuration snapshot browser tab with known gen2 keymap assignments decoded and unknown entries retained as raw values; magnetic values remain raw.
+- [x] Add the board-2255 68-key ANSI diagram and infer physical slot numbers only when every factory HID usage is present exactly once.
 - [x] Add local normalized snapshot backup export and strict import/export round-trip tests.
 - [x] Add a user-triggered, worker-thread read-only configuration action guarded by a fresh same-handle board-2255 Identify.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
