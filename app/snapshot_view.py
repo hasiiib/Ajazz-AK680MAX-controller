@@ -8,16 +8,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from read_only_snapshot import ReadOnlyConfigurationSnapshot
+from keymap_semantics import describe_key_entry
 
 
 @dataclass(frozen=True)
 class KeymapEntryView:
     slot: int
+    assignment: str
     raw_hex: str
 
     def __post_init__(self) -> None:
         if type(self.slot) is not int or not 1 <= self.slot <= 128:
             raise ValueError("Keymap display slot must be an integer from 1 through 128.")
+        if not isinstance(self.assignment, str) or not self.assignment:
+            raise ValueError("Keymap display assignment must be a non-empty string.")
         parts = self.raw_hex.split(" ") if isinstance(self.raw_hex, str) else ()
         if len(parts) != 4 or any(
             len(part) != 2 or any(char not in "0123456789ABCDEF" for char in part)
@@ -113,7 +117,11 @@ def project_snapshot_for_display(snapshot: ReadOnlyConfigurationSnapshot) -> Sna
             profile_index=layer.profile,
             sublayer_index=layer.sublayer,
             entries=tuple(
-                KeymapEntryView(slot=index + 1, raw_hex=entry.hex(" ").upper())
+                KeymapEntryView(
+                    slot=index + 1,
+                    assignment=describe_key_entry(entry),
+                    raw_hex=entry.hex(" ").upper(),
+                )
                 for index, entry in enumerate(layer.entries)
             ),
         )
