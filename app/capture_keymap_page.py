@@ -38,8 +38,18 @@ def capture_once(
     *,
     identify: Callable = identify_exchange_details,
     sleep: Callable[[float], None] = time.sleep,
+    profile: int = 0,
+    page: int = 0,
+    wire_byte4: int = 0,
 ):
-    """Identify the opened board, send one 0x8A page-0 GET, return raw bytes."""
+    """Identify the opened board, send one selected 0x8A GET, return raw bytes."""
+    # Validate the request before opening the device or sending anything.
+    try:
+        packet_payload = keymap_get_packet(
+            profile=profile, page=page, sublayer=wire_byte4
+        )
+    except (TypeError, ValueError) as exc:
+        raise CaptureError(f"Invalid keymap GET selection: {exc}") from exc
     try:
         inventory = inspect_keyboard_interfaces(hid_module)
     except Exception as exc:
@@ -74,10 +84,10 @@ def capture_once(
                 "no 0x8A request sent."
             )
 
-        # Probe only profile 0 / page 0 / wire byte 4 = 0. Do not infer
-        # whether byte 4 means host layer or sub-layer from this zero value.
+        # Byte 4 is passed through unchanged. Its host-layer/sub-layer meaning
+        # remains unresolved for the target board.
         sleep(0.010)
-        request = bytes([0]) + keymap_get_packet(profile=0, page=0, sublayer=0)
+        request = bytes([0]) + packet_payload
         try:
             sent = device.send_feature_report(request)
         except Exception as exc:
@@ -125,7 +135,13 @@ def capture_once(
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Capture one read-only keymap page-0 response from board 2255."
+        description="Capture one selected read-only keymap page from board 2255."
+    )
+    parser.add_argument("--profile", type=int, default=0, help="profile index 0..3 (default: 0)")
+    parser.add_argument("--page", type=int, default=0, help="page index 0..7 (default: 0)")
+    parser.add_argument(
+        "--byte4", type=int, default=0,
+        help="raw request byte 4, accepted values 0..3; host-layer/sub-layer meaning unresolved",
     )
     parser.add_argument(
         "--confirm-one-read-only-0x8a",
@@ -133,6 +149,10 @@ def main(argv=None) -> int:
         help="explicitly authorize one 0x8A GET after a fresh Identify check",
     )
     args = parser.parse_args(argv)
+    try:
+        keymap_get_packet(args.profile, args.page, args.byte4)
+    except (TypeError, ValueError) as exc:
+        parser.error(str(exc))
     if not args.confirm_one_read_only_0x8a:
         parser.error(
             "No device command sent. Re-run only when ready with "
@@ -146,21 +166,23 @@ def main(argv=None) -> int:
         return 2
 
     try:
-        raw, sent = capture_once(hid)
+        raw, sent = capture_once(
+            hid, profile=args.profile, page=args.page, wire_byte4=args.byte4
+        )
     except CaptureError as exc:
         print(f"Capture stopped: {exc}", file=sys.stderr)
         return 1
 
     assessment = assess_capture(
-        "keymap", raw, profile=0, sublayer=0, page=0
+        "keymap", raw, profile=args.profile, sublayer=args.byte4, page=args.page
     )
     print(f"SET_FEATURE send return: {sent}/65 bytes")
     print(f"Raw response length: {len(raw)} bytes")
     print(f"Raw response HEX: {raw.hex(' ').upper()}")
     print(f"Offline assessment: {assessment.summary}")
     print(
-        "Probe metadata: profile 0, page 0, wire byte 4 = 0 "
-        "(host-layer/sub-layer meaning unresolved)."
+        f"Probe metadata: profile {args.profile}, page {args.page}, "
+        f"wire byte 4 = {args.byte4} (host-layer/sub-layer meaning unresolved)."
     )
     print("No capture file was written; no serial number or device path was recorded.")
     return 0 if assessment.accepted else 3
