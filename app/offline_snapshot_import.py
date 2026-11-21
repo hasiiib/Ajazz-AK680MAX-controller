@@ -1,8 +1,8 @@
-"""Strict offline import for complete read-only board-2255 response bundles.
+"""Strict offline import/export for complete read-only board-2255 snapshots.
 
-This module performs no HID I/O and does not persist or export captures. Bundle
-metadata is self-declared; importing cannot establish the source device or
-firmware provenance.
+This module performs no HID I/O. Export reconstructs normalized page payloads
+from a validated snapshot; it is not a bit-for-bit raw USB capture. Bundle
+metadata is self-declared and cannot establish device or firmware provenance.
 """
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import json
 from read_only_snapshot import (
     ReadOnlyConfigurationSnapshot,
     SnapshotValidationError,
+    ReadOnlyConfigurationSnapshot,
     build_read_only_snapshot,
 )
 
@@ -128,3 +129,64 @@ def import_snapshot_bundle_text(text: str) -> ReadOnlyConfigurationSnapshot:
         )
     except (SnapshotValidationError, ValueError, TypeError) as exc:
         raise SnapshotImportError(f"Bundle validation failed: {exc}") from exc
+
+
+def export_snapshot_bundle_text(snapshot: ReadOnlyConfigurationSnapshot) -> str:
+    """Serialize a validated snapshot as a normalized offline backup bundle.
+
+    Page payloads are reconstructed from the validated entries/values. The
+    output preserves the complete represented configuration but is not a
+    bit-for-bit record of the original HID response framing.
+    """
+    if not isinstance(snapshot, ReadOnlyConfigurationSnapshot):
+        raise SnapshotImportError("Export requires a validated read-only snapshot.")
+
+    active_reply = bytearray(64)
+    active_reply[0] = 0x84
+    active_reply[1] = snapshot.active_profile
+
+    keymap_items = []
+    for layer in sorted(snapshot.keymap_layers, key=lambda item: item.sublayer):
+        for page in range(8):
+            entries = layer.entries[page * 16:(page + 1) * 16]
+            raw = b"".join(entries)
+            if len(raw) != 64:
+                raise SnapshotImportError("Validated keymap layer could not be serialized.")
+            keymap_items.append({
+                "sublayer": layer.sublayer,
+                "page": page,
+                "raw_hex": raw.hex(" ").upper(),
+            })
+
+    magnetic_items = []
+    for column in sorted(snapshot.magnetic_columns, key=lambda item: item.subop):
+        values_per_page = 64 // column.value_width
+        for page in range(128 // values_per_page):
+            values = column.values[
+                page * values_per_page:(page + 1) * values_per_page
+            ]
+            if column.value_width == 4:
+                raw = b"".join(bytes(value) for value in values)
+            else:
+                raw = b"".join(
+                    value.to_bytes(column.value_width, "little") for value in values
+                )
+            if len(raw) != 64:
+                raise SnapshotImportError("Validated magnetic column could not be serialized.")
+            magnetic_items.append({
+                "subop": column.subop,
+                "page": page,
+                "raw_hex": raw.hex(" ").upper(),
+            })
+
+    bundle = {
+        "format": BUNDLE_FORMAT,
+        "target": {"vid_pid": TARGET_VID_PID, "board_id": TARGET_BOARD_ID},
+        "active_profile_reply": bytes(active_reply).hex(" ").upper(),
+        "keymap_replies": keymap_items,
+        "magnetic_replies": magnetic_items,
+    }
+    text = json.dumps(bundle, indent=2, sort_keys=True)
+    if len(text.encode("utf-8")) > MAX_BUNDLE_BYTES:
+        raise SnapshotImportError("Exported bundle exceeds the 256 KiB size limit.")
+    return text
