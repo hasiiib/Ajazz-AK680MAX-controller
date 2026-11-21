@@ -75,7 +75,8 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 
 ## Current software boundary
 
-- `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure packet builders/parsers only; they do not open HID or send commands.
+- `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure GET packet builders/parsers only; they do not open HID or send commands.
+- `keymap_write.py` and `magnetic_write.py` contain pure, validated single-slot SET packet builders for future editor work. They do not open HID, are not imported by the live reader, and are not connected to a GUI apply action. No `0x0A` or `0x65` write has been sent.
 - `live_configuration.py` is the only live configuration acquisition path. It runs only after a user clicks Read Configuration, verifies board 2255 on the same open interface-2 handle, then sends 13 GETs (0x84, eight 0x8A base-layer pages with byte 4 = 0, and four 0xE5 sub-operation-0 pages). It sends no write opcode, does not switch profiles, and never retries a GET. Pages beyond the previously captured 0x8A page 0 and 0xE5 page 0 still need physical validation.
 - `read_only_snapshot.py` validates the returned payloads and assembles complete snapshots before display.
 - `hardware_verification.py` assesses manually supplied byte captures or copied hex text offline; it never opens HID, sends a command, retries, or persists a capture.
