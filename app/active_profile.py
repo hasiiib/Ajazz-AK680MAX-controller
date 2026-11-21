@@ -7,6 +7,7 @@ from __future__ import annotations
 
 REPORT_LENGTH = 64
 PROFILE_GET_OPCODE = 0x84
+PROFILE_SET_OPCODE = 0x04
 PROFILE_COUNT = 4
 
 
@@ -21,6 +22,17 @@ def active_profile_get_packet() -> bytes:
     packet[7] = (0xFF - (sum(packet[:7]) & 0xFF)) & 0xFF
     return bytes(packet)
 
+
+
+def active_profile_set_packet(profile: int) -> bytes:
+    """Build a Bit7-checksummed gen2 profile-select packet; performs no I/O."""
+    if type(profile) is not int or not 0 <= profile < PROFILE_COUNT:
+        raise ProfileProtocolError("Profile index must be an integer from 0 through 3.")
+    packet = bytearray(REPORT_LENGTH)
+    packet[0] = PROFILE_SET_OPCODE
+    packet[1] = profile
+    packet[7] = (0xFF - (sum(packet[:7]) & 0xFF)) & 0xFF
+    return bytes(packet)
 
 def parse_active_profile_reply(reply: bytes | bytearray) -> int:
     """Return the zero-based active profile from a validated 0x84 reply."""
