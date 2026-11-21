@@ -366,6 +366,12 @@ class Main(QMainWindow):
         self.stream_stop_thread = None
 
     def closeEvent(self, event):
+        if self.stream_stop_thread is not None and self.stream_stop_thread.is_alive():
+            self.statusBar().showMessage(
+                "Please wait for the analog monitor stop operation to finish."
+            )
+            event.ignore()
+            return
         self.stream_timer.stop()
         self.connection_timer.stop()
         try:
