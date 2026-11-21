@@ -1,7 +1,7 @@
-"""Read-only RongYuan gen2 active-profile request and response parser.
+"""Pure RongYuan gen2 active-profile GET/SET packet framing and GET parser.
 
-This is pure framing/validation code only. It does not switch profiles or
-perform HID I/O.
+The SET helper only constructs an in-memory packet. No HID I/O or profile
+switch operation is implemented by this module.
 """
 from __future__ import annotations
 
