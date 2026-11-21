@@ -1,10 +1,11 @@
 import sys
 import subprocess
+from threading import Thread
 from datetime import datetime
 from time import monotonic
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTextEdit, QFrame, QFileDialog, QTabWidget,
@@ -92,6 +93,12 @@ def collect(inventory=None, inventory_error=None):
             parts.append(label + " error: " + str(exc))
     parts.append(_hid_inventory_text(inventory, inventory_error))
     return "\n\n".join(parts)
+
+
+class StreamStopNotifier(QObject):
+    """Deliver completion of a potentially blocking HID stop off the GUI thread."""
+
+    finished = Signal(object)
 
 
 class Main(QMainWindow):
@@ -191,6 +198,9 @@ class Main(QMainWindow):
 
         self.setCentralWidget(root)
         self.stream_session = AnalogStreamSession()
+        self.stream_stop_notifier = StreamStopNotifier(self)
+        self.stream_stop_notifier.finished.connect(self._on_analog_stop_finished)
+        self.stream_stop_thread = None
         self.latest_samples = {}
         self.analog_samples_received = 0
         self.last_analog_sample_at = None
@@ -319,19 +329,41 @@ class Main(QMainWindow):
             self.analog_status.setText("Analog monitor: stopped after input error")
 
     def stop_analog_stream(self):
+        """Stop HID streaming in a worker so a slow Feature report cannot freeze Qt."""
         self.stream_timer.stop()
+        self.stream_button.setEnabled(False)
+        self.identify_button.setEnabled(False)
+        self.analog_status.setText("Analog monitor: stopping…")
+        self.stream_stop_thread = Thread(
+            target=self._stop_analog_stream_worker,
+            name="ak680-analog-stop",
+            daemon=True,
+        )
+        self.stream_stop_thread.start()
+
+    def _stop_analog_stream_worker(self):
+        error = None
         try:
             self.stream_session.stop()
-            self.analog_status.setText("Analog monitor: stopped")
-            self.log.append("\n\nANALOG MONITOR: stopped")
         except AnalogStreamError as exc:
+            error = str(exc)
+        except Exception as exc:
+            error = f"Unexpected stop error: {exc}"
+        self.stream_stop_notifier.finished.emit(error)
+
+    def _on_analog_stop_finished(self, error):
+        """Restore controls only after the worker has closed its HID handles."""
+        self.latest_samples.clear()
+        if error is None:
+            self.analog_status.setText("Analog monitor: stopped")
+            self.log.append("\\n\\nANALOG MONITOR: stopped")
+        else:
             self.analog_status.setText("Analog monitor: stop attempted; check device connection")
-            self.log.append(f"\n\nANALOG MONITOR STOP WARNING: {exc}")
-        finally:
-            self.latest_samples.clear()
-            self.stream_button.setText("Start Analog Monitor")
-            self.stream_button.setEnabled(True)
-            self.identify_button.setEnabled(True)
+            self.log.append(f"\\n\\nANALOG MONITOR STOP WARNING: {error}")
+        self.stream_button.setText("Start Analog Monitor")
+        self.stream_button.setEnabled(True)
+        self.identify_button.setEnabled(True)
+        self.stream_stop_thread = None
 
     def closeEvent(self, event):
         self.stream_timer.stop()
