@@ -57,15 +57,18 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertIn("profile index: 1", panel.profile_label.text())
         self.assertEqual(panel.table.rowCount(), 128)
         self.assertEqual(panel.table.item(0, 0).text(), "1")
-        self.assertEqual(panel.table.item(0, 1).text(), "10 20 30 00")
+        self.assertEqual(panel.table.item(0, 1).text(), "Unknown assignment (raw)")
+        self.assertEqual(panel.table.item(0, 2).text(), "10 20 30 00")
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
         self.assertIn("provenance are not verified", panel.status.text())
 
         panel.magnetic_selector.setCurrentIndex(0)
-        self.assertEqual(panel.table.item(0, 1).text(), "512 (0x0200)")
+        self.assertEqual(panel.table.item(0, 1).text(), "Actuation travel (raw)")
+        self.assertEqual(panel.table.item(0, 2).text(), "512 (0x0200)")
         panel.layer_selector.setCurrentIndex(0)
-        self.assertEqual(panel.table.item(0, 1).text(), "10 20 30 00")
+        self.assertEqual(panel.table.item(0, 1).text(), "Unknown assignment (raw)")
+        self.assertEqual(panel.table.item(0, 2).text(), "10 20 30 00")
         panel.close()
 
     def test_rejected_replacement_clears_previous_snapshot(self):
