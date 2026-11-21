@@ -133,6 +133,18 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
             self.assertIn("existing display retained", panel.status.text())
             panel.close()
 
+    def test_invalid_utf8_import_retains_existing_snapshot(self):
+        with TemporaryDirectory() as temporary:
+            path = Path(temporary) / "invalid.json"
+            path.write_bytes(bytes([0xFF, 0xFE, 0xFA]))
+            panel = ReadOnlySnapshotPanel()
+            panel.set_snapshot(self.make_snapshot())
+            with patch("snapshot_panel.QFileDialog.getOpenFileName", return_value=(str(path), "")):
+                panel._import_bundle_from_file()
+            self.assertEqual(panel.table.rowCount(), 128)
+            self.assertIn("existing display retained", panel.status.text())
+            panel.close()
+
     def test_explicit_clear_removes_rows_and_selector_items(self):
         panel = ReadOnlySnapshotPanel()
         panel.set_snapshot(self.make_snapshot())

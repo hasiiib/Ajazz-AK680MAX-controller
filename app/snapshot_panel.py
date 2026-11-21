@@ -81,7 +81,7 @@ class ReadOnlySnapshotPanel(QWidget):
                 raise SnapshotImportError("Bundle exceeds the 256 KiB size limit.")
             bundle_text = file_path.read_text(encoding="utf-8")
             snapshot = import_snapshot_bundle_text(bundle_text)
-        except (OSError, SnapshotImportError) as exc:
+        except (OSError, UnicodeError, SnapshotImportError) as exc:
             self.status.setText(f"Import rejected; existing display retained. {exc}")
             return
 
