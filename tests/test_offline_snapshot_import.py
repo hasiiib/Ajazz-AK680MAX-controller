@@ -9,6 +9,7 @@ from offline_snapshot_import import (
     BUNDLE_FORMAT,
     SnapshotImportError,
     import_snapshot_bundle_text,
+    export_snapshot_bundle_text,
 )
 
 
@@ -41,6 +42,35 @@ class OfflineSnapshotImportTests(unittest.TestCase):
         self.assertEqual(len(snapshot.magnetic_columns[0].values), 128)
         self.assertEqual(snapshot.magnetic_columns[0].values[0], 512)
         self.assertEqual(snapshot.magnetic_columns[0].values[32], 513)
+
+
+    def test_exported_snapshot_backup_round_trips_all_supported_value_widths(self):
+        bundle = make_bundle()
+        bundle["magnetic_replies"].extend(
+            {
+                "subop": 10,
+                "page": page,
+                "raw_hex": (bytes([page, 1, 2, 3]) * 16).hex(" "),
+            }
+            for page in range(8)
+        )
+        snapshot = import_snapshot_bundle_text(json.dumps(bundle))
+        exported = export_snapshot_bundle_text(snapshot)
+        exported_data = json.loads(exported)
+        self.assertEqual(exported_data["target"], {
+            "vid_pid": "3151:502D",
+            "board_id": 2255,
+        })
+        self.assertNotIn("serial", exported.lower())
+        restored = import_snapshot_bundle_text(exported)
+        self.assertEqual(restored, snapshot)
+        self.assertEqual(restored.magnetic_columns[1].subop, 10)
+        self.assertEqual(restored.magnetic_columns[1].values[0], (0, 1, 2, 3))
+
+    def test_export_rejects_unvalidated_objects(self):
+        for value in (None, {}, "snapshot"):
+            with self.subTest(value=value), self.assertRaises(SnapshotImportError):
+                export_snapshot_bundle_text(value)
 
     def test_missing_keymap_page_rejects_incomplete_bundle(self):
         bundle = make_bundle()
