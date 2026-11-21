@@ -191,6 +191,7 @@ class Main(QMainWindow):
         self.setCentralWidget(root)
         self.stream_session = AnalogStreamSession()
         self.latest_samples = {}
+        self.analog_samples_received = 0
         self.stream_timer = QTimer(self)
         self.stream_timer.setInterval(5)
         self.stream_timer.timeout.connect(self.poll_analog_stream)
@@ -278,6 +279,7 @@ class Main(QMainWindow):
         try:
             self.stream_session.start()
             self.latest_samples.clear()
+            self.analog_samples_received = 0
             self.stream_timer.start()
             self.stream_button.setText("Stop Analog Monitor")
             self.identify_button.setEnabled(False)
@@ -291,14 +293,16 @@ class Main(QMainWindow):
 
     def poll_analog_stream(self):
         try:
-            for sample in self.stream_session.poll():
+            samples = self.stream_session.poll()
+            self.analog_samples_received += len(samples)
+            for sample in samples:
                 self.latest_samples[sample.slot] = sample.raw_travel
-            active = [(slot, value) for slot, value in self.latest_samples.items() if value > 0]
-            active.sort(key=lambda item: item[0])
-            preview = ", ".join(f"{slot}:{value}" for slot, value in active[:8])
-            suffix = f" | {preview}" if preview else " | no keys currently moving/held"
+            observed = sorted(self.latest_samples.items())
+            preview = ", ".join(f"{slot}:{value}" for slot, value in observed[:8])
+            suffix = f" | latest slot:raw counts {preview}" if preview else " | waiting for samples"
             self.analog_status.setText(
-                f"Analog monitor: running | active slots: {len(active)}{suffix}"
+                f"Analog monitor: running | samples: {self.analog_samples_received} "
+                f"| slots observed: {len(observed)}{suffix}"
             )
         except AnalogStreamError as exc:
             self._abort_analog_stream(f"Analog input error: {exc}")
