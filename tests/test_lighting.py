@@ -27,7 +27,7 @@ class LightingProtocolTests(unittest.TestCase):
     def test_parser_reads_mode_speed_brightness_flags_and_rgb(self):
         reply = bytearray(64)
         reply[0] = LED_GET_OPCODE
-        reply[1:8] = bytes([13, 2, 4, 0x38, 12, 34, 56])
+        reply[1:8] = bytes([13, 2, 4, 0x37, 12, 34, 56])
         parsed = parse_led_params_reply(reply)
         self.assertEqual(parsed.mode, 13)
         self.assertEqual(parsed.speed, 2)
