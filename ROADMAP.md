@@ -28,6 +28,7 @@
 - [x] Pure active-profile GET builder and parser.
 - [x] Add strict, pure gen2 profile-select, single-slot keymap and magnetic SET packet builders (offline only; no HID write transport).
 - [x] Add board-2255 LED parameter GET/SET packet helpers and parser; keep them offline until physical validation.
+- [x] Add pure 50-slot macro codec, page GET/SET packet builders, and keyboard/mouse event serialization; no HID transport is connected.
 - [x] Strict aggregation of complete 128-slot keymap layers and magnetic-settings columns from supplied replies.
 - [x] Reject incomplete, duplicate, mixed-profile, mixed-sublayer, malformed, or unexpected reply sets.
 - [x] Audit public board-2255 registry/protocol evidence and document family-level versus firmware-image evidence, the upstream `0x8A` byte-4 ambiguity, stock/custom firmware limits, and incompatible-board exclusions.
