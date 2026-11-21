@@ -30,7 +30,8 @@ The product goal is a native Ubuntu implementation of the Windows AJAZZ driver f
 
 ## Reference research
 
-- `xyzmean/ajazz-driver-electron`: the Electron repository is primarily a packaging wrapper around a pinned vendor WebHID UI snapshot; its related reverse-engineering repository is the useful protocol source.
+- `xyzmean/ajazz-driver-electron`: primarily an Electron packaging wrapper around a pinned vendor WebHID UI snapshot; it is not a native Linux implementation.
+- `xyzmean/ajazz-driver-reverse`: useful as a feature-inventory and reverse-engineering reference, but its documented transport is **not the target board-2255 transport**. It describes WebHID `0xAA` request / `0x55` response frames, an 8-byte header, and a default 32-byte report. Our exact 3151:502D / Identify-ID-2255 keyboard has instead been physically observed through 64-byte HID Feature payloads (65-byte hidapi buffers including report ID) and RongYuan gen2 opcodes such as `0x8F`, `0x84`, `0x8A`, and `0xE5`. Do not transplant the `0xAA` framing, its command enum, or its model table into this project. Use the reverse repository only to understand the Windows UI feature areas and as a comparison source where protocol identity is independently established.
 - `xyzmean/ajazz-driver-reverse`: independently reconstructed vendor command framing and feature serializers.
 - `dniminenn/sharkfin`: public protocol notes and gen2 firmware analysis. The protocol is useful for designing read-only requests, but its own evidence labels distinguish hardware, firmware-image, and vendor-JavaScript findings. Those labels must remain distinct from board-2255 physical verification.
 
