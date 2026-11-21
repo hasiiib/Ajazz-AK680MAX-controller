@@ -236,5 +236,38 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("self.identify_button.setEnabled(True)", source)
 
 
+    def test_manual_stop_runs_hid_stop_off_gui_thread(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        stop = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "stop_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, stop)
+        self.assertIn("self.stream_timer.stop()", source)
+        self.assertIn("Thread(", source)
+        self.assertIn("target=self._stop_analog_stream_worker", source)
+        self.assertNotIn("self.stream_session.stop()", source)
+
+        worker = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "_stop_analog_stream_worker"
+        )
+        worker_source = ast.get_source_segment(self.source, worker)
+        self.assertIn("self.stream_session.stop()", worker_source)
+        self.assertIn("self.stream_stop_notifier.finished.emit(error)", worker_source)
+
+    def test_stop_completion_updates_qt_controls_via_signal_handler(self):
+        self.assertIn("finished = Signal(object)", self.source)
+        self.assertIn(
+            "self.stream_stop_notifier.finished.connect(self._on_analog_stop_finished)",
+            self.source,
+        )
+        self.assertIn("self.stream_button.setEnabled(True)", self.source)
+
+
 if __name__ == "__main__":
     unittest.main()
