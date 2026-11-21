@@ -38,6 +38,7 @@
 ## User-facing controls
 - [x] Add a read-only snapshot browser tab that renders validated keymap and magnetic values without assigning meanings.
 - [x] Enforce immutable display-projection invariants for slot order, profile/layer identity, supported sub-operations, and raw-value shape.
+- [x] Import strict offline capture bundles into the read-only viewer; require complete pages for each included layer/column, reject unknown fields/serial metadata, and retain the previous view on import failure. Target metadata is self-declared, not provenance evidence.
 - [ ] Connect snapshot acquisition only after additional magnetic/keymap page coverage and metadata semantics are verified on board 2255.
 - [ ] Build editable controls only for capabilities verified on board 2255.
 - [ ] Verify lighting capabilities and safe controls.
@@ -57,9 +58,10 @@
 - Preserve user settings and keep installation within the dedicated application directories.
 
 ## Current handoff
-The suite contains **177 tests**, including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Sustained analog behavior/calibration and broader `0xE5`/`0x8A` page coverage remain hardware gates; one bounded analog probe yielded valid samples, while `0x84`, `0x8A` page 0, and `0xE5` sub-operation 0/page 0 each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
+The suite contains **194 tests** (after the offline capture bundle-import milestone), including response-to-snapshot integration, offline capture assessment, documentation safety checks, all Qt panel tests, strict immutable display-projection validation, precise one-shot Feature response diagnostics, and keymap/magnetic capture safety tests. Snapshot value objects enforce deep immutability, exact 128-slot coverage, protocol-compatible value widths/ranges, active-profile consistency, and unique layer/column identities. Sustained analog behavior/calibration and broader `0xE5`/`0x8A` page coverage remain hardware gates; one bounded analog probe yielded valid samples, while `0x84`, `0x8A` page 0, and `0xE5` sub-operation 0/page 0 each have one accepted physical capture. See [GitHub Actions](https://github.com/hasiiib/Ajazz-AK680MAX-controller/actions) for the current branch's test result.
 
 
 - [x] Add offline response-capture assessment for manually supplied 0x84/0x8A/0xE5 reports (no HID I/O).
+- [x] Add strict offline capture bundle import with size/schema/target/page-completeness validation and GUI integration.
 - [x] Add an explicitly confirmed, one-shot 0xE5 page-0 capture helper with no retries or writes.
 - [x] Publish board-2255-specific protocol evidence and variant exclusions.

@@ -89,17 +89,38 @@ class GuiConnectionRefreshTests(unittest.TestCase):
 
     def test_analog_warning_reports_bounded_evidence_and_remaining_limits(self):
         self.assertIn("self.analog_warning = QLabel(", self.source)
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        initializer = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "__init__"
+        )
+        warning_assignment = next(
+            node for node in initializer.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Attribute)
+                and target.attr == "analog_warning"
+                for target in node.targets
+            )
+        )
+        warning_call = warning_assignment.value
+        self.assertIsInstance(warning_call, ast.Call)
+        self.assertIsInstance(warning_call.args[0], ast.Constant)
+        warning = warning_call.args[0].value
         self.assertIn(
             "SUSTAINED ANALOG MONITORING IS NOT VERIFIED ON PHYSICAL BOARD 2255",
-            self.source,
+            warning,
         )
-        self.assertIn("16 valid Report ID 5 samples", self.source)
-        self.assertIn("sent the stop request", self.source)
-        self.assertIn("stop effectiveness", self.source)
-        self.assertIn("disconnect recovery", self.source)
-        self.assertIn("values are raw counts", self.source.lower())
-        self.assertIn("physical unit and calibrated range", self.source)
-        self.assertIn("No persistent setting-write opcode is used", self.source)
+        self.assertIn("16 valid Report ID 5 samples", warning)
+        self.assertIn("sent the stop request", warning)
+        self.assertIn("stop effectiveness", warning)
+        self.assertIn("disconnect recovery", warning)
+        self.assertIn("values are raw counts", warning.lower())
+        self.assertIn("physical unit and calibrated range", warning)
+        self.assertIn("No persistent setting-write opcode is used", warning)
         self.assertIn("layout.addWidget(self.analog_warning)", self.source)
 
     def test_window_close_stops_both_background_timers(self):

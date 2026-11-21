@@ -162,6 +162,11 @@ pure parsers; it cannot open the keyboard, send a request, or initiate a retry.
 Synthetic unit tests cover opcode-echo distinctions, report-ID prefixes,
 malformed lengths, invalid metadata, and preservation of the original capture.
 
+The Configuration (read-only) GUI also accepts complete JSON capture bundles through
+`offline_snapshot_import.py`. The bundle format and strict coverage rules are
+documented in [OFFLINE_CAPTURE_BUNDLE.md](OFFLINE_CAPTURE_BUNDLE.md). Import
+remains offline and does not establish the source device or firmware provenance.
+
 ## Exit criteria
 
 A read path may be connected to the application only after the physical captures establish the exact report framing and the board-2255 response semantics, and regression tests cover both valid captures and malformed variants. The GUI must remain read-only and user-initiated.

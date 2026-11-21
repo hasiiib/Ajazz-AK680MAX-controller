@@ -5,11 +5,18 @@ must explicitly provide a validated ReadOnlyConfigurationSnapshot.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QTableWidget,
-    QTableWidgetItem, QAbstractItemView,
+    QTableWidgetItem, QAbstractItemView, QPushButton, QFileDialog,
 )
 
+from offline_snapshot_import import (
+    MAX_BUNDLE_BYTES,
+    SnapshotImportError,
+    import_snapshot_bundle_text,
+)
 from read_only_snapshot import ReadOnlyConfigurationSnapshot
 from snapshot_view import SnapshotView, project_snapshot_for_display
 
@@ -28,6 +35,10 @@ class ReadOnlySnapshotPanel(QWidget):
         layout = QVBoxLayout(self)
         self.profile_label = QLabel("Active profile: —")
         layout.addWidget(self.profile_label)
+
+        self.import_button = QPushButton("Import offline capture bundle…")
+        self.import_button.clicked.connect(self._import_bundle_from_file)
+        layout.addWidget(self.import_button)
 
         selectors = QHBoxLayout()
         selectors.addWidget(QLabel("Keymap layer:"))
@@ -54,6 +65,31 @@ class ReadOnlySnapshotPanel(QWidget):
 
         self.layer_selector.setEnabled(False)
         self.magnetic_selector.setEnabled(False)
+
+    def _import_bundle_from_file(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Offline Capture Bundle",
+            str(Path.home()),
+            "JSON bundles (*.json)",
+        )
+        if not filename:
+            return
+        try:
+            file_path = Path(filename)
+            if file_path.stat().st_size > MAX_BUNDLE_BYTES:
+                raise SnapshotImportError("Bundle exceeds the 256 KiB size limit.")
+            bundle_text = file_path.read_text(encoding="utf-8")
+            snapshot = import_snapshot_bundle_text(bundle_text)
+        except (OSError, SnapshotImportError) as exc:
+            self.status.setText(f"Import rejected; existing display retained. {exc}")
+            return
+
+        self.set_snapshot(snapshot)
+        self.status.setText(
+            "Offline bundle imported · raw protocol values only · target metadata is self-declared · "
+            "device source and firmware provenance are not verified"
+        )
 
     def clear_snapshot(self) -> None:
         """Remove all displayed data and reset selectors to a safe empty state."""

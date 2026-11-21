@@ -78,6 +78,7 @@ The current Linux implementation sends its temporary `0x1B` control packet using
 - `active_profile.py`, `keymap.py`, and `magnetic_settings.py` contain pure packet builders/parsers only.
 - `read_only_snapshot.py` validates supplied response payloads and assembles complete snapshots; it does not communicate with the keyboard.
 - `hardware_verification.py` assesses manually supplied byte captures or copied hex text offline; it never opens HID, sends a command, retries, or persists a capture.
+- `offline_snapshot_import.py` validates complete, strict JSON bundles and assembles an in-memory snapshot; target metadata is self-declared and unknown fields (including serial metadata) are rejected.
 - `capture_active_profile.py` is an optional CLI requiring an explicit confirmation flag. It opens one unique interface-2 handle, performs the read-only `0x8F` Identify on that handle, and only for ID 2255 sends one `0x84` GET on the same handle; it is not run by the GUI, installer, or background refresh. One physical capture has been accepted.
 - `capture_keymap_page.py` is a separate, opt-in one-shot `0x8A` page-0 probe. It is not run by the GUI, installer, or background refresh, and requires its own explicit confirmation flag. One target-board capture was accepted as 16 opaque four-byte entries; its initial wire byte 4 is zero, so it cannot resolve the host-layer/sub-layer ambiguity.
 - `capture_magnetic_page.py` is a separate, opt-in one-shot `0xE5` sub-operation-0/page-0 probe. It requires its own confirmation flag, performs a fresh same-handle Identify, and never retries or sends a setting write. One target-board capture has been accepted as a raw 64-byte page containing 32 little-endian u16 values, all 200; their meanings remain unverified.
@@ -96,6 +97,7 @@ All Sharkfin source links below are pinned to repository commit `8c999ba7d44254f
 - [Sharkfin README](https://github.com/dniminenn/sharkfin/blob/8c999ba7d44254f5206fb0ff25ed7cea6ebbb496/README.md) — open-source host configurator; states that it never flashes firmware.
 - [AJAZZ UK software page](https://ajazz.co.uk/pages/ajazz-software) — lists two distinct wired AK680 MAX variants, but does not identify a matching USB PID/device ID or provide a firmware image/hash.
 - [AJAZZ driver listing](https://ajazz.net/pages/ajazz-drivers) — separates 8+1K and 8+8K wireless packages and an online driver; it does not map a package to board 2255 or provide a stock firmware manifest.
+- [shorekeeper/ajazzdesktopify](https://github.com/shorekeeper/ajazzdesktopify) — its protocol reconstruction explicitly covers the lightless 3151:502C variant and the RGB 0C45:80B2 variant, not this 3151:502D / board-2255 unit. It is independent host-driver research and does not establish target-board stock firmware or protocol evidence; these protocol branches remain excluded.
 
 ## Next evidence gate
 

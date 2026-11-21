@@ -2,6 +2,9 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+import json
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
@@ -89,6 +92,46 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertIsNone(panel._view)
         self.assertIn("No verified snapshot", panel.status.text())
         panel.close()
+
+    def test_import_button_loads_complete_offline_bundle_without_device_io(self):
+        profile = bytearray(64)
+        profile[0] = 0x84
+        profile[1] = 1
+        bundle = {
+            "format": "ak680-read-only-capture-bundle-v1",
+            "target": {"vid_pid": "3151:502D", "board_id": 2255},
+            "active_profile_reply": bytes(profile).hex(" "),
+            "keymap_replies": [
+                {"sublayer": 0, "page": page, "raw_hex": (bytes([page, 1, 2, 3]) * 16).hex(" ")}
+                for page in range(8)
+            ],
+            "magnetic_replies": [
+                {"subop": 0, "page": page, "raw_hex": (bytes([page, 0]) * 32).hex(" ")}
+                for page in range(4)
+            ],
+        }
+        with TemporaryDirectory() as temporary:
+            path = Path(temporary) / "bundle.json"
+            path.write_text(json.dumps(bundle), encoding="utf-8")
+            panel = ReadOnlySnapshotPanel()
+            with patch("snapshot_panel.QFileDialog.getOpenFileName", return_value=(str(path), "")):
+                panel._import_bundle_from_file()
+            self.assertEqual(panel.table.rowCount(), 128)
+            self.assertIn("self-declared", panel.status.text())
+            self.assertIn("provenance are not verified", panel.status.text())
+            panel.close()
+
+    def test_failed_import_retains_existing_snapshot(self):
+        with TemporaryDirectory() as temporary:
+            path = Path(temporary) / "bad.json"
+            path.write_text("not json", encoding="utf-8")
+            panel = ReadOnlySnapshotPanel()
+            panel.set_snapshot(self.make_snapshot())
+            with patch("snapshot_panel.QFileDialog.getOpenFileName", return_value=(str(path), "")):
+                panel._import_bundle_from_file()
+            self.assertEqual(panel.table.rowCount(), 128)
+            self.assertIn("existing display retained", panel.status.text())
+            panel.close()
 
     def test_explicit_clear_removes_rows_and_selector_items(self):
         panel = ReadOnlySnapshotPanel()
