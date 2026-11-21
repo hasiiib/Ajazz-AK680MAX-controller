@@ -9,7 +9,7 @@ The product goal is a native Ubuntu implementation of the Windows AJAZZ driver f
 | Device discovery and connection | Implemented | USB VID:PID enumeration, paired HID interfaces, same-handle Identify guard |
 | Active profile | Read-only GET and offline profile workspace | GET 0x84 physically accepted once; profile switching remains disabled |
 | Key remapping | Read-only base-layer capture, decoder, offline SET packet builder | One 0x8A page-0 GET accepted; physical slot geometry and write/readback behavior unresolved |
-| Fn layer and host OS layers | Protocol research only | Gen2 read shape documented by independent sources; target-board capture required |
+| Fn layer and host OS layers | Selectable one-shot read-only keymap capture CLI | CLI accepts profile 0–3, page 0–7, and raw request byte 4 0–3; byte-4 host-layer/sub-layer meaning and target-board values remain unresolved |
 | Per-key actuation | Read-only sub-operation 0 capture | One 0xE5 subop-0/page-0 response accepted; complete GUI sequence not yet physically validated |
 | Rapid Trigger / lift-off / DKS / Mod-Tap / toggle / Snap Tap | Offline packet/parser groundwork plus a generalized one-page read-only 0xE5 capture CLI | CLI can request one documented sub-operation/page after same-handle Identify; target-board values and semantics still need capture |
 | RGB / lighting effects | Board-2255 LED GET/SET packet helpers plus an isolated, same-handle-identified one-shot 0x87 capture CLI | Flags 7/8 are present in vendor model metadata; the new read-only capture still needs one physical acceptance test; writes remain disabled |
@@ -38,7 +38,7 @@ The product goal is a native Ubuntu implementation of the Windows AJAZZ driver f
 ## Release gates
 
 - [ ] Physically validate the complete current 13-request read-only configuration acquisition.
-- [ ] Capture target-board Fn/OS layers and advanced magnetic columns with separately bounded read-only operations. The magnetic CLI accepts `--subop N --page N` and still sends exactly one GET per invocation.
+- [ ] Capture target-board Fn/OS layers and advanced magnetic columns with separately bounded read-only operations. The keymap CLI accepts `--profile N --page N --byte4 N`; byte-4 semantics remain unresolved. The magnetic CLI accepts `--subop N --page N`. Each invocation sends exactly one GET.
 - [ ] Validate the target-board LED GET and decode its returned state with `app/capture_led_parameters.py --confirm-one-read-only-0x87`.
 - [ ] Validate macro GET pages and the complete macro blob shape.
 - [ ] Establish physical key-slot mapping.
