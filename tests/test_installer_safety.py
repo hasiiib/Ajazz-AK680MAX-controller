@@ -71,7 +71,7 @@ class InstallerSafetyTests(unittest.TestCase):
             fake_git.write_text(
                 "#!/bin/sh\n"
                 "[ \"$1\" = clone ] || exit 2\n"
-                "target=\"$4\"\n"
+                "target=\"$5\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
                 "for module in active_profile.py analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do : > \"$target/app/$module\"; done\n"                ": > \"$target/requirements.txt\"\n"
