@@ -139,6 +139,24 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertNotIn("active slots:", source)
         self.assertNotIn("no keys currently moving/held", source)
 
+    def test_analog_status_exposes_sample_freshness_without_expiring_values(self):
+        self.assertIn("from time import monotonic", self.source)
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        poll = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "poll_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, poll)
+        self.assertIn("if samples:", source)
+        self.assertIn("self.last_analog_sample_at = monotonic()", source)
+        self.assertIn("last sample {age_ms} ms ago", source)
+        self.assertIn("waiting for first sample", source)
+        self.assertNotIn("latest_samples.pop", source)
+        self.assertNotIn("latest_samples.clear", source)
+
     def test_window_close_stops_both_background_timers(self):
         self.assertIn("self.connection_timer.stop()", self.source)
         self.assertIn("self.stream_timer.stop()", self.source)
