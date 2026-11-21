@@ -213,7 +213,7 @@ class ReadOnlySnapshotPanel(QWidget):
         layer = self._view.keymap_layers[index]
         self.keyboard_layout.show()
         self.layout_status.show()
-        self.keyboard_layout.set_keymap_entries(tuple(entry.raw for entry in layer.entries))
+        self.keyboard_layout.set_keymap_entries(tuple(bytes.fromhex(entry.raw_hex) for entry in layer.entries))
         self.layout_status.setText(self.keyboard_layout.mapping_message)
         self._populate((entry.slot, entry.assignment, entry.raw_hex) for entry in layer.entries)
 
