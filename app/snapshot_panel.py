@@ -148,7 +148,7 @@ class ReadOnlySnapshotPanel(QWidget):
         elif view.magnetic_columns:
             self._show_magnetic(0)
         self.status.setText(
-            "Snapshot loaded · known gen2 key entries are decoded; unknown entries stay raw · magnetic values remain raw · source provenance is not verified here"
+            "Snapshot loaded · known gen2 key entries are decoded; unknown entries stay raw · magnetic values remain raw · provenance are not verified here"
         )
 
     def _populate(self, rows) -> None:
