@@ -29,7 +29,7 @@ class InstallerSafetyTests(unittest.TestCase):
 
     def test_installer_validates_required_controller_modules_before_and_after_swap(self):
         script = INSTALLER.read_text(encoding="utf-8")
-        for module in ("live_configuration.py", "keymap_semantics.py", "macros.py", "lighting.py", "keymap_write.py", "magnetic_write.py"):
+        for module in ("live_configuration.py", "keymap_semantics.py", "keyboard_layout.py", "ak680_max_2255_layout.json", "macros.py", "lighting.py", "keymap_write.py", "magnetic_write.py"):
             with self.subTest(module=module):
                 self.assertIn(module, script)
         self.assertIn('"$WORK_DIR/repo/app/$module"', script)
@@ -74,8 +74,7 @@ class InstallerSafetyTests(unittest.TestCase):
                 "target=\"$5\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
-                "for module in active_profile.py analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do : > \"$target/app/$module\"; done\n"                ": > \"$target/requirements.txt\"\n"
-                "printf \\\"probe\\\\n\\\" > \\\"$target/capture_analog_stream.py\\\"\n",
+                "for module in active_profile.py ak680_max_2255_layout.json analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keyboard_layout.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do : > \"$target/app/$module\"; done\n"                "printf \\\"probe\\\\n\\\" > \\\"$target/capture_analog_stream.py\\\"\n",
                 encoding="utf-8",
             )
             fake_python = fake_bin / "python3"
