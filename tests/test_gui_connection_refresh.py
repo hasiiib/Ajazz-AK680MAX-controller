@@ -163,6 +163,8 @@ class GuiConnectionRefreshTests(unittest.TestCase):
 
     def test_connection_timer_is_periodic_and_starts_after_initial_scan(self):
         self.assertIn("self.connection_timer.setInterval(1500)", self.source)
+        self.assertIn("self.stream_timer.setInterval(33)", self.source)
+        self.assertIn("self.stream_session.poll(max_reports=16)", self.source)
         self.assertIn(
             "self.connection_timer.timeout.connect(self.refresh_connection_status)",
             self.source,
