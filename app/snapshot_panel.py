@@ -16,6 +16,7 @@ from offline_snapshot_import import (
     MAX_BUNDLE_BYTES,
     SnapshotImportError,
     import_snapshot_bundle_text,
+    export_snapshot_bundle_text,
 )
 from read_only_snapshot import ReadOnlyConfigurationSnapshot
 from snapshot_view import SnapshotView, project_snapshot_for_display
@@ -25,12 +26,13 @@ class ReadOnlySnapshotPanel(QWidget):
     """Browse documented keymap assignments and raw magnetic values."""
 
     EMPTY_STATUS = (
-        "No verified snapshot loaded. Device configuration reads are not enabled."
+        "No verified snapshot loaded. Use Read Configuration or import a capture bundle."
     )
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._view: SnapshotView | None = None
+        self._snapshot: ReadOnlyConfigurationSnapshot | None = None
 
         layout = QVBoxLayout(self)
         self.profile_label = QLabel("Active profile: —")
@@ -39,6 +41,11 @@ class ReadOnlySnapshotPanel(QWidget):
         self.import_button = QPushButton("Import offline capture bundle…")
         self.import_button.clicked.connect(self._import_bundle_from_file)
         layout.addWidget(self.import_button)
+
+        self.export_button = QPushButton("Export normalized backup bundle…")
+        self.export_button.clicked.connect(self._export_bundle_to_file)
+        self.export_button.setEnabled(False)
+        layout.addWidget(self.export_button)
 
         selectors = QHBoxLayout()
         selectors.addWidget(QLabel("Keymap layer:"))
@@ -87,13 +94,15 @@ class ReadOnlySnapshotPanel(QWidget):
 
         self.set_snapshot(snapshot)
         self.status.setText(
-            "Offline bundle imported · raw protocol values only · target metadata is self-declared · "
-            "device source and firmware provenance are not verified"
+            "Offline bundle imported · known gen2 key entries are decoded, unknown entries stay raw · "
+            "magnetic values remain raw · target metadata is self-declared"
         )
 
     def clear_snapshot(self) -> None:
         """Remove all displayed data and reset selectors to a safe empty state."""
         self._view = None
+        self._snapshot = None
+        self.export_button.setEnabled(False)
         for selector in (self.layer_selector, self.magnetic_selector):
             selector.blockSignals(True)
             selector.clear()
@@ -114,6 +123,8 @@ class ReadOnlySnapshotPanel(QWidget):
             self.clear_snapshot()
             raise
         self.set_snapshot_view(view)
+        self._snapshot = snapshot
+        self.export_button.setEnabled(True)
 
     def set_snapshot_view(self, view: SnapshotView) -> None:
         """Display an existing immutable projection, without interpreting it."""
@@ -149,6 +160,28 @@ class ReadOnlySnapshotPanel(QWidget):
             self._show_magnetic(0)
         self.status.setText(
             "Snapshot loaded · known gen2 key entries are decoded; unknown entries stay raw · magnetic values remain raw · provenance are not verified here"
+        )
+
+    def _export_bundle_to_file(self) -> None:
+        if self._snapshot is None:
+            return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Normalized Configuration Backup",
+            str(Path.home() / "ak680-configuration-backup.json"),
+            "JSON bundles (*.json)",
+        )
+        if not filename:
+            return
+        try:
+            bundle_text = export_snapshot_bundle_text(self._snapshot)
+            Path(filename).write_text(bundle_text, encoding="utf-8")
+        except (OSError, SnapshotImportError) as exc:
+            self.status.setText(f"Backup export failed. {exc}")
+            return
+        self.status.setText(
+            "Normalized backup exported · values can be re-imported · "
+            "this is not a bit-for-bit raw USB capture"
         )
 
     def _populate(self, rows) -> None:
