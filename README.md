@@ -39,6 +39,10 @@ USB connection status refreshes automatically every 1.5 seconds using HID enumer
 
 RGB, remapping, profiles, per-key actuation, Rapid Trigger, DKS, macros, and calibration are not advertised as working. Persistent configuration writes remain disabled pending exact stock board-2255 protocol verification and explicit user authorization. The research note also excludes incompatible 3151:502C and 0C45:80B2 protocols.
 
+## Windows-driver parity target
+
+The project target is a native Ubuntu implementation of the Windows AJAZZ driver, not only a read-only inspector. The feature-by-feature implementation state, evidence boundaries, and release gates are tracked in [Windows-driver feature parity](docs/WINDOWS_DRIVER_PARITY.md). Hardware writes remain disabled until target-board packet behavior, backup/read-back, and recovery are verified.
+
 ## Installation and data safety
 
 - Application files: `~/.local/opt/ak680-controller`.
