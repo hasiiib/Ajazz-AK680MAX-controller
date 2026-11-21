@@ -56,7 +56,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
     def test_panel_displays_validated_snapshot_as_raw_rows(self):
         panel = ReadOnlySnapshotPanel()
         panel.set_snapshot(self.make_snapshot())
-        self.assertIn("profile index: 1", panel.profile_label.text())
+        self.assertIn("Profile 2 (index 1)", panel.profile_label.text())
         self.assertEqual(panel.table.rowCount(), 128)
         self.assertEqual(panel.table.item(0, 0).text(), "1")
         self.assertEqual(panel.table.item(0, 1).text(), "Unknown assignment (raw)")
