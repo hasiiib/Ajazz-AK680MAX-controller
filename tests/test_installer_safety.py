@@ -27,6 +27,15 @@ class InstallerSafetyTests(unittest.TestCase):
         self.assertIn('"$WORK_DIR/repo/capture_analog_stream.py"', script)
         self.assertIn('cp -- "$WORK_DIR/repo/capture_analog_stream.py" "$STAGE_DIR/capture_analog_stream.py"', script)
 
+    def test_installer_validates_required_controller_modules_before_and_after_swap(self):
+        script = INSTALLER.read_text(encoding="utf-8")
+        for module in ("live_configuration.py", "keymap_semantics.py", "macros.py", "lighting.py", "keymap_write.py", "magnetic_write.py"):
+            with self.subTest(module=module):
+                self.assertIn(module, script)
+        self.assertIn('"$WORK_DIR/repo/app/$module"', script)
+        self.assertIn('"$STAGE_DIR/$module"', script)
+        self.assertIn('"$APP_DIR/$module"', script)
+
     def test_installer_uses_staging_and_rollback_before_activation(self):
         script = INSTALLER.read_text(encoding="utf-8")
         self.assertIn("STAGE_DIR=", script)
