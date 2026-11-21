@@ -33,6 +33,18 @@ _CONSUMER_NAMES = {
 }
 
 
+
+def extract_layout_usage(entry: bytes | bytearray) -> int | None:
+    """Return the original HID usage for a simple key assignment, if exact."""
+    if not isinstance(entry, (bytes, bytearray)) or len(entry) != 4:
+        return None
+    kind, a, b, c = bytes(entry)
+    if kind == 0x00 and a == 0 and c == 0 and 0x04 <= b <= 0xE7:
+        return b
+    if kind == 0x0A and a == 1 and b == 0 and c == 0:
+        return 1033
+    return None
+
 def describe_key_entry(entry: bytes | bytearray) -> str:
     """Describe only known 4-byte gen2 slot encodings; otherwise stay opaque."""
     if not isinstance(entry, (bytes, bytearray)) or len(entry) != 4:
