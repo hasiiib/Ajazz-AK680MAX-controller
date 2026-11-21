@@ -20,6 +20,7 @@ from offline_snapshot_import import (
 )
 from read_only_snapshot import ReadOnlyConfigurationSnapshot
 from snapshot_view import SnapshotView, project_snapshot_for_display
+from keyboard_layout import KeyboardLayoutWidget
 
 
 class ReadOnlySnapshotPanel(QWidget):
@@ -57,6 +58,12 @@ class ReadOnlySnapshotPanel(QWidget):
         self.magnetic_selector.currentIndexChanged.connect(self._show_magnetic)
         selectors.addWidget(self.magnetic_selector)
         layout.addLayout(selectors)
+
+        self.keyboard_layout = KeyboardLayoutWidget()
+        layout.addWidget(self.keyboard_layout)
+        self.layout_status = QLabel(self.keyboard_layout.mapping_message)
+        self.layout_status.setWordWrap(True)
+        layout.addWidget(self.layout_status)
 
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Slot", "Gen2 assignment / value", "Raw bytes / value"])
@@ -103,6 +110,10 @@ class ReadOnlySnapshotPanel(QWidget):
         self._view = None
         self._snapshot = None
         self.export_button.setEnabled(False)
+        self.keyboard_layout.clear()
+        self.layout_status.setText(self.keyboard_layout.mapping_message)
+        self.keyboard_layout.show()
+        self.layout_status.show()
         for selector in (self.layer_selector, self.magnetic_selector):
             selector.blockSignals(True)
             selector.clear()
@@ -200,10 +211,16 @@ class ReadOnlySnapshotPanel(QWidget):
         if self._view is None or not 0 <= index < len(self._view.keymap_layers):
             return
         layer = self._view.keymap_layers[index]
+        self.keyboard_layout.show()
+        self.layout_status.show()
+        self.keyboard_layout.set_keymap_entries(tuple(entry.raw for entry in layer.entries))
+        self.layout_status.setText(self.keyboard_layout.mapping_message)
         self._populate((entry.slot, entry.assignment, entry.raw_hex) for entry in layer.entries)
 
     def _show_magnetic(self, index: int) -> None:
         if self._view is None or not 0 <= index < len(self._view.magnetic_columns):
             return
         column = self._view.magnetic_columns[index]
+        self.keyboard_layout.hide()
+        self.layout_status.hide()
         self._populate((value.slot, "Actuation travel (raw)" if column.get_subop == 0 else f"Magnetic sub-op {column.get_subop} (raw)", value.raw_value) for value in column.values)
