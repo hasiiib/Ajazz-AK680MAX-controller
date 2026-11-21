@@ -15,6 +15,19 @@ LAUNCHER_TMP=""
 DESKTOP_TMP=""
 HAD_APP=0
 SWAPPED=0
+REQUIRED_APP_FILES=(
+  main.py
+  live_configuration.py
+  keymap_semantics.py
+  snapshot_panel.py
+  active_profile.py
+  keymap.py
+  magnetic_settings.py
+  keymap_write.py
+  magnetic_write.py
+  lighting.py
+  macros.py
+)
 
 say() { printf '\n[AK680] %s\n' "$*"; }
 fail() { printf '\n[AK680] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -60,10 +73,16 @@ BACKUP_DIR="${OPT_DIR}/.${APP_NAME}-backup-$$"
 
 say "Downloading the public repository..."
 git clone --depth 1 "$REPO" "$WORK_DIR/repo"
-[[ -f "$WORK_DIR/repo/app/main.py" && -f "$WORK_DIR/repo/requirements.txt" && -f "$WORK_DIR/repo/capture_analog_stream.py" ]] || fail "Repository is missing required application or analog probe files."
+[[ -f "$WORK_DIR/repo/requirements.txt" && -f "$WORK_DIR/repo/capture_analog_stream.py" ]] || fail "Repository is missing required requirements or analog probe files."
+for module in "${REQUIRED_APP_FILES[@]}"; do
+  [[ -s "$WORK_DIR/repo/app/$module" ]] || fail "Repository is missing required application module: $module"
+done
 
 mkdir -m 700 -- "$STAGE_DIR"
 cp -a "$WORK_DIR/repo/app/." "$STAGE_DIR/"
+for module in "${REQUIRED_APP_FILES[@]}"; do
+  [[ -s "$STAGE_DIR/$module" ]] || fail "Application module staging failed: $module"
+done
 cp -- "$WORK_DIR/repo/requirements.txt" "$STAGE_DIR/requirements.txt"
 # Stage the standalone opt-in probe alongside the installed app modules.
 cp -- "$WORK_DIR/repo/capture_analog_stream.py" "$STAGE_DIR/capture_analog_stream.py"
@@ -111,6 +130,9 @@ if ! mv -- "$STAGE_DIR" "$APP_DIR"; then
 fi
 STAGE_DIR=""
 [[ -s "$APP_DIR/capture_analog_stream.py" ]] || fail "Installed analog probe is missing; the previous version will be restored."
+for module in "${REQUIRED_APP_FILES[@]}"; do
+  [[ -s "$APP_DIR/$module" ]] || fail "Installed application module is missing: $module; the previous version will be restored."
+done
 
 mv -- "$LAUNCHER_TMP" "$BIN_DIR/$APP_NAME"
 LAUNCHER_TMP=""
