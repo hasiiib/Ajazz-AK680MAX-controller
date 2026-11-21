@@ -32,8 +32,7 @@ class LayoutKey:
 
 @dataclass(frozen=True)
 class LayoutInference:
-    complete: bool
-    slot_by_hid: dict[int, int]
+    all_factory_usages_present_once: bool
     missing_hids: tuple[int, ...]
     duplicate_hids: tuple[int, ...]
 
@@ -74,34 +73,34 @@ def load_keyboard_layout(path: Path = LAYOUT_PATH) -> tuple[LayoutKey, ...]:
     return tuple(keys)
 
 
-def infer_layout_slots(
+def assess_factory_usage_coverage(
     entries: Sequence[bytes],
     layout_keys: Sequence[LayoutKey] | None = None,
 ) -> LayoutInference:
-    """Infer physical slots only when every factory HID usage appears once."""
+    """Check whether factory HID usages are present once; do not infer slots.
+
+    A customized keymap can contain all 68 usages while swapping their
+    physical positions. Therefore usage coverage alone is never used to label
+    a physical key with a slot number.
+    """
     if not isinstance(entries, (tuple, list)) or len(entries) != 128:
-        raise ValueError("Layout inference requires exactly 128 four-byte keymap entries.")
+        raise ValueError("Layout assessment requires exactly 128 four-byte keymap entries.")
     if any(not isinstance(entry, bytes) or len(entry) != 4 for entry in entries):
-        raise ValueError("Layout inference entries must be immutable four-byte values.")
+        raise ValueError("Layout assessment entries must be immutable four-byte values.")
     keys = tuple(layout_keys if layout_keys is not None else load_keyboard_layout())
     expected = {key.hid for key in keys}
     matches: dict[int, list[int]] = {hid: [] for hid in expected}
-    for slot, entry in enumerate(entries, start=1):
+    for entry in entries:
         usage = extract_layout_usage(entry)
         if usage in matches:
-            matches[usage].append(slot)
-    missing = tuple(sorted(hid for hid, slots in matches.items() if not slots))
-    duplicates = tuple(sorted(hid for hid, slots in matches.items() if len(slots) > 1))
-    mapping = {
-        hid: slots[0] for hid, slots in matches.items() if len(slots) == 1
-    }
+            matches[usage].append(usage)
+    missing = tuple(sorted(hid for hid, usages in matches.items() if not usages))
+    duplicates = tuple(sorted(hid for hid, usages in matches.items() if len(usages) > 1))
     return LayoutInference(
-        complete=not missing and not duplicates,
-        slot_by_hid=mapping,
+        all_factory_usages_present_once=not missing and not duplicates,
         missing_hids=missing,
         duplicate_hids=duplicates,
     )
-
 
 class KeyboardLayoutWidget(QWidget):
     """Display the ANSI key geometry and inferred slot numbers, never edit keys."""
@@ -110,7 +109,7 @@ class KeyboardLayoutWidget(QWidget):
         super().__init__(parent)
         self.keys = load_keyboard_layout()
         self.entries: tuple[bytes, ...] | None = None
-        self.inference = LayoutInference(False, {}, tuple(key.hid for key in self.keys), ())
+        self.inference = LayoutInference(False, tuple(key.hid for key in self.keys), ())
         self.setMinimumSize(760, 236)
 
     def sizeHint(self) -> QSize:
@@ -119,12 +118,12 @@ class KeyboardLayoutWidget(QWidget):
     def clear(self) -> None:
         self.entries = None
         self.inference = LayoutInference(
-            False, {}, tuple(key.hid for key in self.keys), ()
+            False, tuple(key.hid for key in self.keys), ()
         )
         self.update()
 
     def set_keymap_entries(self, entries: Sequence[bytes]) -> LayoutInference:
-        self.inference = infer_layout_slots(entries, self.keys)
+        self.inference = assess_factory_usage_coverage(entries, self.keys)
         self.entries = tuple(entries)
         self.update()
         return self.inference
@@ -132,15 +131,17 @@ class KeyboardLayoutWidget(QWidget):
     @property
     def mapping_message(self) -> str:
         if self.entries is None:
-            return "Physical layout reference · no keymap loaded"
-        if self.inference.complete:
             return (
-                "68 physical slots inferred from the current factory HID assignments. "
-                "This mapping is not a physical key test; verify before any future write."
+                "ANSI reference geometry only · no keymap loaded · physical slot mapping is not verified"
+            )
+        if self.inference.all_factory_usages_present_once:
+            return (
+                "All 68 factory HID usages appear once, but a remap can reorder them. "
+                "Physical slot mapping is not verified; use the slot table below."
             )
         return (
-            "Slot mapping not inferred: current keymap does not contain every factory HID "
-            "usage exactly once. The diagram shows reference key positions only."
+            "Current keymap differs from the factory HID usage set. "
+            "Physical slot mapping is not verified; use the slot table below."
         )
 
     def paintEvent(self, event) -> None:
@@ -169,15 +170,4 @@ class KeyboardLayoutWidget(QWidget):
             font.setPointSizeF(max(6.0, 8.0 * scale))
             painter.setFont(font)
             painter.drawText(rect.adjusted(2, 1, -2, -1), Qt.AlignmentFlag.AlignCenter, key.label)
-            if self.inference.complete:
-                slot = self.inference.slot_by_hid.get(key.hid)
-                if slot is not None:
-                    small = QFont(self.font())
-                    small.setPointSizeF(max(5.0, 6.0 * scale))
-                    painter.setFont(small)
-                    painter.drawText(
-                        rect.adjusted(2, 1, -3, -2),
-                        Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight,
-                        f"#{slot}",
-                    )
         painter.end()
