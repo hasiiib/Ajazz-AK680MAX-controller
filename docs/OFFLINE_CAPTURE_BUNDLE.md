@@ -1,6 +1,6 @@
 # Offline read-only configuration bundle
 
-The Configuration (read-only) tab can import a JSON bundle assembled from manually supplied response captures. Import is offline: it does not open HID, send commands, retry, save captures, or modify the keyboard. The target fields are **self-declared metadata**, not proof that the data came from board 2255 or stock firmware.
+The Configuration (read-only) tab can import a JSON bundle assembled from manually supplied response captures and export a normalized backup from a validated in-memory snapshot. Both operations are offline: they do not open HID, send commands, retry, or modify the keyboard. The target fields are **self-declared metadata**, not proof that the data came from board 2255 or stock firmware.
 
 ## Format
 
@@ -25,3 +25,10 @@ The importer is limited to 256 KiB. It rejects unknown fields (including serial-
 If validation fails, the current displayed snapshot is retained. If it succeeds, the new snapshot is shown with an explicit warning that device source and firmware provenance have not been verified.
 
 The bundle can be created manually from reviewed one-shot capture output. Do not include the keyboard's unique serial number, USB device path, unrelated logs, or firmware claims. This format is not a hardware-validation substitute and does not authorize any device command or persistent setting write.
+
+
+## Export a local backup
+
+After a live read or successful import, select **Export normalized backup bundle…** and choose a local JSON path. The exporter reconstructs normalized 64-byte page payloads from the validated snapshot, preserving all represented keymap entries and magnetic values. The result can be imported again using the format above.
+
+The exported bundle is a normalized backup, **not a bit-for-bit raw USB capture**: original report-ID prefixes and exact transport bytes are not retained by the snapshot model. Its target declaration is self-declared metadata, and it contains no device serial number or USB device path.
