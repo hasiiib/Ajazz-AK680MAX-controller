@@ -123,6 +123,22 @@ class GuiConnectionRefreshTests(unittest.TestCase):
         self.assertIn("No persistent setting-write opcode is used", warning)
         self.assertIn("layout.addWidget(self.analog_warning)", self.source)
 
+    def test_analog_display_reports_observed_samples_not_unverified_active_state(self):
+        main_class = next(
+            node for node in self.tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "Main"
+        )
+        poll = next(
+            node for node in main_class.body
+            if isinstance(node, ast.FunctionDef) and node.name == "poll_analog_stream"
+        )
+        source = ast.get_source_segment(self.source, poll)
+        self.assertIn("self.analog_samples_received += len(samples)", source)
+        self.assertIn("slots observed:", source)
+        self.assertIn("latest slot:raw counts", source)
+        self.assertNotIn("active slots:", source)
+        self.assertNotIn("no keys currently moving/held", source)
+
     def test_window_close_stops_both_background_timers(self):
         self.assertIn("self.connection_timer.stop()", self.source)
         self.assertIn("self.stream_timer.stop()", self.source)
