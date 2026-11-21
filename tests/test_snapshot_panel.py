@@ -79,7 +79,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         panel.close()
 
 
-    def test_factory_keymap_shows_inferred_slot_numbers_in_layout(self):
+    def test_factory_keymap_usage_coverage_does_not_claim_physical_slots(self):
         entries = []
         for key in load_keyboard_layout():
             if key.hid == 1033:
@@ -100,9 +100,9 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         )
         panel = ReadOnlySnapshotPanel()
         panel.set_snapshot(snapshot)
-        self.assertTrue(panel.keyboard_layout.inference.complete)
-        self.assertEqual(len(panel.keyboard_layout.inference.slot_by_hid), 68)
-        self.assertIn("68 physical slots inferred", panel.layout_status.text())
+        self.assertTrue(panel.keyboard_layout.inference.all_factory_usages_present_once)
+        self.assertIn("remap can reorder them", panel.layout_status.text())
+        self.assertIn("Physical slot mapping is not verified", panel.layout_status.text())
         panel.close()
 
     def test_rejected_replacement_clears_previous_snapshot(self):
