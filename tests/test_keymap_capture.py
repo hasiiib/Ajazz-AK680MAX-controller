@@ -95,6 +95,34 @@ class KeymapCaptureTests(unittest.TestCase):
         self.assertEqual(self.device.opened_path, b"fake-interface-2")
         self.assertTrue(self.device.closed)
 
+    def test_can_capture_selected_profile_page_and_raw_byte4(self):
+        raw, sent = capture_once(
+            self.hid, identify=self.identify, sleep=lambda _: None,
+            profile=2, page=3, wire_byte4=1,
+        )
+        self.assertEqual(
+            self.device.sent[1],
+            bytes([0]) + keymap_get_packet(profile=2, page=3, sublayer=1),
+        )
+        self.assertEqual(raw, keymap_reply())
+        self.assertEqual(sent, 65)
+        self.assertTrue(self.device.closed)
+
+    def test_invalid_keymap_selection_is_rejected_before_device_open(self):
+        for selection in (
+            {"profile": 4}, {"page": 8}, {"wire_byte4": 4},
+        ):
+            with self.subTest(selection=selection):
+                device = FakeDevice()
+                hid = FakeHid(device)
+                with self.assertRaisesRegex(CaptureError, "Invalid keymap GET selection"):
+                    capture_once(
+                        hid, identify=self.identify, sleep=lambda _: None,
+                        **selection,
+                    )
+                self.assertEqual(hid.device_calls, 0)
+                self.assertEqual(device.sent, [])
+
     def test_wrong_board_id_stops_before_keymap_get(self):
         self.device.device_id = 1234
         with self.assertRaisesRegex(CaptureError, "board ID 2255"):
