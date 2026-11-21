@@ -17,6 +17,7 @@ HAD_APP=0
 SWAPPED=0
 REQUIRED_APP_FILES=(
   active_profile.py
+  ak680_max_2255_layout.json
   analog_stream.py
   capture_active_profile.py
   capture_keymap_page.py
@@ -24,6 +25,7 @@ REQUIRED_APP_FILES=(
   device_state.py
   diagnostics.py
   hardware_verification.py
+  keyboard_layout.py
   keymap.py
   keymap_semantics.py
   keymap_write.py
