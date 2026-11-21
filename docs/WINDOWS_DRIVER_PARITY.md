@@ -12,7 +12,7 @@ The product goal is a native Ubuntu implementation of the Windows AJAZZ driver f
 | Fn layer and host OS layers | Protocol research only | Gen2 read shape documented by independent sources; target-board capture required |
 | Per-key actuation | Read-only sub-operation 0 capture | One 0xE5 subop-0/page-0 response accepted; complete GUI sequence not yet physically validated |
 | Rapid Trigger / lift-off / DKS / Mod-Tap / toggle / Snap Tap | Offline packet/parser groundwork only | Additional 0xE5 columns and keymap sublayers are documented by family-level research; target-board values and behavior need capture |
-| RGB / lighting effects | Board-2255 LED GET/SET packet helpers | Flags 7/8 are present in vendor model metadata; no target-board LED GET or write acceptance yet |
+| RGB / lighting effects | Board-2255 LED GET/SET packet helpers plus an isolated, same-handle-identified one-shot 0x87 capture CLI | Flags 7/8 are present in vendor model metadata; the new read-only capture still needs one physical acceptance test; writes remain disabled |
 | Macros | Offline codec and GET/SET packet builders | No target-board macro read or write acceptance yet |
 | Named profiles / backup | Local offline workspace and strict snapshot import/export | Not equivalent to switching or applying a hardware profile |
 | Calibration | Not implemented | Requires verified target-board command semantics and explicit user test |
@@ -38,7 +38,7 @@ The product goal is a native Ubuntu implementation of the Windows AJAZZ driver f
 
 - [ ] Physically validate the complete current 13-request read-only configuration acquisition.
 - [ ] Capture target-board Fn/OS layers and advanced magnetic columns with a separately bounded read-only operation.
-- [ ] Validate the target-board LED GET and decode its returned state.
+- [ ] Validate the target-board LED GET and decode its returned state with `app/capture_led_parameters.py --confirm-one-read-only-0x87`.
 - [ ] Validate macro GET pages and the complete macro blob shape.
 - [ ] Establish physical key-slot mapping.
 - [ ] Add editable UI controls only for captured and understood fields.
