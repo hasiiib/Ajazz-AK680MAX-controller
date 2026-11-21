@@ -1,6 +1,7 @@
 import sys
 import subprocess
 from datetime import datetime
+from time import monotonic
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
@@ -192,6 +193,7 @@ class Main(QMainWindow):
         self.stream_session = AnalogStreamSession()
         self.latest_samples = {}
         self.analog_samples_received = 0
+        self.last_analog_sample_at = None
         self.stream_timer = QTimer(self)
         self.stream_timer.setInterval(5)
         self.stream_timer.timeout.connect(self.poll_analog_stream)
@@ -280,6 +282,7 @@ class Main(QMainWindow):
             self.stream_session.start()
             self.latest_samples.clear()
             self.analog_samples_received = 0
+            self.last_analog_sample_at = None
             self.stream_timer.start()
             self.stream_button.setText("Stop Analog Monitor")
             self.identify_button.setEnabled(False)
@@ -294,15 +297,22 @@ class Main(QMainWindow):
     def poll_analog_stream(self):
         try:
             samples = self.stream_session.poll()
+            if samples:
+                self.last_analog_sample_at = monotonic()
             self.analog_samples_received += len(samples)
             for sample in samples:
                 self.latest_samples[sample.slot] = sample.raw_travel
             observed = sorted(self.latest_samples.items())
             preview = ", ".join(f"{slot}:{value}" for slot, value in observed[:8])
-            suffix = f" | latest slot:raw counts {preview}" if preview else " | waiting for samples"
+            if self.last_analog_sample_at is None:
+                freshness = "waiting for first sample"
+            else:
+                age_ms = max(0, int((monotonic() - self.last_analog_sample_at) * 1000))
+                freshness = f"last sample {age_ms} ms ago"
+            suffix = f" | latest slot:raw counts {preview}" if preview else ""
             self.analog_status.setText(
                 f"Analog monitor: running | samples: {self.analog_samples_received} "
-                f"| slots observed: {len(observed)}{suffix}"
+                f"| slots observed: {len(observed)} | {freshness}{suffix}"
             )
         except AnalogStreamError as exc:
             self._abort_analog_stream(f"Analog input error: {exc}")
