@@ -64,7 +64,7 @@ class ReadOnlySnapshotPanelTests(unittest.TestCase):
         self.assertTrue(panel.layer_selector.isEnabled())
         self.assertTrue(panel.magnetic_selector.isEnabled())
         self.assertTrue(panel.export_button.isEnabled())
-        self.assertIn("Slot mapping not inferred", panel.layout_status.text())
+        self.assertIn("Physical slot mapping is not verified", panel.layout_status.text())
         self.assertFalse(panel.keyboard_layout.isHidden())
         self.assertIn("device provenance is not verified", panel.status.text())
 
