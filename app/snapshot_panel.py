@@ -1,7 +1,7 @@
-"""Read-only GUI for displaying an already validated configuration snapshot.
+"""Read-only GUI for displaying a validated live or offline configuration snapshot.
 
-This widget never communicates with the keyboard. A future acquisition layer
-must explicitly provide a validated ReadOnlyConfigurationSnapshot.
+This widget never communicates with the keyboard. The main window supplies a
+snapshot only after its bounded, read-only acquisition worker completes.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from snapshot_view import SnapshotView, project_snapshot_for_display
 
 
 class ReadOnlySnapshotPanel(QWidget):
-    """Browse raw keymap and magnetic values without assigning meanings."""
+    """Browse documented keymap assignments and raw magnetic values."""
 
     EMPTY_STATUS = (
         "No verified snapshot loaded. Device configuration reads are not enabled."
@@ -52,7 +52,7 @@ class ReadOnlySnapshotPanel(QWidget):
         layout.addLayout(selectors)
 
         self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Slot", "Assignment / value", "Raw bytes / value"])
+        self.table.setHorizontalHeaderLabels(["Slot", "Gen2 assignment / value", "Raw bytes / value"])
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
@@ -148,7 +148,7 @@ class ReadOnlySnapshotPanel(QWidget):
         elif view.magnetic_columns:
             self._show_magnetic(0)
         self.status.setText(
-            "Snapshot data loaded · raw protocol values only · device source and provenance are not verified here"
+            "Snapshot loaded · known gen2 key entries are decoded; unknown entries stay raw · magnetic values remain raw · source provenance is not verified here"
         )
 
     def _populate(self, rows) -> None:
