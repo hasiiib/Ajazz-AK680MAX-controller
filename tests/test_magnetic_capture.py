@@ -95,6 +95,28 @@ class MagneticCaptureTests(unittest.TestCase):
         self.assertEqual(self.device.opened_path, b"fake-interface-2")
         self.assertTrue(self.device.closed)
 
+    def test_can_capture_selected_documented_magnetic_subop_and_page(self):
+        raw, sent = capture_once(
+            self.hid, identify=self.identify, sleep=lambda _: None,
+            subop=5, page=1,
+        )
+        self.assertEqual(
+            self.device.sent[1],
+            bytes([0]) + magnetic_settings_get_packet(5, 1),
+        )
+        self.assertEqual(raw, magnetic_reply())
+        self.assertEqual(sent, 65)
+        self.assertTrue(self.device.closed)
+
+    def test_invalid_subop_or_page_is_rejected_before_device_open(self):
+        with self.assertRaisesRegex(CaptureError, "Invalid magnetic GET selection"):
+            capture_once(
+                self.hid, identify=self.identify, sleep=lambda _: None,
+                subop=8, page=0,
+            )
+        self.assertEqual(self.hid.device_calls, 0)
+        self.assertEqual(self.device.sent, [])
+
     def test_wrong_board_id_stops_before_magnetic_get(self):
         self.device.device_id = 1234
         with self.assertRaisesRegex(CaptureError, "board ID 2255"):
