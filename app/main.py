@@ -16,6 +16,7 @@ from diagnostics import build_diagnostic_report
 from device_state import evaluate_connection
 
 from snapshot_panel import ReadOnlySnapshotPanel
+from profile_workspace_panel import ProfileWorkspacePanel
 from live_configuration import ConfigurationReadError, read_configuration_snapshot
 
 from protocol import (
@@ -161,6 +162,8 @@ class Main(QMainWindow):
         self.snapshot_panel = ReadOnlySnapshotPanel()
         tabs.addTab(inspector_tab, "Device Inspector")
         tabs.addTab(self.snapshot_panel, "Configuration (read-only)")
+        self.profile_workspace_panel = ProfileWorkspacePanel(self.snapshot_panel)
+        tabs.addTab(self.profile_workspace_panel, "Profiles (offline)")
         layout.addWidget(tabs)
 
         self.connection_status = QLabel("USB connection: not scanned")
@@ -315,6 +318,7 @@ class Main(QMainWindow):
     def _on_configuration_read_finished(self, snapshot):
         try:
             self.snapshot_panel.set_snapshot(snapshot)
+            self.profile_workspace_panel.set_current_snapshot(snapshot)
             self.tabs.setCurrentWidget(self.snapshot_panel)
             self.configuration_status.setText(
                 "Configuration: read successfully · base keymap and actuation column 0 · raw values"
