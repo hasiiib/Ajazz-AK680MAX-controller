@@ -56,6 +56,11 @@ class Board2255DocumentationTests(unittest.TestCase):
             content = doc_path.read_text(encoding="utf-8")
             with self.subTest(path=path):
                 self.assertIn("BOARD_2255_PROTOCOL_EVIDENCE.md", content)
+        self.assertIn("WINDOWS_DRIVER_PARITY.md", (ROOT / "README.md").read_text(encoding="utf-8"))
+        parity = (ROOT / "docs" / "WINDOWS_DRIVER_PARITY.md").read_text(encoding="utf-8").lower()
+        for token in ("windows ajazz driver", "board 2255", "backup", "read-back", "recovery", "calibration"):
+            with self.subTest(parity_token=token):
+                self.assertIn(token, parity)
         self.assertIn("not verified on physical board 2255", (ROOT / "README.md").read_text(encoding="utf-8").lower())
         self.assertIn("not verified on physical board 2255", (ROOT / "PROJECT_STATUS.md").read_text(encoding="utf-8").lower())
 
