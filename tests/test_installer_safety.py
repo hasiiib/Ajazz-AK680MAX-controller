@@ -74,7 +74,8 @@ class InstallerSafetyTests(unittest.TestCase):
                 "target=\"$5\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
-                "for module in active_profile.py ak680_max_2255_layout.json analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keyboard_layout.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do printf 'pass\\n' > \"$target/app/$module\"; done\\n",\n                encoding="utf-8",
+                "for module in active_profile.py ak680_max_2255_layout.json analog_stream.py capture_active_profile.py capture_keymap_page.py capture_magnetic_page.py device_state.py diagnostics.py hardware_verification.py keyboard_layout.py keymap.py keymap_semantics.py keymap_write.py lighting.py live_configuration.py macros.py magnetic_settings.py magnetic_write.py main.py offline_snapshot_import.py protocol.py read_only_snapshot.py snapshot_panel.py snapshot_view.py; do printf 'pass\\n' > \"$target/app/$module\"; done\\n",
+                encoding="utf-8",
             )
             fake_python = fake_bin / "python3"
             fake_python.write_text(
