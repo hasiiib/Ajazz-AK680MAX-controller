@@ -43,6 +43,8 @@ The 2336/2343/2371 AK680 MAX revisions use PID 3151:502F and have different cont
 
 ## Protocol evidence matrix
 
+The upstream source ambiguity for nonzero `0x8A` byte-4 values remains unresolved on board 2255: one public table calls it a host layer, while the gen2 helper and firmware analysis call it a sub-layer. The current reader uses only zero, where both interpretations select the common Windows/base layer.
+
 | Area | Public evidence | Target-2255 status | Project decision |
 |---|---|---|---|
 | Identify `0x8F` | Shared GET; public protocol gives a 32-bit little-endian device ID | **Physically verified**: user's keyboard returned 2255 | Keep the existing user-initiated read-only Identify path |
