@@ -74,6 +74,7 @@ class InstallerSafetyTests(unittest.TestCase):
                 "target=\"$4\"\n"
                 "mkdir -p \"$target/app\"\n"
                 "printf 'pass\\n' > \"$target/app/main.py\"\n"
+                "for module in live_configuration.py keymap_semantics.py snapshot_panel.py active_profile.py keymap.py magnetic_settings.py keymap_write.py magnetic_write.py lighting.py macros.py; do : > \"$target/app/$module\"; done\n"
                 ": > \"$target/requirements.txt\"\n"
                 "printf \\\"probe\\\\n\\\" > \\\"$target/capture_analog_stream.py\\\"\n",
                 encoding="utf-8",
